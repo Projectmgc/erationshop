@@ -148,12 +148,13 @@ class _Signup_ScreenState extends State<Signup_Screen> {
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
+                children: [ClipOval(child: Image.asset(
                     'asset/logo.jpg',
-                    width: 65,
-                    height: 65,
-                  ),
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                  ),)
+                  ,
                   Text(
                     'Sign Up',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),

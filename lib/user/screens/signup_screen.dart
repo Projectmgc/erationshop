@@ -1,3 +1,4 @@
+import 'package:erationshop/user/screens/otp_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -24,12 +25,12 @@ class _Signup_ScreenState extends State<Signup_Screen> {
     }));
   }
 
-  void registration() {
+  void otpverification() {
     if (_formKey.currentState!.validate()) {
       // If the form is valid, perform registration actions here
       Navigator.push(context, MaterialPageRoute(
         builder: (context) {
-          return Login_Screen();
+          return Otp_Screen();
         },
       ));
       print("Name: ${name_controller.text}");
@@ -45,8 +46,9 @@ class _Signup_ScreenState extends State<Signup_Screen> {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('asset/bgforsign.jpg'), // Add your image here
-            fit: BoxFit.cover, // Make the image cover the entire screen
+            image: AssetImage('asset/bggrains.jpg'), // Add your image here
+            fit: BoxFit.cover, 
+            opacity: 0.70,// Make the image cover the entire screen
           ),
         ),
         child: Padding(
@@ -61,19 +63,19 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                   children: [
                     ClipOval(
                       child: Image.asset(
-                        'asset/logoorg.jpg',
-                        width: 100,
-                        height: 100,
-                        fit: BoxFit.cover,
+                        'asset/logo.jpg',
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 80),
+                SizedBox(height: 45),
                 Text(
-                  'Take The First Step ...',
-                  style: GoogleFonts.pacifico(
-                    color: Colors.black,
+                  'SIGN UP',
+                  style: GoogleFonts.merriweather(
+                    color: const Color.fromARGB(255, 81, 50, 12),
                     fontWeight: FontWeight.bold,
                     fontSize: 28.0,
                     shadows: [
@@ -85,17 +87,21 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 10),
+                SizedBox(height: 45),
                 TextFormField(
                   controller: name_controller,
                   decoration: InputDecoration(
+                    border :OutlineInputBorder(
+                      borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),
+                      borderRadius: BorderRadius.circular(10)
+                    ),
                     hintText: "Enter card owner's name",
                     filled: true,
-                    fillColor: const Color.fromARGB(255, 133, 194, 225),
+                    fillColor: const Color.fromARGB(255, 225, 157, 68),
                     hoverColor: const Color.fromARGB(255, 2, 9, 49),
                     prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                     prefixIcon: Icon(Icons.person),
-                    border: OutlineInputBorder(),
+                    
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -111,12 +117,15 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: const Color.fromARGB(255, 133, 194, 225),
+                    fillColor: const Color.fromARGB(255, 225, 157, 68),
                     hoverColor: const Color.fromARGB(255, 2, 9, 49),
                     prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                     hintText: 'Enter Card No',
                     prefixIcon: Icon(Icons.book),
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),
+                      borderRadius: BorderRadius.circular(10)
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -134,12 +143,15 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: const Color.fromARGB(255, 133, 194, 225),
+                    fillColor: const Color.fromARGB(255, 225, 157, 68),
                     hoverColor: const Color.fromARGB(255, 2, 9, 49),
                     prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                     hintText: 'Enter UID No',
                     prefixIcon: Icon(Icons.credit_card_rounded),
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),
+                      borderRadius: BorderRadius.circular(10)
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -158,11 +170,14 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                     prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                     suffixIconColor: const Color.fromARGB(198, 14, 1, 62),
                     filled: true,
-                    fillColor: const Color.fromARGB(255, 133, 194, 225),
+                    fillColor: const Color.fromARGB(255, 225, 157, 68),
                     hoverColor: const Color.fromARGB(255, 2, 9, 49),
                     hintText: 'Enter Password',
                     prefixIcon: Icon(Icons.lock),
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),
+                      borderRadius: BorderRadius.circular(10)
+                    ),
                     suffixIcon: IconButton(
                       onPressed: () {
                         setState(() {
@@ -178,7 +193,7 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                     if (value == null || value.isEmpty) {
                       return "Please enter a password";
                     } else if (value.length < 6) {
-                      return "Password must be at least 6 characters";
+                      return "Password must be at least 6 characters" ;
                     }
                     return null;
                   },
@@ -187,16 +202,18 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                 ElevatedButton(
                   style: ButtonStyle(
                     backgroundColor: WidgetStatePropertyAll(
-                        const Color.fromARGB(255, 146, 239, 215)),
+                        const Color.fromARGB(255, 225, 157, 68)),
                     shadowColor: WidgetStatePropertyAll(
-                        const Color.fromARGB(255, 30, 139, 121)),
+                        const Color.fromARGB(255, 62, 55, 5)),
                     elevation: WidgetStatePropertyAll(10.0),
+                    
                   ),
-                  onPressed: registration,
+                  onPressed: otpverification,
                   child: Text(
                     'SIGN UP',
                     style: TextStyle(
-                        color: const Color.fromARGB(255, 15, 4, 67),
+                        
+                        color: const Color.fromARGB(255, 8, 6, 21),
                         fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -206,7 +223,7 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                   children: [
                     Text(
                       'Already sign up?',
-                      style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: const Color.fromARGB(255, 1, 4, 21), fontWeight: FontWeight.bold,fontSize: 18,fontFamily: 'merriweather'),
                     ),
                     TextButton(
                       onPressed: () {
@@ -214,7 +231,7 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                       },
                       child: Text(
                         'Login here',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18,fontFamily: 'merriweather',color: const Color.fromARGB(255, 10, 1, 61)),
                       ),
                     ),
                   ],

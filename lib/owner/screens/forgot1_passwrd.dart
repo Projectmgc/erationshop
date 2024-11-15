@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 
-class Otp_Screen extends StatefulWidget {
-  const Otp_Screen({super.key});
+class Forgot1_Password extends StatefulWidget {
+  const Forgot1_Password({super.key});
 
   @override
-  State<Otp_Screen> createState() => _Otp_ScreenState();
+  State<Forgot1_Password> createState() => _Forgot1_PasswordState();
 }
 
-class _Otp_ScreenState extends State<Otp_Screen> {
+class _Forgot1_PasswordState extends State<Forgot1_Password> {
   final _formKey = GlobalKey<FormState>();
 
+  
 
- 
+  
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +49,7 @@ class _Otp_ScreenState extends State<Otp_Screen> {
                 ),
                 SizedBox(height: 55),
                 Text(
-                  'Verify the OTP',
+                  'Forgot Password Page',
                   style: GoogleFonts.merriweather(
                     color: const Color.fromARGB(255, 81, 50, 12),
                     fontWeight: FontWeight.bold,
@@ -62,12 +63,15 @@ class _Otp_ScreenState extends State<Otp_Screen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 45),
-             
-               
                 
                  
-                   
+               
+                
+              
+                    
+                 
+                SizedBox(height: 10),
+                
               ],
             ),
           ),

@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 
-class Otp_Screen extends StatefulWidget {
-  const Otp_Screen({super.key});
+class Otp1_Screen extends StatefulWidget {
+  const Otp1_Screen({super.key});
 
   @override
-  State<Otp_Screen> createState() => _Otp_ScreenState();
+  State<Otp1_Screen> createState() => _Otp1_ScreenState();
 }
 
-class _Otp_ScreenState extends State<Otp_Screen> {
+class _Otp1_ScreenState extends State<Otp1_Screen> {
   final _formKey = GlobalKey<FormState>();
 
 

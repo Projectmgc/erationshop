@@ -1,135 +1,185 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class OwnerHomeScreen extends StatelessWidget {
+class OwnerHomeScreen extends StatefulWidget {
   const OwnerHomeScreen({super.key});
 
-  // Function to navigate to different pages
+  @override
+  State<OwnerHomeScreen> createState() => _OwnerHomeScreenState();
+}
+
+class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
+  final PageController _pageController = PageController();
+
+  final List<Map<String, dynamic>> _cards = [
+    {
+      'title': 'Profile',
+      'icon': Icons.person,
+      'color': Colors.blue,
+      'description': 'Manage your personal details and preferences.',
+    },
+    {
+      'title': 'Stock',
+      'icon': Icons.inventory,
+      'color': Colors.green,
+      'description': 'Keep track of available inventory and supplies.',
+    },
+    {
+      'title': 'Sales',
+      'icon': Icons.show_chart,
+      'color': Colors.orange,
+      'description': 'Analyze and monitor your sales data.',
+    },
+    {
+      'title': 'Converse',
+      'icon': Icons.chat,
+      'color': Colors.purple,
+      'description': 'Communicate with your team or customers.',
+    },
+  ];
+
   void _onCardTapped(String cardType) {
     print('$cardType card clicked');
-    // You can use Navigator to push to different screens here
+    // Add navigation logic here
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        // AppBar background color
-        elevation: 10, // AppBar shadow
-        title: Row(
-          children: [
-            ClipOval(
-              child: Image.asset(
-                'asset/logo.jpg', // Your logo image
-                width: 50,
-                height: 50,
-                fit: BoxFit.contain,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Top Section: Logo, Title, and Profile Icon
+          SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(width: 8),
+              ClipOval(
+                child: Image.asset(
+                  'asset/logo.jpg', // Ensure path is correct and added to pubspec.yaml
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.contain,
+                ),
               ),
-            ),
-            // Spacing between logo and name
-            SizedBox(width: 8), // Slight space between logo and text
-            Text(
-              'E-RATION', // Name next to the logo
-              style: GoogleFonts.merriweather(
-                color: const Color.fromARGB(255, 17, 17, 17),
-                fontWeight: FontWeight.bold,
-                fontSize: 18.0,
+              SizedBox(width: 8),
+              Text(
+                'E-RATION OWNER"S',
+                style: GoogleFonts.merriweather(
+                  color: const Color.fromARGB(255, 17, 17, 17),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22.0,
+                ),
               ),
-            ),
-            // Spacer to push profile icon to the right end
-            Spacer(),
-            // Profile icon button
-            IconButton(
-              icon: CircleAvatar(
-                // backgroundImage: AssetImage('assets/profile.jpg'), // User profile image
-                radius: 20,
-                backgroundColor: Colors.white,
-                child: Icon(Icons.person, color: Colors.deepPurpleAccent),
+              Spacer(),
+              IconButton(
+                icon: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.person, color: Colors.deepPurpleAccent),
+                ),
+                onPressed: () {
+                  print('Profile button pressed');
+                },
               ),
-              onPressed: () {
-                // Handle profile button press (e.g., navigate to profile screen)
-                print('Profile button pressed');
+              SizedBox(width: 16), // Add spacing to align properly
+            ],
+          ),
+          SizedBox(height: 30), // Space between the header and cards
+          // Cards Section
+          Expanded(
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: _cards.length,
+              itemBuilder: (context, index) {
+                final card = _cards[index];
+                return _buildPageCard(card);
               },
             ),
-          ],
-        ),
-        centerTitle: false, // Ensures the title is not centered
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Welcome message
-            Text('owner'),
-            SizedBox(height: 20),
-            
-            // Cards Section
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                children: [
-                  // Profile Card
-                  _buildCard('Profile', Icons.person, Colors.blue, () {
-                    _onCardTapped('Profile');
-                  }),
-
-                  // Purchase Card
-                  _buildCard('stokes', Icons.graphic_eq, Colors.green, () {
-                    _onCardTapped('stokes');
-                  }),
-
-                  // Outlet Card
-                  _buildCard('sales', Icons.on_device_training, Colors.orange, () {
-                    _onCardTapped('sales');
-                  }),
-
-                  
-
-                  // Enquiry Card
-                  _buildCard('convorsation', Icons.help_outline, Colors.red, () {
-                    _onCardTapped('comvorsation');
-                  }),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  // Helper method to build a clickable card
-  Widget _buildCard(String title, IconData icon, Color color, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Card(
-        elevation: 8,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        color: color,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 50, color: Colors.white),
-              SizedBox(height: 10),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+  Widget _buildPageCard(Map<String, dynamic> card) {
+    return Center(
+      child: Stack(
+        alignment: Alignment.center, // Center all children inside the Stack
+        children: [
+          // Card Container
+          GestureDetector(
+            onTap: () => _onCardTapped(card['title']),
+            child: Transform.rotate(
+              angle: 0.05, // Slight tilt
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                height: MediaQuery.of(context).size.height * 0.6,
+                decoration: BoxDecoration(
+                  color: card['color'],
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      offset: Offset(0, 4),
+                      blurRadius: 8,
+                    ),
+                  ],
+                  border: Border.all(color: Colors.white, width: 4),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(card['icon'], size: 100, color: Colors.white),
+                    SizedBox(height: 10),
+                    Text(
+                      card['title'],
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+          // Description with Animation
+          Positioned(
+            bottom: 50,
+            left: 30,
+            right: 30,
+            child: AnimatedOpacity(
+              opacity: 1.0,
+              duration: Duration(milliseconds: 500),
+              child: Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      offset: Offset(0, 4),
+                      blurRadius: 6,
+                    ),
+                  ],
+                ),
+                child: Text(
+                  card['description'],
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: card['color'],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

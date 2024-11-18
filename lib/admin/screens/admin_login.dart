@@ -72,7 +72,7 @@ class _Admin_LoginState extends State<Admin_Login> {
                 ),
                 SizedBox(height: 55),
                 Text(
-                  'OWNER LOGIN ',
+                  'ADMIN LOGIN ',
                   style: GoogleFonts.merriweather(
                     color: const Color.fromARGB(255, 81, 50, 12),
                     fontWeight: FontWeight.bold,
@@ -98,7 +98,7 @@ class _Admin_LoginState extends State<Admin_Login> {
                     fillColor: const Color.fromARGB(255, 225, 157, 68),
                     hoverColor: const Color.fromARGB(255, 2, 9, 49),
                     prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
-                    hintText: 'Enter Store Id',
+                    hintText: 'Enter Admin Id',
                     prefixIcon: Icon(Icons.book),
                     border: OutlineInputBorder(
                       borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),

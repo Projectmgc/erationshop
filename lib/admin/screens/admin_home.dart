@@ -262,7 +262,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'icon': Icons.inventory,
       'color': Colors.lightGreenAccent,
       'description': 'Keep track of available inventory and supplies.',
-      'image': 'asset/stock.jpg',
+      'image': 'asset/purchase.jpg',
       'page': StockPage(), // Navigation target
     },
     {
@@ -278,15 +278,15 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'icon': Icons.report_problem,
       'color': Colors.pinkAccent.shade100,
       'description': 'Address and resolve customer complaints.',
-      'image': 'asset/stock.jpg',
+      'image': 'asset/enquiry.jpg',
       'page': ComplaintsPage(), // Navigation target
     },
     {
       'title': 'Card',
       'icon': Icons.credit_card,
       'color': Colors.purpleAccent.shade100,
-      'description': 'Manage credit or debit card-related operations.',
-      'image': 'asset/stock.jpg',
+      'description': 'Manage Ration-card related operations.',
+      'image': 'asset/card.jpg',
       'page': CardPage(), // Navigation target
     },
     {

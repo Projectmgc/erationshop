@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class Forgot_Password extends StatefulWidget {
@@ -50,7 +51,7 @@ class _Forgot_PasswordState extends State<Forgot_Password> {
           image: DecorationImage(
             image: AssetImage('asset/bggrains.jpg'), // Your background image
             fit: BoxFit.cover,
-            opacity: 0.7,
+            opacity: 0.6,
           ),
         ),
         child: Padding(
@@ -98,7 +99,7 @@ class _Forgot_PasswordState extends State<Forgot_Password> {
                     Text(
                       'Enter your phone number',
                       style: GoogleFonts.merriweather(
-                        color: Colors.black,
+                        color: const Color.fromARGB(255, 12, 12, 12),
                         fontWeight: FontWeight.bold,
                         fontSize: 18.0,
                       ),
@@ -106,28 +107,47 @@ class _Forgot_PasswordState extends State<Forgot_Password> {
                     SizedBox(height: 10),
                     TextFormField(
                       controller: _phoneController,
+                                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+
                       decoration: InputDecoration(
-                        labelText: 'Phone Number',
-                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: const Color.fromARGB(255, 225, 157, 68),
+                    hoverColor: const Color.fromARGB(255, 2, 9, 49),
+                    prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
+                    prefixIcon: Icon(Icons.phone),
+                    
+                        
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),
+                      borderRadius: BorderRadius.circular(10)
+                        ),
                         hintText: 'Enter your phone number',
                       ),
                       keyboardType: TextInputType.phone,
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your phone number';
+                        if (value == null || value.isEmpty||value.length!=10) {
+                          return 'Please enter valid phone number';
                         }
                         return null;
                       },
                     ),
                     SizedBox(height: 20),
                     ElevatedButton(
+                      
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStatePropertyAll(const Color.fromARGB(121, 209, 148, 101)),
+                        shadowColor: WidgetStatePropertyAll(Color.fromARGB(159, 57, 31, 5)),
+                                            elevation: WidgetStatePropertyAll(10.0),
+
+
+                      ),
                       onPressed: () {
                         if (_formKey.currentState?.validate() ?? false) {
                           // Trigger OTP send logic
                           _sendOtp();
                         }
                       },
-                      child: Text('Send OTP'),
+                      child: Text('Send OTP',style: TextStyle(color: const Color.fromARGB(228, 6, 6, 6),fontWeight: FontWeight.bold,fontSize: 18),),
                     ),
                   ],
                 ),
@@ -154,6 +174,8 @@ class _Forgot_PasswordState extends State<Forgot_Password> {
                             child: TextFormField(
                               controller: _otpControllers[index],
                               decoration: InputDecoration(
+                                filled: true,
+                                fillColor: const Color.fromARGB(255, 225, 157, 68),
                                 border: OutlineInputBorder(),
                                 hintText: '•',
                               ),
@@ -177,8 +199,15 @@ class _Forgot_PasswordState extends State<Forgot_Password> {
                       ),
                       SizedBox(height: 20),
                       ElevatedButton(
+                         style: ButtonStyle(
+                        backgroundColor: WidgetStatePropertyAll(const Color.fromARGB(121, 209, 148, 101)),
+                        shadowColor: WidgetStatePropertyAll(Color.fromARGB(159, 57, 31, 5)),
+                                            elevation: WidgetStatePropertyAll(10.0),
+
+
+                      ),
                         onPressed: _verifyOtp,
-                        child: Text('Verify OTP'),
+                        child: Text('Verify OTP',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18,color: const Color.fromARGB(228, 6, 6, 6)),),
                       ),
                     ],
                   ),
@@ -190,18 +219,25 @@ class _Forgot_PasswordState extends State<Forgot_Password> {
                       Text(
                         'Your OTP has been verified. You can now reset your password.',
                         style: TextStyle(
-                          color: Colors.green,
+                          color: const Color.fromARGB(255, 2, 78, 4),
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
                       SizedBox(height: 20),
                       ElevatedButton(
+                         style: ButtonStyle(
+                        backgroundColor: WidgetStatePropertyAll(const Color.fromARGB(121, 209, 148, 101)),
+                        shadowColor: WidgetStatePropertyAll(Color.fromARGB(159, 57, 31, 5)),
+                                            elevation: WidgetStatePropertyAll(10.0),
+
+
+                      ),
                         onPressed: () {
                           // Navigate to Reset Password Page
                           // Navigator.push(context, MaterialPageRoute(builder: (context) => ResetPasswordPage()));
                         },
-                        child: Text('Go to Reset Password'),
+                        child: Text('Go to Reset Password',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18, color: const Color.fromARGB(228, 6, 6, 6)),),
                       ),
                     ],
                   ),

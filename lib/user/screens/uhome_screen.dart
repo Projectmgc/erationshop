@@ -1,4 +1,9 @@
-
+import 'package:erationshop/user/screens/user_card.dart';
+import 'package:erationshop/user/screens/user_enquiry.dart';
+import 'package:erationshop/user/screens/user_notification.dart';
+import 'package:erationshop/user/screens/user_outlet.dart';
+import 'package:erationshop/user/screens/user_profile.dart';
+import 'package:erationshop/user/screens/user_purchase.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart'; // Import the package
@@ -19,42 +24,42 @@ class _UhomeScreenState extends State<UhomeScreen> {
       'color': Colors.lightBlueAccent,
       'description': 'Manage your personal details and preferences.',
       'image': 'asset/profile.jpg',
-      //'page': ProfilePage(), // Navigation target
+      'page': UserProfile(), // Navigation target
     },
     {
       'title': 'Purchase',
       'color': Colors.lightGreenAccent,
       'description': 'Keep track of available inventory and supplies.',
       'image': 'asset/purchase.jpg',
-      //'page': StockPage(), // Navigation target
+      'page': UserPurchase(), // Navigation target
     },
     {
       'title': 'Outlet',
       'color': Colors.amberAccent,
       'description': 'Find and Analyse the Ration Outlets.',
       'image': 'asset/outlet.jpg',
-      //'page': SalesPage(), // Navigation target
+      'page': UserOutlet(), // Navigation target
     },
     {
       'title': 'Enquiry',
       'color': Colors.pinkAccent.shade100,
       'description': 'Address and Resolve Your Complaints.',
       'image': 'asset/enquiry.jpg',
-      //'page': ComplaintsPage(), // Navigation target
+      'page': UserEnquiry(), // Navigation target
     },
     {
       'title': 'Card',
       'color': Colors.purpleAccent.shade100,
       'description': 'Manage Ration-Card related operations.',
       'image': 'asset/card.jpg',
-      //'page': CardPage(), // Navigation target
+      'page': UserCard(), // Navigation target
     },
     {
       'title': 'Notification',
       'color': Colors.tealAccent,
       'description': 'New Updations and Notifications are here.',
       'image': 'asset/notification.jpg',
-      //'page': ConversePage(), // Navigation target
+      'page': UserNotification(), // Navigation target
     },
   ];
 
@@ -62,6 +67,15 @@ class _UhomeScreenState extends State<UhomeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => page),
+    );
+  }
+
+  void gotoprofile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) {
+        return UserProfile();
+      }),
     );
   }
 
@@ -86,13 +100,16 @@ class _UhomeScreenState extends State<UhomeScreen> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Header Section
+                                  SizedBox(height: 20),
+
+              // Header Section with adjusted spacing and font size
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
                   children: [
                     ClipOval(
-                      child: Image.asset(
+                      child: 
+                      Image.asset(
                         'asset/logo.jpg',
                         width: 50,
                         height: 50,
@@ -105,24 +122,22 @@ class _UhomeScreenState extends State<UhomeScreen> {
                       style: GoogleFonts.merriweather(
                         color: Colors.black87,
                         fontWeight: FontWeight.bold,
-                        fontSize: 22.0,
+                        fontSize: 26.0, // Increased font size
                       ),
                     ),
                     Spacer(),
                     IconButton(
                       icon: CircleAvatar(
                         radius: 20,
-                        backgroundColor: Colors.white,
-                        child: Icon(Icons.person, color: Colors.deepPurpleAccent),
+                        backgroundColor: const Color.fromARGB(255, 85, 50, 4),
+                        child: Icon(Icons.person, color: const Color.fromARGB(255, 250, 250, 250)),
                       ),
-                      onPressed: () {
-                        print('Profile button pressed');
-                      },
+                      onPressed: gotoprofile,
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 30),
+              SizedBox(height: 50), // Increased spacing from the top
               // Cards Section with PageView.builder
               Expanded(
                 child: Column(
@@ -207,10 +222,8 @@ class _UhomeScreenState extends State<UhomeScreen> {
               Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  
                   SizedBox(height: 20),
                   Text(
-                    
                     card['title'],
                     style: GoogleFonts.roboto(
                       fontSize: 28,
@@ -239,4 +252,3 @@ class _UhomeScreenState extends State<UhomeScreen> {
     );
   }
 }
-

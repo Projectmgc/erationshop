@@ -1,3 +1,4 @@
+import 'package:erationshop/user/screens/reset_password.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -19,6 +20,12 @@ class _Forgot_PasswordState extends State<Forgot_Password> {
   String _otp = ''; // This will simulate the OTP
 
   // Simulate sending OTP
+  void gotoreset()
+  {
+    Navigator.push(context, MaterialPageRoute(builder: (context){
+      return Reset_Password();
+    }));
+  }
   void _sendOtp() {
     setState(() {
       _isOtpSent = true;
@@ -48,12 +55,17 @@ class _Forgot_PasswordState extends State<Forgot_Password> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('asset/bggrains.jpg'), // Your background image
-            fit: BoxFit.cover,
-            opacity: 0.6,
-          ),
-        ),
+          
+              gradient: LinearGradient(
+                colors: [
+                  const Color.fromARGB(255, 245, 184, 93),
+                  const Color.fromARGB(255, 233, 211, 88),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+        
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
           child: Form(
@@ -234,7 +246,7 @@ class _Forgot_PasswordState extends State<Forgot_Password> {
 
                       ),
                         onPressed: () {
-                          // Navigate to Reset Password Page
+                           gotoreset(); // Navigate to Reset Password Page
                           // Navigator.push(context, MaterialPageRoute(builder: (context) => ResetPasswordPage()));
                         },
                         child: Text('Go to Reset Password',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18, color: const Color.fromARGB(228, 6, 6, 6)),),

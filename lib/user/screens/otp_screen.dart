@@ -20,11 +20,14 @@ class _Otp_ScreenState extends State<Otp_Screen> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('asset/bggrains.jpg'), // Add your image here
-            fit: BoxFit.cover, 
-            opacity: 0.70,// Make the image cover the entire screen
-          ),
+          gradient: LinearGradient(
+                colors: [
+                  const Color.fromARGB(255, 245, 184, 93),
+                  const Color.fromARGB(255, 233, 211, 88),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),

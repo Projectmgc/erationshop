@@ -10,6 +10,6 @@ import 'package:erationshop/user/screens/uhome_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(MaterialApp(debugShowCheckedModeBanner: false,home: AdminHomeScreen()),);
+  runApp(MaterialApp(debugShowCheckedModeBanner: false,home: UhomeScreen()),);
 }
 

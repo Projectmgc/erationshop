@@ -1,5 +1,7 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart'; // Import the package
 
 class OwnerHomeScreen extends StatefulWidget {
   const OwnerHomeScreen({super.key});
@@ -14,89 +16,146 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
   final List<Map<String, dynamic>> _cards = [
     {
       'title': 'Profile',
-      'icon': Icons.person,
-      'color': Colors.blue,
+      'color': Colors.lightBlueAccent,
       'description': 'Manage your personal details and preferences.',
+      'image': 'asset/profile.jpg',
+      //'page': ProfilePage(), // Navigation target
     },
     {
-      'title': 'Stock',
-      'icon': Icons.inventory,
-      'color': Colors.green,
+      'title': 'Purchase',
+      'color': Colors.lightGreenAccent,
       'description': 'Keep track of available inventory and supplies.',
+      'image': 'asset/purchase.jpg',
+      //'page': StockPage(), // Navigation target
     },
     {
-      'title': 'Sales',
-      'icon': Icons.show_chart,
-      'color': Colors.orange,
-      'description': 'Analyze and monitor your sales data.',
+      'title': 'Outlet',
+      'color': Colors.amberAccent,
+      'description': 'Find and Analyse the Ration Outlets.',
+      'image': 'asset/outlet.jpg',
+      //'page': SalesPage(), // Navigation target
     },
     {
-      'title': 'Converse',
-      'icon': Icons.chat,
-      'color': Colors.purple,
-      'description': 'Communicate with your team or customers.',
+      'title': 'Enquiry',
+      'color': Colors.pinkAccent.shade100,
+      'description': 'Address and Resolve Your Complaints.',
+      'image': 'asset/enquiry.jpg',
+      //'page': ComplaintsPage(), // Navigation target
+    },
+    {
+      'title': 'Card',
+      'color': Colors.purpleAccent.shade100,
+      'description': 'Manage Ration-Card related operations.',
+      'image': 'asset/card.jpg',
+      //'page': CardPage(), // Navigation target
+    },
+    {
+      'title': 'Notification',
+      'color': Colors.tealAccent,
+      'description': 'New Updations and Notifications are here.',
+      'image': 'asset/notification.jpg',
+      //'page': ConversePage(), // Navigation target
     },
   ];
 
-  void _onCardTapped(String cardType) {
-    print('$cardType card clicked');
-    // Add navigation logic here
+  void _onCardTapped(Widget page) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => page),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      body: Stack(
         children: [
-          // Top Section: Logo, Title, and Profile Icon
-          SizedBox(height: 10),
-          Row(
+          // Background gradient
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color.fromARGB(255, 245, 184, 93),
+                  const Color.fromARGB(255, 233, 211, 88),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+          Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(width: 8),
-              ClipOval(
-                child: Image.asset(
-                  'asset/logo.jpg', // Ensure path is correct and added to pubspec.yaml
-                  width: 50,
-                  height: 50,
-                  fit: BoxFit.contain,
+              // Header Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    ClipOval(
+                      child: Image.asset(
+                        'asset/logo.jpg',
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      'OWNER HOME',
+                      style: GoogleFonts.merriweather(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22.0,
+                      ),
+                    ),
+                    Spacer(),
+                    IconButton(
+                      icon: CircleAvatar(
+                        radius: 20,
+                        backgroundColor: Colors.white,
+                        child: Icon(Icons.person, color: Colors.deepPurpleAccent),
+                      ),
+                      onPressed: () {
+                        print('Profile button pressed');
+                      },
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(width: 8),
-              Text(
-                'E-RATION OWNER"S',
-                style: GoogleFonts.merriweather(
-                  color: const Color.fromARGB(255, 17, 17, 17),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 22.0,
+              SizedBox(height: 30),
+              // Cards Section with PageView.builder
+              Expanded(
+                child: Column(
+                  children: [
+                    // PageView Section
+                    Expanded(
+                      child: PageView.builder(
+                        controller: _pageController,
+                        itemCount: _cards.length,
+                        itemBuilder: (context, index) {
+                          final card = _cards[index];
+                          return _buildPageCard(card);
+                        },
+                      ),
+                    ),
+                    // Dot indicator (SmoothPageIndicator)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20.0),
+                      child: SmoothPageIndicator(
+                        controller: _pageController,  // Controller to sync with PageView
+                        count: _cards.length,  // Number of dots
+                        effect: ExpandingDotsEffect(
+                          dotWidth: 10,
+                          dotHeight: 10,
+                          activeDotColor: Colors.deepPurpleAccent,  // Active dot color
+                          dotColor: Colors.white.withOpacity(0.5),  // Inactive dot color
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Spacer(),
-              IconButton(
-                icon: CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.person, color: Colors.deepPurpleAccent),
-                ),
-                onPressed: () {
-                  print('Profile button pressed');
-                },
-              ),
-              SizedBox(width: 16), // Add spacing to align properly
             ],
-          ),
-          SizedBox(height: 30), // Space between the header and cards
-          // Cards Section
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: _cards.length,
-              itemBuilder: (context, index) {
-                final card = _cards[index];
-                return _buildPageCard(card);
-              },
-            ),
           ),
         ],
       ),
@@ -105,82 +164,79 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
 
   Widget _buildPageCard(Map<String, dynamic> card) {
     return Center(
-      child: Stack(
-        alignment: Alignment.center, // Center all children inside the Stack
-        children: [
-          // Card Container
-          GestureDetector(
-            onTap: () => _onCardTapped(card['title']),
-            child: Transform.rotate(
-              angle: 0.05, // Slight tilt
-              child: Container(
-                width: MediaQuery.of(context).size.width * 0.8,
-                height: MediaQuery.of(context).size.height * 0.6,
-                decoration: BoxDecoration(
-                  color: card['color'],
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      offset: Offset(0, 4),
-                      blurRadius: 8,
-                    ),
-                  ],
-                  border: Border.all(color: Colors.white, width: 4),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(card['icon'], size: 100, color: Colors.white),
-                    SizedBox(height: 10),
-                    Text(
-                      card['title'],
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+      child: GestureDetector(
+        onTap: () => _onCardTapped(card['page']),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+          width: MediaQuery.of(context).size.width * 0.8,
+          height: MediaQuery.of(context).size.height * 0.6,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: card['color'].withOpacity(0.4),
+                blurRadius: 20,
+                offset: Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  card['image'],
+                  fit: BoxFit.cover,
                 ),
               ),
-            ),
-          ),
-          // Description with Animation
-          Positioned(
-            bottom: 50,
-            left: 30,
-            right: 30,
-            child: AnimatedOpacity(
-              opacity: 1.0,
-              duration: Duration(milliseconds: 500),
-              child: Container(
-                padding: EdgeInsets.all(16),
+              Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      offset: Offset(0, 4),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
-                child: Text(
-                  card['description'],
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: card['color'],
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withOpacity(0.4),
+                      Colors.black.withOpacity(0.1),
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
                   ),
                 ),
               ),
-            ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  
+                  SizedBox(height: 20),
+                  Text(
+                    
+                    card['title'],
+                    style: GoogleFonts.roboto(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      card['description'],
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.roboto(
+                        fontSize: 16,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
+

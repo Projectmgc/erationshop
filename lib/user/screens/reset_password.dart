@@ -46,11 +46,14 @@ class _Reset_PasswordState extends State<Reset_Password> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('asset/bggrains.jpg'), // Your background image
-            fit: BoxFit.cover,
-            opacity: 0.6,
-          ),
+          gradient: LinearGradient(
+                colors: [
+                  const Color.fromARGB(255, 245, 184, 93),
+                  const Color.fromARGB(255, 233, 211, 88),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),

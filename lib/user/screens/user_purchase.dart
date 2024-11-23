@@ -17,13 +17,13 @@ class UserPurchase extends StatefulWidget {
 class _UserPurchaseState extends State<UserPurchase> {
   // List of common products found in Indian Government ration shops
   final List<Product> products = [
-    Product(image: 'asset/rawrice.jpeg', name: 'Rice (5kg)', price: 20.0),
-    Product(image: 'asset/rice.jpeg', name: 'Wheat (5kg)', price: 15.0),
-    Product(image: 'asset/rice.jpeg', name: 'Sugar (1kg)', price: 25.0),
-    Product(image: 'asset/rice.jpeg', name: 'Cooking Oil (1L)', price: 50.0),
-    Product(image: 'asset/rice.jpeg', name: 'Salt (1kg)', price: 12.0),
-    Product(image: 'asset/rice.jpeg', name: 'Lentils (1kg)', price: 35.0),
-    Product(image: 'asset/rice.jpeg', name: 'Flour (5kg)', price: 40.0),
+    Product(image: 'asset/rawrice.jpeg', name: 'Raw Rice (1kg)', price: 2.0),
+    Product(image: 'asset/rice.jpeg', name: 'Rice (1kg)', price: 2.0),
+    Product(image: 'asset/wheat.jpeg', name: 'Wheat (1kg)', price: 5.0),
+    Product(image: 'asset/kerosine.jpeg', name: 'Kerosine (1L)', price: 50.0),
+    Product(image: 'asset/atta.jpeg', name: 'Atta (1kg)', price: 12.0),
+    Product(image: 'asset/sugar.jpeg', name: 'sugar (1kg)', price: 25.0),
+    
   ];
 
   // List to store cart items
@@ -53,6 +53,7 @@ class _UserPurchaseState extends State<UserPurchase> {
         backgroundColor: Colors.orangeAccent,
       ),
       body: Column(
+        
         children: [
           // Product List
           Expanded(

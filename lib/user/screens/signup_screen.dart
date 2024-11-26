@@ -177,7 +177,7 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                     filled: true,
                     fillColor: const Color.fromARGB(255, 225, 157, 68),
                     hoverColor: const Color.fromARGB(255, 2, 9, 49),
-                    hintText: 'Enter Password',
+                    hintText: 'Create Password',
                     prefixIcon: Icon(Icons.lock),
                     border: OutlineInputBorder(
                       borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),

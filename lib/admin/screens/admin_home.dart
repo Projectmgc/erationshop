@@ -78,6 +78,28 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     },
   ];
 
+  // Function to handle infinite scrolling
+  void _onPageChanged(int index) {
+    // Loop back to the first card when the last card is reached
+    if (index == _cards.length - 1) {
+      _pageController.jumpToPage(0); // Reset to first page
+    } else if (index == 0) {
+      _pageController.jumpToPage(_cards.length - 0); // Go to the second last page
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Add a listener to handle page changes
+    _pageController.addListener(() {
+      final page = _pageController.page?.toInt();
+      if (page != null) {
+        _onPageChanged(page);
+      }
+    });
+  }
+
   void _onCardTapped(Widget page) {
     Navigator.push(
       context,
@@ -151,9 +173,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     Expanded(
                       child: PageView.builder(
                         controller: _pageController,
-                        itemCount: _cards.length,
+                        itemCount: null, // Infinite pages
                         itemBuilder: (context, index) {
-                          final card = _cards[index];
+                          final card = _cards[index % _cards.length];
                           return _buildPageCard(card);
                         },
                       ),
@@ -258,4 +280,3 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 }
-

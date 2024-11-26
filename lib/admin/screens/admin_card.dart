@@ -5,7 +5,6 @@ class CardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Sample data for multiple users' ration cards
     final List<Map<String, dynamic>> rationCards = [
       {
         'name': 'John Doe',
@@ -58,7 +57,13 @@ class CardPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => CardDetailsPage(card: card),
+                    builder: (context) => CardDetailsPage(
+                      card: card,
+                      onRemoveCard: () {
+                        rationCards.removeAt(index);
+                        Navigator.pop(context);
+                      },
+                    ),
                   ),
                 );
               },
@@ -70,11 +75,17 @@ class CardPage extends StatelessWidget {
   }
 }
 
-class CardDetailsPage extends StatelessWidget {
+class CardDetailsPage extends StatefulWidget {
   final Map<String, dynamic> card;
+  final VoidCallback onRemoveCard;
 
-  const CardDetailsPage({required this.card, super.key});
+  const CardDetailsPage({required this.card, required this.onRemoveCard, super.key});
 
+  @override
+  State<CardDetailsPage> createState() => _CardDetailsPageState();
+}
+
+class _CardDetailsPageState extends State<CardDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,12 +123,12 @@ class CardDetailsPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Cardholder: ${card['name']}',
+                        'Cardholder: ${widget.card['name']}',
                         style: const TextStyle(fontSize: 18),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        'Card Number: ${card['cardNumber']}',
+                        'Card Number: ${widget.card['cardNumber']}',
                         style: const TextStyle(fontSize: 18),
                       ),
                     ],
@@ -133,9 +144,9 @@ class CardDetailsPage extends StatelessWidget {
             const SizedBox(height: 10),
             Expanded(
               child: ListView.builder(
-                itemCount: (card['familyMembers'] as List).length,
+                itemCount: (widget.card['familyMembers'] as List).length,
                 itemBuilder: (context, index) {
-                  final member = card['familyMembers'][index];
+                  final member = widget.card['familyMembers'][index];
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Colors.deepPurpleAccent,
@@ -143,6 +154,14 @@ class CardDetailsPage extends StatelessWidget {
                     ),
                     title: Text(member['name']),
                     subtitle: Text('ID: ${member['id']}'),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        setState(() {
+                          (widget.card['familyMembers'] as List).removeAt(index);
+                        });
+                      },
+                    ),
                   );
                 },
               ),
@@ -151,15 +170,14 @@ class CardDetailsPage extends StatelessWidget {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Manage ${card['name']}\`s Card')),
-                  );
+                  widget.onRemoveCard();
+                  Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurpleAccent,
+                  backgroundColor: Colors.red,
                   padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                 ),
-                child: const Text('Manage Card'),
+                child: const Text('Remove Card'),
               ),
             ),
           ],

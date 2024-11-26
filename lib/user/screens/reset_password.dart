@@ -1,7 +1,6 @@
 import 'package:erationshop/user/screens/login_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:google_fonts/google_fonts.dart' show GoogleFonts;
 
 class Reset_Password extends StatefulWidget {
   const Reset_Password({super.key});

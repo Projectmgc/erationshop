@@ -1,7 +1,12 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart'; // Import the package
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'owner_profile.dart';
+import 'owner_purchase.dart';
+import 'owner_outlet.dart';
+import 'owner_enquiry.dart';
+import 'owner_card.dart';
+import 'owner_notification.dart';
 
 class OwnerHomeScreen extends StatefulWidget {
   const OwnerHomeScreen({super.key});
@@ -19,42 +24,42 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       'color': Colors.lightBlueAccent,
       'description': 'Manage your personal details and preferences.',
       'image': 'asset/profile.jpg',
-      //'page': ProfilePage(), // Navigation target
+      'page': const ProfilePage(), // Navigation target
     },
     {
       'title': 'Purchase',
       'color': Colors.lightGreenAccent,
       'description': 'Keep track of available inventory and supplies.',
       'image': 'asset/purchase.jpg',
-      //'page': StockPage(), // Navigation target
+      'page': const PurchasePage(), // Navigation target
     },
     {
       'title': 'Outlet',
       'color': Colors.amberAccent,
       'description': 'Find and Analyse the Ration Outlets.',
       'image': 'asset/outlet.jpg',
-      //'page': SalesPage(), // Navigation target
+      'page': const OutletPage(), // Navigation target
     },
     {
       'title': 'Enquiry',
       'color': Colors.pinkAccent.shade100,
       'description': 'Address and Resolve Your Complaints.',
       'image': 'asset/enquiry.jpg',
-      //'page': ComplaintsPage(), // Navigation target
+      'page': const EnquiryPage(), // Navigation target
     },
     {
       'title': 'Card',
       'color': Colors.purpleAccent.shade100,
       'description': 'Manage Ration-Card related operations.',
       'image': 'asset/card.jpg',
-      //'page': CardPage(), // Navigation target
+      'page': const CardPage(), // Navigation target
     },
     {
       'title': 'Notification',
       'color': Colors.tealAccent,
-      'description': 'New Updations and Notifications are here.',
+      'description': 'New Updates and Notifications are here.',
       'image': 'asset/notification.jpg',
-      //'page': ConversePage(), // Navigation target
+      'page': const NotificationPage(), // Navigation target
     },
   ];
 
@@ -142,13 +147,13 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 20.0),
                       child: SmoothPageIndicator(
-                        controller: _pageController,  // Controller to sync with PageView
-                        count: _cards.length,  // Number of dots
+                        controller: _pageController, // Controller to sync with PageView
+                        count: _cards.length, // Number of dots
                         effect: ExpandingDotsEffect(
                           dotWidth: 10,
                           dotHeight: 10,
-                          activeDotColor: Colors.deepPurpleAccent,  // Active dot color
-                          dotColor: Colors.white.withOpacity(0.5),  // Inactive dot color
+                          activeDotColor: Colors.deepPurpleAccent, // Active dot color
+                          dotColor: Colors.white.withOpacity(0.5), // Inactive dot color
                         ),
                       ),
                     ),
@@ -207,10 +212,8 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
               Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  
                   SizedBox(height: 20),
                   Text(
-                    
                     card['title'],
                     style: GoogleFonts.roboto(
                       fontSize: 28,
@@ -239,4 +242,3 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
     );
   }
 }
-

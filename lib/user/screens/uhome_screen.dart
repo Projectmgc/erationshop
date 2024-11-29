@@ -19,13 +19,7 @@ class _UhomeScreenState extends State<UhomeScreen> {
   final PageController _pageController = PageController();
 
   final List<Map<String, dynamic>> _cards = [
-    {
-      'title': 'Profile',
-      'color': Colors.lightBlueAccent,
-      'description': 'Manage your personal details and preferences.',
-      'image': 'asset/profile.jpg',
-      'page': UserProfile(), // Navigation target
-    },
+    
     {
       'title': 'Purchase',
       'color': Colors.lightGreenAccent,

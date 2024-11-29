@@ -432,7 +432,7 @@ class BackgroundGradient extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.black
+        color: Color.fromARGB(255, 201, 155, 4)
         ),
       );
   }

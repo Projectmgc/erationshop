@@ -36,7 +36,7 @@ class _Login_ScreenState extends State<Login_Screen> {
       // If the form is valid, perform registration actions here
       Navigator.push(context, MaterialPageRoute(
         builder: (context) {
-          return Otp_Screen();
+          return OtpScreen();
         },
       ));
       
@@ -103,7 +103,7 @@ class _Login_ScreenState extends State<Login_Screen> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: const Color.fromARGB(255, 225, 157, 68),
-                    hoverColor: const Color.fromARGB(255, 2, 9, 49),
+                    
                     prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                     hintText: 'Enter Card No',
                     prefixIcon: Icon(Icons.book),
@@ -132,7 +132,6 @@ class _Login_ScreenState extends State<Login_Screen> {
                     suffixIconColor: const Color.fromARGB(198, 14, 1, 62),
                     filled: true,
                     fillColor: const Color.fromARGB(255, 225, 157, 68),
-                    hoverColor: const Color.fromARGB(255, 2, 9, 49),
                     hintText: 'Enter Password',
                     prefixIcon: Icon(Icons.lock),
                     border: OutlineInputBorder(

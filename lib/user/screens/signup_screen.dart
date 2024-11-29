@@ -30,7 +30,7 @@ class _Signup_ScreenState extends State<Signup_Screen> {
       // If the form is valid, perform registration actions here
       Navigator.push(context, MaterialPageRoute(
         builder: (context) {
-          return Otp_Screen();
+          return OtpScreen();
         },
       ));
       print("Name: ${name_controller.text}");

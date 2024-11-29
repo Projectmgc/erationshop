@@ -70,14 +70,86 @@ class _UserOutletState extends State<UserOutlet> {
     },
   ];
 
+  List<Map<String, dynamic>> filteredOutlets = [];
+  bool isSearchVisible = false;
+  TextEditingController searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    filteredOutlets = outlets; // Initially display all outlets
+  }
+
+  void _filterOutlets(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        filteredOutlets = outlets;
+      } else {
+        filteredOutlets = outlets
+            .where((outlet) =>
+                outlet['outletName'].toLowerCase().contains(query.toLowerCase()))
+            .toList();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Outlet Details'),
         backgroundColor: Color.fromARGB(255, 245, 184, 93),
+        elevation: 0,
+        actions: [
+          // Display search icon, which when clicked, expands to a search field
+          IconButton(
+            icon: Icon(isSearchVisible ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                isSearchVisible = !isSearchVisible;
+                if (!isSearchVisible) {
+                  searchController.clear();
+                  _filterOutlets('');
+                }
+              });
+            },
+          ),
+        ],
+        bottom: isSearchVisible
+            ? PreferredSize(
+                preferredSize: Size.fromHeight(60.0),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Container(
+                    padding: EdgeInsets.all(8.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(30.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 8.0,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: searchController,
+                      onChanged: _filterOutlets,
+                      style: TextStyle(fontSize: 18),
+                      decoration: InputDecoration(
+                        hintText: 'Search for a store...',
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            : null,
       ),
       body: Container(
+        // Ensures that the background covers the entire screen by using Expanded
+        height: double.infinity, // This ensures the container expands to fill the screen
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -93,7 +165,14 @@ class _UserOutletState extends State<UserOutlet> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              for (var outlet in outlets) _buildOutletCard(outlet),
+              if (filteredOutlets.isEmpty)
+                Center(
+                  child: Text(
+                    'No outlets found.',
+                    style: TextStyle(fontSize: 20, color: Colors.white),
+                  ),
+                ),
+              for (var outlet in filteredOutlets) _buildOutletCard(outlet),
             ],
           ),
         ),
@@ -186,5 +265,4 @@ class _UserOutletState extends State<UserOutlet> {
         ),
       ),
     );
-  }
-}
+  }}

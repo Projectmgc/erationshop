@@ -1,4 +1,5 @@
 import 'package:erationshop/user/screens/otp_screen.dart';
+import 'package:erationshop/user/services/User_firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -15,7 +16,7 @@ class _Signup_ScreenState extends State<Signup_Screen> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController name_controller = TextEditingController();
   TextEditingController card_controller = TextEditingController();
-  TextEditingController uid_controller = TextEditingController();
+  TextEditingController email_controller = TextEditingController();
   TextEditingController password_controller = TextEditingController();
   bool passwordVisible = true;
 
@@ -35,7 +36,6 @@ class _Signup_ScreenState extends State<Signup_Screen> {
       ));
       print("Name: ${name_controller.text}");
       print("Card No: ${card_controller.text}");
-      print("UID No: ${uid_controller.text}");
       print("Password: ${password_controller.text}");
     }
   }
@@ -45,17 +45,15 @@ class _Signup_ScreenState extends State<Signup_Screen> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          
-              gradient: LinearGradient(
-                colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-       
+          gradient: LinearGradient(
+            colors: [
+              const Color.fromARGB(255, 245, 184, 93),
+              const Color.fromARGB(255, 233, 211, 88),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
           child: Form(
@@ -96,17 +94,17 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                 TextFormField(
                   controller: name_controller,
                   decoration: InputDecoration(
-                    border :OutlineInputBorder(
-                      borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),
-                      borderRadius: BorderRadius.circular(10)
-                    ),
+                    border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            width: 2,
+                            color: const Color.fromARGB(255, 81, 50, 12)),
+                        borderRadius: BorderRadius.circular(10)),
                     hintText: "Enter card owner's name",
                     filled: true,
                     fillColor: const Color.fromARGB(255, 225, 157, 68),
                     hoverColor: const Color.fromARGB(255, 2, 9, 49),
                     prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                     prefixIcon: Icon(Icons.person),
-                    
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -128,9 +126,10 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                     hintText: 'Enter Card No',
                     prefixIcon: Icon(Icons.book),
                     border: OutlineInputBorder(
-                      borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),
-                      borderRadius: BorderRadius.circular(10)
-                    ),
+                        borderSide: BorderSide(
+                            width: 2,
+                            color: const Color.fromARGB(255, 81, 50, 12)),
+                        borderRadius: BorderRadius.circular(10)),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -143,26 +142,32 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                 ),
                 SizedBox(height: 20),
                 TextFormField(
-                  controller: uid_controller,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  controller: email_controller,
+                  keyboardType: TextInputType
+                      .emailAddress, // Ensures the keyboard is optimized for email input
                   decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        width: 2,
+                        color: const Color.fromARGB(255, 81, 50, 12),
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    hintText: "Enter your email address",
                     filled: true,
                     fillColor: const Color.fromARGB(255, 225, 157, 68),
                     hoverColor: const Color.fromARGB(255, 2, 9, 49),
                     prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
-                    hintText: 'Enter UID No',
-                    prefixIcon: Icon(Icons.credit_card_rounded),
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),
-                      borderRadius: BorderRadius.circular(10)
-                    ),
+                    prefixIcon: Icon(Icons.email),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return "Please enter the UID number";
-                    } else if (value.length != 12) {
-                      return "Card number must be 12 digits";
+                      return "Please enter your email address";
+                    }
+                    // Basic email validation using regex
+                    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                    if (!emailRegex.hasMatch(value)) {
+                      return "Please enter a valid email address";
                     }
                     return null;
                   },
@@ -180,9 +185,10 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                     hintText: 'Create Password',
                     prefixIcon: Icon(Icons.lock),
                     border: OutlineInputBorder(
-                      borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),
-                      borderRadius: BorderRadius.circular(10)
-                    ),
+                        borderSide: BorderSide(
+                            width: 2,
+                            color: const Color.fromARGB(255, 81, 50, 12)),
+                        borderRadius: BorderRadius.circular(10)),
                     suffixIcon: IconButton(
                       onPressed: () {
                         setState(() {
@@ -190,7 +196,9 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                         });
                       },
                       icon: Icon(
-                        passwordVisible ? Icons.visibility : Icons.visibility_off,
+                        passwordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                     ),
                   ),
@@ -198,7 +206,7 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                     if (value == null || value.isEmpty) {
                       return "Please enter a password";
                     } else if (value.length < 6) {
-                      return "Password must be at least 6 characters" ;
+                      return "Password must be at least 6 characters";
                     }
                     return null;
                   },
@@ -211,13 +219,13 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                     shadowColor: WidgetStatePropertyAll(
                         const Color.fromARGB(255, 62, 55, 5)),
                     elevation: WidgetStatePropertyAll(10.0),
-                    
                   ),
-                  onPressed: otpverification,
+                  onPressed: (){
+                    Auth_Services().User_Register(name: '', cardno: 344, email: 'email', password: 'password', context: context);
+                  },
                   child: Text(
                     'SIGN UP',
                     style: TextStyle(
-                        
                         color: const Color.fromARGB(255, 8, 6, 21),
                         fontWeight: FontWeight.bold),
                   ),
@@ -228,7 +236,11 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                   children: [
                     Text(
                       'Already sign up?',
-                      style: TextStyle(color: const Color.fromARGB(255, 1, 4, 21), fontWeight: FontWeight.bold,fontSize: 18,fontFamily: 'merriweather'),
+                      style: TextStyle(
+                          color: const Color.fromARGB(255, 1, 4, 21),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          fontFamily: 'merriweather'),
                     ),
                     TextButton(
                       onPressed: () {
@@ -236,7 +248,11 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                       },
                       child: Text(
                         'Login here',
-                        style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18,fontFamily: 'merriweather',color: const Color.fromARGB(255, 10, 1, 61)),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            fontFamily: 'merriweather',
+                            color: const Color.fromARGB(255, 10, 1, 61)),
                       ),
                     ),
                   ],

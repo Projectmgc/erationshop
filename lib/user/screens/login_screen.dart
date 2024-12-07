@@ -15,6 +15,8 @@ class Login_Screen extends StatefulWidget {
 class _Login_ScreenState extends State<Login_Screen> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController card_controller = TextEditingController();
+  TextEditingController email_controller = TextEditingController();
+
   TextEditingController password_controller = TextEditingController();
   bool passwordVisible = true;
 
@@ -122,7 +124,39 @@ class _Login_ScreenState extends State<Login_Screen> {
                   },
                 ),
                 SizedBox(height: 20),
+                 TextFormField(
+                  controller: email_controller,
+                  keyboardType: TextInputType
+                      .emailAddress, // Ensures the keyboard is optimized for email input
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        width: 2,
+                        color: const Color.fromARGB(255, 81, 50, 12),
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    hintText: "Enter your email address",
+                    filled: true,
+                    fillColor: const Color.fromARGB(255, 225, 157, 68),
+                    hoverColor: const Color.fromARGB(255, 2, 9, 49),
+                    prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
+                    prefixIcon: Icon(Icons.email),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Please enter your email address";
+                    }
+                    // Basic email validation using regex
+                    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                    if (!emailRegex.hasMatch(value)) {
+                      return "Please enter a valid email address";
+                    }
+                    return null;
+                  },
+                ),
                
+                SizedBox(height: 20),
                 
                 TextFormField(
                   controller: password_controller,

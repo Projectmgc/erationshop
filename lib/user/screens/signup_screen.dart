@@ -19,6 +19,7 @@ class _Signup_ScreenState extends State<Signup_Screen> {
   TextEditingController email_controller = TextEditingController();
   TextEditingController password_controller = TextEditingController();
   bool passwordVisible = true;
+  bool loading = false;
 
   void gotologin() {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
@@ -38,6 +39,20 @@ class _Signup_ScreenState extends State<Signup_Screen> {
       print("Card No: ${card_controller.text}");
       print("Password: ${password_controller.text}");
     }
+  }
+
+  void signp() async {
+    setState(() {
+      loading = true;
+    });
+    await Auth_Services().User_Register(
+        name: name_controller.text,
+        cardno: card_controller.text,
+        email: email_controller.text,
+        password: password_controller.text,
+        context: context);
+
+    loading = false;
   }
 
   @override
@@ -102,7 +117,6 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                     hintText: "Enter card owner's name",
                     filled: true,
                     fillColor: const Color.fromARGB(255, 225, 157, 68),
-                    hoverColor: const Color.fromARGB(255, 2, 9, 49),
                     prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                     prefixIcon: Icon(Icons.person),
                   ),
@@ -121,7 +135,6 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: const Color.fromARGB(255, 225, 157, 68),
-                    hoverColor: const Color.fromARGB(255, 2, 9, 49),
                     prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                     hintText: 'Enter Card No',
                     prefixIcon: Icon(Icons.book),
@@ -156,7 +169,6 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                     hintText: "Enter your email address",
                     filled: true,
                     fillColor: const Color.fromARGB(255, 225, 157, 68),
-                    hoverColor: const Color.fromARGB(255, 2, 9, 49),
                     prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                     prefixIcon: Icon(Icons.email),
                   ),
@@ -181,7 +193,6 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                     suffixIconColor: const Color.fromARGB(198, 14, 1, 62),
                     filled: true,
                     fillColor: const Color.fromARGB(255, 225, 157, 68),
-                    hoverColor: const Color.fromARGB(255, 2, 9, 49),
                     hintText: 'Create Password',
                     prefixIcon: Icon(Icons.lock),
                     border: OutlineInputBorder(
@@ -212,24 +223,24 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                   },
                 ),
                 SizedBox(height: 40),
-                ElevatedButton(
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStatePropertyAll(
-                        const Color.fromARGB(255, 225, 157, 68)),
-                    shadowColor: WidgetStatePropertyAll(
-                        const Color.fromARGB(255, 62, 55, 5)),
-                    elevation: WidgetStatePropertyAll(10.0),
-                  ),
-                  onPressed: (){
-                    Auth_Services().User_Register(name: '', cardno: 344, email: 'email', password: 'password', context: context);
-                  },
-                  child: Text(
-                    'SIGN UP',
-                    style: TextStyle(
-                        color: const Color.fromARGB(255, 8, 6, 21),
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
+                loading
+                    ? CircularProgressIndicator()
+                    : ElevatedButton(
+                        style: ButtonStyle(
+                          backgroundColor: WidgetStatePropertyAll(
+                              const Color.fromARGB(255, 225, 157, 68)),
+                          shadowColor: WidgetStatePropertyAll(
+                              const Color.fromARGB(255, 62, 55, 5)),
+                          elevation: WidgetStatePropertyAll(10.0),
+                        ),
+                        onPressed: signp,
+                        child: Text(
+                          'SIGN UP',
+                          style: TextStyle(
+                              color: const Color.fromARGB(255, 8, 6, 21),
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
                 SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

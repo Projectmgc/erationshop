@@ -20,7 +20,5 @@ Future<void> main() async {
 
   runApp(MaterialApp(debugShowCheckedModeBanner: false,home: Login_Screen()),);
 
-  runApp(MaterialApp(debugShowCheckedModeBanner: false,home: IntroPage()),);
-
 
 }

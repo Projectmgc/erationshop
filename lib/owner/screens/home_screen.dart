@@ -20,13 +20,6 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
 
   final List<Map<String, dynamic>> _cards = [
     {
-      'title': 'Profile',
-      'color': Colors.lightBlueAccent,
-      'description': 'Manage your personal details and preferences.',
-      'image': 'asset/profile.jpg',
-      'page': const ProfilePage(), // Navigation target
-    },
-    {
       'title': 'Purchase',
       'color': Colors.lightGreenAccent,
       'description': 'Keep track of available inventory and supplies.',
@@ -41,7 +34,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       'page': const OutletPage(), // Navigation target
     },
     {
-      'title': 'Enquiry',
+      'title': 'Connverse',
       'color': Colors.pinkAccent.shade100,
       'description': 'Address and Resolve Your Complaints.',
       'image': 'asset/enquiry.jpg',
@@ -59,7 +52,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       'color': Colors.tealAccent,
       'description': 'New Updates and Notifications are here.',
       'image': 'asset/notification.jpg',
-      'page': const NotificationPage(), // Navigation target
+      'page': const OwnerNotification(), // Navigation target
     },
   ];
 
@@ -67,6 +60,13 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => page),
+    );
+  }
+
+  void _goToProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ProfilePage()),
     );
   }
 
@@ -120,9 +120,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
                         backgroundColor: Colors.white,
                         child: Icon(Icons.person, color: Colors.deepPurpleAccent),
                       ),
-                      onPressed: () {
-                        print('Profile button pressed');
-                      },
+                      onPressed: _goToProfile, // Navigate to the profile screen
                     ),
                   ],
                 ),

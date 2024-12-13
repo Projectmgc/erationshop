@@ -12,7 +12,7 @@ class Auth_Services
 {
   final firebaseAuth= FirebaseAuth.instance;
   final firebaseDatabase = FirebaseFirestore.instance;
-  Future<void> User_Register({required String name, required int cardno,required String email, required String password,required BuildContext context} )
+  Future<void> User_Register({required String name, required String cardno,required String email, required String password,required BuildContext context} )
    async {
     try{
       final user =await firebaseAuth.createUserWithEmailAndPassword(email: email, password: password);
@@ -40,7 +40,7 @@ class Auth_Services
    Future<void> User_Login({
   required String email,
   required String password,
-  required int cardno,
+  required String cardno,
   required BuildContext context,
 }) async {
   try {
@@ -98,4 +98,4 @@ class Auth_Services
 
 
    
-  }
+ }

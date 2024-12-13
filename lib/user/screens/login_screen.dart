@@ -103,7 +103,6 @@ class _Login_ScreenState extends State<Login_Screen> {
                 SizedBox(height: 45),
                 TextFormField(
                   controller: card_controller,
-                  keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
                     filled: true,

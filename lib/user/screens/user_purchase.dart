@@ -141,12 +141,3 @@ class _UserPurchaseState extends State<UserPurchase> {
   }
 }
 
-void main() {
-  runApp(MaterialApp(
-    title: 'Ration Shop - User Purchase',
-    theme: ThemeData(
-      primarySwatch: Colors.blue,
-    ),
-    home: UserPurchase(),
-  ));
-}

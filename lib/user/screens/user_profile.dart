@@ -80,15 +80,15 @@ class UserProfile extends StatelessWidget {
                     SizedBox(height: 20),
 
                     // Aadhar Number with last digits masked
-                    _buildProfileTextField("Aadhar Number:", aadharNumber.replaceRange(0, 9, "**** ****")),
+                    _buildProfileTextField("Aadhar Number:", aadharNumber),
                     SizedBox(height: 20),
 
                     // Card Number with stars
-                    _buildProfileTextField("Card Number:", cardNumber.replaceRange(4, 12, '**** ****')),
+                    _buildProfileTextField("Card Number:", cardNumber),
                     SizedBox(height: 20),
 
                     // Mobile Number with stars
-                    _buildProfileTextField("Mobile Number:", mobileNumber.replaceRange(0, 8, '**** ****')),
+                    _buildProfileTextField("Mobile Number:", mobileNumber),
                     SizedBox(height: 20),
                   ],
                 ),

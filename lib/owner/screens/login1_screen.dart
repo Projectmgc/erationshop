@@ -1,5 +1,6 @@
 import 'package:erationshop/owner/screens/forgot1_passwrd.dart';
 import 'package:erationshop/owner/screens/otp1_screen.dart';
+import 'package:erationshop/owner/services/Owner_firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,9 +14,11 @@ class Login1_Screen extends StatefulWidget {
 
 class _Login1_ScreenState extends State<Login1_Screen> {
   final _formKey = GlobalKey<FormState>();
-  TextEditingController card_controller = TextEditingController();
+  TextEditingController shopid_controller = TextEditingController();
+  TextEditingController email_controller=TextEditingController();
   TextEditingController password_controller = TextEditingController();
   bool passwordVisible = true;
+  bool loading= false;
 
   void forgotpassword()
   {
@@ -37,6 +40,22 @@ class _Login1_ScreenState extends State<Login1_Screen> {
       ));
       
     }
+  }
+
+  void login()async{
+      setState(() {
+      loading = true; // Set loading to true while performing login
+    });
+
+        await Auth_Services().Owner_Login(
+      email: email_controller.text,
+      password: password_controller.text,
+      shopid: shopid_controller.text ,
+      context: context,
+    );
+
+    loading = false;
+    
   }
 
   @override
@@ -90,10 +109,34 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                   ),
                 ),
                 SizedBox(height: 45),
-             
-                SizedBox(height: 10),
                 TextFormField(
-                  controller: card_controller,
+                  controller: email_controller,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 81, 50, 12)),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    hintText: "Enter your email address",
+                    filled: true,
+                    fillColor: const Color.fromARGB(255, 225, 157, 68),
+                    prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
+                    prefixIcon: Icon(Icons.email),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Please enter your email address";
+                    }
+                    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                    if (!emailRegex.hasMatch(value)) {
+                      return "Please enter a valid email address";
+                    }
+                    return null;
+                  },
+                ),             
+                SizedBox(height: 20),
+                TextFormField(
+                  controller: shopid_controller,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
@@ -117,8 +160,8 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                     return null;
                   },
                 ),
-                SizedBox(height: 20),
                
+                SizedBox(height: 20),
                 
                 TextFormField(
                   controller: password_controller,
@@ -158,6 +201,7 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                 SizedBox(height: 10,),
                 TextButton(onPressed: forgotpassword, child: Text('Forgot password ?',style:TextStyle(color: const Color.fromARGB(255, 11, 8, 1),fontSize: 15,fontWeight: FontWeight.bold))),
                 SizedBox(height: 40),
+                loading ?CircularProgressIndicator():
                 ElevatedButton(
                   style: ButtonStyle(
                     backgroundColor: WidgetStatePropertyAll(
@@ -167,7 +211,7 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                     elevation: WidgetStatePropertyAll(10.0),
                     
                   ),
-                  onPressed: otpverification,
+                  onPressed: login,
                   child: Text(
                     'LOGIN',
                     style: TextStyle(

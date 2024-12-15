@@ -31,7 +31,7 @@ class Auth_Services{
         // Check if the stored card number matches the provided card number
         if (storedShopid == shopid) {
           // Proceed with the user data, for example:
-          print('Logged in user with card number: $storedShopid');
+          print('Logged in user with Shop id: $storedShopid');
 
           // Navigate to the home screen (or whichever screen you'd like)
           Navigator.pushReplacement(context, MaterialPageRoute(

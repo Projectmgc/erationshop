@@ -11,7 +11,7 @@ class PurchasePage extends StatefulWidget {
 class _PurchasePageState extends State<PurchasePage> {
   // Cart items list
   List<Product> cartItems = [];
-
+                        
   @override
   Widget build(BuildContext context) {
     return Scaffold(

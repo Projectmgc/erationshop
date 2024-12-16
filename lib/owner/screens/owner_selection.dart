@@ -17,7 +17,7 @@ class _StoreOwnerPageState extends State<StoreOwnerPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Store Owner - User Information"),
-        backgroundColor: Colors.green,
+        backgroundColor: const Color.fromARGB(255, 199, 158, 23),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -75,7 +75,7 @@ class _StoreOwnerPageState extends State<StoreOwnerPage> {
                 },
                 child: Text("Proceed to Purchase"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: const Color.fromARGB(255, 199, 168, 32),
                   padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                   textStyle: TextStyle(fontSize: 18),
                 ),

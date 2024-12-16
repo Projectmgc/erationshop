@@ -17,7 +17,7 @@ class _PurchasePageState extends State<PurchasePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Purchase Ration Products"),
-        backgroundColor: Colors.green,
+        backgroundColor: const Color.fromARGB(255, 175, 139, 40),
       ),
       body: Padding(
         padding: const EdgeInsets.all(10.0),
@@ -73,7 +73,7 @@ class _PurchasePageState extends State<PurchasePage> {
           );
         },
         child: Icon(Icons.shopping_cart),
-        backgroundColor: Colors.green,
+        backgroundColor: const Color.fromARGB(255, 184, 163, 46),
       ),
     );
   }
@@ -140,7 +140,7 @@ class ProductCard extends StatelessWidget {
                   '\₹${product.price}',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.green,
+                    color: const Color.fromARGB(255, 197, 174, 42),
                   ),
                 ),
                 SizedBox(height: 10),
@@ -150,7 +150,7 @@ class ProductCard extends StatelessWidget {
                     onAddToCart(product); // Call the callback to add product to cart
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: const Color.fromARGB(255, 192, 139, 26),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -200,7 +200,7 @@ class CartPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("Your Cart"),
-        backgroundColor: Colors.green,
+        backgroundColor: const Color.fromARGB(255, 201, 176, 37),
       ),
       body: cartItems.isEmpty
           ? Center(child: Text("Your cart is empty."))

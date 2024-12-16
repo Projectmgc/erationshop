@@ -51,7 +51,7 @@ class ProfilePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Profile Image Section
-                  Center(
+                  Center(         
                     child: CircleAvatar(
                       radius: 80,
                       backgroundImage: AssetImage('asset/profile_picture.jpg'), // Replace with your image path

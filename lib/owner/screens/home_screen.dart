@@ -1,3 +1,4 @@
+import 'package:erationshop/owner/screens/owner_selection.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -24,7 +25,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       'color': Colors.lightGreenAccent,
       'description': 'Keep track of available inventory and supplies.',
       'image': 'asset/purchase.jpg',
-      'page': const PurchasePage(), // Navigation target
+      'page': const StoreOwnerPage(), // Navigation target
     },
     {
       'title': 'Outlet',

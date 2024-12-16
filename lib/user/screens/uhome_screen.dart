@@ -6,7 +6,7 @@ import 'package:erationshop/user/screens/user_profile.dart';
 import 'package:erationshop/user/screens/user_purchase.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart'; // Import the package
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class UhomeScreen extends StatefulWidget {
   const UhomeScreen({super.key});
@@ -17,9 +17,7 @@ class UhomeScreen extends StatefulWidget {
 
 class _UhomeScreenState extends State<UhomeScreen> {
   final PageController _pageController = PageController();
-
   final List<Map<String, dynamic>> _cards = [
-    
     {
       'title': 'Purchase',
       'color': Colors.lightGreenAccent,
@@ -74,6 +72,23 @@ class _UhomeScreenState extends State<UhomeScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // Listen for page changes to enable looping
+    _pageController.addListener(() {
+      if (_pageController.position.pixels >= _pageController.position.maxScrollExtent ||
+          _pageController.position.pixels <= _pageController.position.minScrollExtent) {
+        // After reaching the last or first card, jump to the opposite end
+        if (_pageController.page == _cards.length - 1) {
+          _pageController.jumpToPage(0);
+        } else if (_pageController.page == 0) {
+          _pageController.jumpToPage(_cards.length - 1);
+        }
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
@@ -94,16 +109,14 @@ class _UhomeScreenState extends State<UhomeScreen> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-                                  SizedBox(height: 20),
-
+              SizedBox(height: 20),
               // Header Section with adjusted spacing and font size
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
                   children: [
                     ClipOval(
-                      child: 
-                      Image.asset(
+                      child: Image.asset(
                         'asset/logo.jpg',
                         width: 50,
                         height: 50,
@@ -132,36 +145,30 @@ class _UhomeScreenState extends State<UhomeScreen> {
                 ),
               ),
               SizedBox(height: 50), // Increased spacing from the top
+
               // Cards Section with PageView.builder
               Expanded(
-                child: Column(
-                  children: [
-                    // PageView Section
-                    Expanded(
-                      child: PageView.builder(
-                        controller: _pageController,
-                        itemCount: _cards.length,
-                        itemBuilder: (context, index) {
-                          final card = _cards[index];
-                          return _buildPageCard(card);
-                        },
-                      ),
-                    ),
-                    // Dot indicator (SmoothPageIndicator)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 20.0),
-                      child: SmoothPageIndicator(
-                        controller: _pageController,  // Controller to sync with PageView
-                        count: _cards.length,  // Number of dots
-                        effect: ExpandingDotsEffect(
-                          dotWidth: 10,
-                          dotHeight: 10,
-                          activeDotColor: Colors.deepPurpleAccent,  // Active dot color
-                          dotColor: Colors.white.withOpacity(0.5),  // Inactive dot color
-                        ),
-                      ),
-                    ),
-                  ],
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: null, // Infinite pages
+                  itemBuilder: (context, index) {
+                    final card = _cards[index % _cards.length]; // Looping
+                    return _buildPageCard(card);
+                  },
+                ),
+              ),
+              // Dot indicator (SmoothPageIndicator)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                child: SmoothPageIndicator(
+                  controller: _pageController, // Controller to sync with PageView
+                  count: _cards.length, // Number of dots
+                  effect: ExpandingDotsEffect(
+                    dotWidth: 10,
+                    dotHeight: 10,
+                    activeDotColor: Colors.deepPurpleAccent, // Active dot color
+                    dotColor: Colors.white.withOpacity(0.5), // Inactive dot color
+                  ),
                 ),
               ),
             ],

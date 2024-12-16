@@ -21,14 +21,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
   final List<Map<String, dynamic>> _cards = [
     {
-      'title': 'Profile',
-      'icon': Icons.person,
-      'color': Colors.lightBlueAccent,
-      'description': 'Manage your personal details and preferences.',
-      'image': 'asset/profile.jpg',
-      'page': ProfilePage(), // Navigation target
-    },
-    {
       'title': 'Stock',
       'icon': Icons.inventory,
       'color': Colors.lightGreenAccent,
@@ -107,6 +99,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
+  void _goToProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ProfilePage()), // Navigate to ProfilePage
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -157,9 +156,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                         backgroundColor: Colors.white,
                         child: Icon(Icons.person, color: Colors.deepPurpleAccent),
                       ),
-                      onPressed: () {
-                        print('Profile button pressed');
-                      },
+                      onPressed: _goToProfile, // Navigate to Profile screen
                     ),
                   ],
                 ),

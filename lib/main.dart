@@ -18,11 +18,7 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
 );
 
-<<<<<<< HEAD
   runApp(MaterialApp(debugShowCheckedModeBanner: false,home: AdminHomeScreen()),);
-=======
-  runApp(MaterialApp(debugShowCheckedModeBanner: false,home: OwnerHomeScreen()),);
->>>>>>> 37a3963564e9c9e4eac39d933ccb2a3a8a566cd4
 
 
 }

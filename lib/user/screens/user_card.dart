@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Ration Cards',
       theme: ThemeData(primarySwatch: Colors.deepPurple),
-      home: const UserCard(),
+      //home: const UserCard(),
     );
   }
 }

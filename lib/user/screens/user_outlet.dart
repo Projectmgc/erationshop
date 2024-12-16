@@ -1,20 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'User Outlet Details',
-      theme: ThemeData(),
-      initialRoute: '/',
-      home: UserOutlet(),
-    );
-  }
-}
 
 class UserOutlet extends StatefulWidget {
   @override
@@ -22,74 +7,28 @@ class UserOutlet extends StatefulWidget {
 }
 
 class _UserOutletState extends State<UserOutlet> {
-  List<Map<String, dynamic>> outlets = [
-    {
-      'outletName': 'Best Outlet',
-      'address': '123 Main Street, Cityville',
-      'phone': '(123) 456-7890',
-      'stock': [
-        {'item': 'Product A', 'quantity': '50', 'price': '30.0', 'image': 'asset/rawrice.jpeg'},
-        {'item': 'Product B', 'quantity': '20', 'price': '50.0', 'image': 'asset/rawrice.jpeg'},
-      ]
-    },
-    {
-      'outletName': 'Second Outlet',
-      'address': '456 Elm Street, Townsville',
-      'phone': '(234) 567-8901',
-      'stock': [
-        {'item': 'Product C', 'quantity': '100', 'price': '40.0', 'image': 'asset/rawrice.jpeg'},
-        {'item': 'Product D', 'quantity': '60', 'price': '60.0', 'image': 'asset/rawrice.jpeg'},
-      ]
-    },
-    {
-      'outletName': 'Third Outlet',
-      'address': '789 Pine Street, Villageburg',
-      'phone': '(345) 678-9012',
-      'stock': [
-        {'item': 'Product E', 'quantity': '30', 'price': '25.0', 'image': 'asset/rawrice.jpeg'},
-        {'item': 'Product F', 'quantity': '15', 'price': '70.0', 'image': 'asset/rawrice.jpeg'},
-      ]
-    },
-    {
-      'outletName': 'Fourth Outlet',
-      'address': '101 Maple Street, Countryside',
-      'phone': '(456) 789-0123',
-      'stock': [
-        {'item': 'Product G', 'quantity': '80', 'price': '35.0', 'image': 'asset/rawrice.jpeg'},
-        {'item': 'Product H', 'quantity': '90', 'price': '55.0', 'image': 'asset/rawrice.jpeg'},
-      ]
-    },
-    {
-      'outletName': 'Fifth Outlet',
-      'address': '202 Oak Street, Downtown',
-      'phone': '(567) 890-1234',
-      'stock': [
-        {'item': 'Product I', 'quantity': '40', 'price': '45.0', 'image': 'asset/rawrice.jpeg'},
-        {'item': 'Product J', 'quantity': '10', 'price': '80.0', 'image': 'asset/rawrice.jpeg'},
-      ]
-    },
-  ];
-
+  List<Map<String, dynamic>> allOutlets = [];
   List<Map<String, dynamic>> filteredOutlets = [];
-  bool isSearchVisible = false;
   TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    filteredOutlets = outlets; // Initially display all outlets
   }
 
+  // Function to filter outlets based on the search query
   void _filterOutlets(String query) {
+    final filtered = allOutlets.where((outlet) {
+      final outletName = outlet['outletName'].toLowerCase();
+      final ownerName = outlet['ownerName'].toLowerCase();
+      final address = outlet['address'].toLowerCase();
+      return outletName.contains(query.toLowerCase()) ||
+          ownerName.contains(query.toLowerCase()) ||
+          address.contains(query.toLowerCase());
+    }).toList();
+
     setState(() {
-      if (query.isEmpty) {
-        filteredOutlets = outlets;
-      } else {
-        filteredOutlets = outlets
-            .where((outlet) =>
-                outlet['outletName'].toLowerCase().contains(query.toLowerCase()))
-            .toList();
-      }
+      filteredOutlets = filtered;
     });
   }
 
@@ -100,56 +39,10 @@ class _UserOutletState extends State<UserOutlet> {
         title: Text('Outlet Details'),
         backgroundColor: Color.fromARGB(255, 245, 184, 93),
         elevation: 0,
-        actions: [
-          // Display search icon, which when clicked, expands to a search field
-          IconButton(
-            icon: Icon(isSearchVisible ? Icons.close : Icons.search),
-            onPressed: () {
-              setState(() {
-                isSearchVisible = !isSearchVisible;
-                if (!isSearchVisible) {
-                  searchController.clear();
-                  _filterOutlets('');
-                }
-              });
-            },
-          ),
-        ],
-        bottom: isSearchVisible
-            ? PreferredSize(
-                preferredSize: Size.fromHeight(60.0),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Container(
-                    padding: EdgeInsets.all(8.0),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(30.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 8.0,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: searchController,
-                      onChanged: _filterOutlets,
-                      style: TextStyle(fontSize: 18),
-                      decoration: InputDecoration(
-                        hintText: 'Search for a store...',
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                ),
-              )
-            : null,
       ),
       body: Container(
-        // Ensures that the background covers the entire screen by using Expanded
-        height: double.infinity, // This ensures the container expands to fill the screen
+        width: double.infinity, // Ensure the container takes up the full screen width
+        height: double.infinity, // Ensure the container takes up the full screen height
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -160,21 +53,82 @@ class _UserOutletState extends State<UserOutlet> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              if (filteredOutlets.isEmpty)
-                Center(
-                  child: Text(
-                    'No outlets found.',
-                    style: TextStyle(fontSize: 20, color: Colors.white),
+        child: Column(
+          children: [
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                controller: searchController,
+                onChanged: (query) {
+                  _filterOutlets(query); // Call filter function when user types
+                },
+                decoration: InputDecoration(
+                  labelText: 'Search by Store Name, Owner, or Address',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
                   ),
                 ),
-              for (var outlet in filteredOutlets) _buildOutletCard(outlet),
-            ],
-          ),
+              ),
+            ),
+            // StreamBuilder to fetch and display data from Firestore
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('Shop Owner')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  // Show loading indicator while waiting for data
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+
+                  // Handle error scenario
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
+
+                  // Handle no data found scenario
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return Center(child: Text('No outlets found'));
+                  }
+
+                  // Extract outlet details directly from Firestore documents
+                  List<Map<String, dynamic>> outlets = [];
+                  for (var doc in snapshot.data!.docs) {
+                    final shopOwnerData = doc.data() as Map<String, dynamic>;
+
+                    final outletName = shopOwnerData['store_name'] ?? 'N/A';
+                    final ownerName = shopOwnerData['name'] ?? 'N/A';
+                    final address = shopOwnerData['address'] ?? 'N/A';
+                    final phone = shopOwnerData['phone'] ?? 'N/A';
+                    final stock = shopOwnerData['stock'] ?? [];
+
+                    // Add the outlet data to the list
+                    outlets.add({
+                      'outletName': outletName,
+                      'ownerName': ownerName,
+                      'address': address,
+                      'phone': phone,
+                      'stock': stock,
+                    });
+                  }
+
+                  // Save all outlets and initially display all
+                  allOutlets = outlets;
+                  filteredOutlets = allOutlets;
+
+                  return ListView.builder(
+                    itemCount: filteredOutlets.length,
+                    itemBuilder: (context, index) {
+                      return _buildOutletCard(filteredOutlets[index]);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -193,6 +147,11 @@ class _UserOutletState extends State<UserOutlet> {
             Text(
               outlet['outletName'],
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'Owner: ${outlet['ownerName']}',
+              style: TextStyle(fontSize: 18),
             ),
             SizedBox(height: 10),
             Text(
@@ -222,7 +181,7 @@ class _UserOutletState extends State<UserOutlet> {
     );
   }
 
-  Widget _buildStockItemCard(Map<String, String> item) {
+  Widget _buildStockItemCard(Map<String, dynamic> item) {
     return Card(
       color: Colors.orange[50],
       margin: EdgeInsets.only(bottom: 10),
@@ -234,7 +193,7 @@ class _UserOutletState extends State<UserOutlet> {
             Row(
               children: [
                 Image.asset(
-                  item['image']!,
+                  item['image'] ?? 'asset/rawrice.jpeg', // Ensure an image path is provided
                   width: 60,
                   height: 60,
                   fit: BoxFit.cover,
@@ -244,7 +203,7 @@ class _UserOutletState extends State<UserOutlet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item['item']!,
+                      item['item'] ?? 'Item Name',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 5),
@@ -265,4 +224,5 @@ class _UserOutletState extends State<UserOutlet> {
         ),
       ),
     );
-  }}
+  }
+}

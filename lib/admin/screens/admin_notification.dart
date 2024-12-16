@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class AdminNotificationPage extends StatefulWidget {
@@ -8,25 +9,33 @@ class AdminNotificationPage extends StatefulWidget {
 }
 
 class _AdminNotificationPageState extends State<AdminNotificationPage> {
-  // List to store the notifications
-  final List<Map<String, String>> notifications = [];
-
   // Controllers for text fields
   final TextEditingController titleController = TextEditingController();
   final TextEditingController contentController = TextEditingController();
 
-  // Function to add notification to the list
-  void addNotification() {
+  // Firestore instance
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Function to add notification to Firestore
+  Future<void> addNotification() async {
     if (titleController.text.isNotEmpty && contentController.text.isNotEmpty) {
-      setState(() {
-        notifications.add({
+      try {
+        // Add notification data to Firestore 'Notifications' collection
+        await _firestore.collection('Notifications').add({
           'title': titleController.text,
           'content': contentController.text,
+          'timestamp': FieldValue.serverTimestamp(),
         });
-      });
-      // Clear the text fields after posting
-      titleController.clear();
-      contentController.clear();
+
+        // Clear the text fields after posting
+        titleController.clear();
+        contentController.clear();
+      } catch (e) {
+        // Show error if there is an issue with the Firestore operation
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to post notification: $e')),
+        );
+      }
     } else {
       // Show a simple validation error message if fields are empty
       ScaffoldMessenger.of(context).showSnackBar(
@@ -71,16 +80,38 @@ class _AdminNotificationPageState extends State<AdminNotificationPage> {
             const SizedBox(height: 32),
             // Display list of posted notifications
             Expanded(
-              child: ListView.builder(
-                itemCount: notifications.length,
-                itemBuilder: (context, index) {
-                  final notification = notifications[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: ListTile(
-                      title: Text(notification['title']!),
-                      subtitle: Text(notification['content']!),
-                    ),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: _firestore.collection('Notifications').orderBy('timestamp', descending: true).snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return const Center(child: Text('Error loading notifications.'));
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text('No notifications yet.'));
+                  }
+
+                  final notifications = snapshot.data!.docs;
+
+                  return ListView.builder(
+                    itemCount: notifications.length,
+                    itemBuilder: (context, index) {
+                      final notification = notifications[index];
+                      final title = notification['title'] ?? 'No Title';
+                      final content = notification['content'] ?? 'No Content';
+
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: ListTile(
+                          title: Text(title),
+                          subtitle: Text(content),
+                        ),
+                      );
+                    },
                   );
                 },
               ),

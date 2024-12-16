@@ -1,9 +1,11 @@
 import 'package:erationshop/user/screens/otp_screen.dart';
+import 'package:erationshop/user/screens/login_screen.dart';
 import 'package:erationshop/user/services/User_firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:erationshop/user/screens/login_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // For Firebase Authentication
+import 'package:cloud_firestore/cloud_firestore.dart'; // For Firestore
 
 class Signup_Screen extends StatefulWidget {
   const Signup_Screen({super.key});
@@ -21,38 +23,112 @@ class _Signup_ScreenState extends State<Signup_Screen> {
   bool passwordVisible = true;
   bool loading = false;
 
+  // Method to navigate to Login Screen
   void gotologin() {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
       return Login_Screen();
     }));
   }
 
+  // Method for OTP Verification (you can modify this if necessary)
   void otpverification() {
     if (_formKey.currentState!.validate()) {
-      // If the form is valid, perform registration actions here
+      Navigator.push(context, MaterialPageRoute(builder: (context) {
+        return OtpScreen();
+      }));
+    }
+  }
+
+  // Method to handle signup with Firebase Authentication and Firestore
+  void signp() async {
+    setState(() {
+      loading = true;
+    });
+
+    try {
+      // Check if card exists in the Firestore collection 'Card'
+      QuerySnapshot cardSnapshot = await FirebaseFirestore.instance
+          .collection('Card')
+          .where('card_no', isEqualTo: card_controller.text)
+          .get();
+
+      if (cardSnapshot.docs.isEmpty) {
+        setState(() {
+          loading = false;
+        });
+        // If no card is found, show an error message
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text("Error"),
+              content: Text("Card number does not exist!"),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text("OK"),
+                ),
+              ],
+            );
+          },
+        );
+        return; // Exit the function if card doesn't exist
+      }
+
+      // If the card exists, proceed with user authentication
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+        email: email_controller.text,
+        password: password_controller.text,
+      );
+
+      // After successful authentication, store the additional user details in Firestore
+      await FirebaseFirestore.instance.collection('User').doc(userCredential.user!.uid).set({
+        'name': name_controller.text,
+        'card_id': cardSnapshot.docs.first.id, // Store the card ID from the Card collection
+        'email': email_controller.text,
+      });
+
+      setState(() {
+        loading = false;
+      });
+
+      // After successful signup, navigate to OTP screen
       Navigator.push(context, MaterialPageRoute(
         builder: (context) {
           return OtpScreen();
         },
       ));
+
       print("Name: ${name_controller.text}");
       print("Card No: ${card_controller.text}");
-      print("Password: ${password_controller.text}");
+      print("Email: ${email_controller.text}");
+
+    } catch (e) {
+      setState(() {
+        loading = false;
+      });
+      // Show error message if something went wrong during the signup process
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Error"),
+            content: Text(e.toString()),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text("OK"),
+              ),
+            ],
+          );
+        },
+      );
     }
-  }
-
-  void signp() async {
-    setState(() {
-      loading = true;
-    });
-    await Auth_Services().User_Register(
-        name: name_controller.text,
-        cardno: card_controller.text,
-        email: email_controller.text,
-        password: password_controller.text,
-        context: context);
-
-    loading = false;
   }
 
   @override
@@ -156,8 +232,7 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                 SizedBox(height: 20),
                 TextFormField(
                   controller: email_controller,
-                  keyboardType: TextInputType
-                      .emailAddress, // Ensures the keyboard is optimized for email input
+                  keyboardType: TextInputType.emailAddress, // Ensures the keyboard is optimized for email input
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderSide: BorderSide(
@@ -227,11 +302,11 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                     ? CircularProgressIndicator()
                     : ElevatedButton(
                         style: ButtonStyle(
-                          backgroundColor: WidgetStatePropertyAll(
+                          backgroundColor: MaterialStateProperty.all(
                               const Color.fromARGB(255, 225, 157, 68)),
-                          shadowColor: WidgetStatePropertyAll(
+                          shadowColor: MaterialStateProperty.all(
                               const Color.fromARGB(255, 62, 55, 5)),
-                          elevation: WidgetStatePropertyAll(10.0),
+                          elevation: MaterialStateProperty.all(10.0),
                         ),
                         onPressed: signp,
                         child: Text(
@@ -246,7 +321,7 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Already sign up?',
+                      'Already signed up?',
                       style: TextStyle(
                           color: const Color.fromARGB(255, 1, 4, 21),
                           fontWeight: FontWeight.bold,

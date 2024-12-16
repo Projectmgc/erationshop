@@ -1,5 +1,8 @@
-import 'package:erationshop/user/screens/login_screen.dart';
+import 'package:erationshop/admin/screens/admin_login.dart';
+import 'package:erationshop/owner/screens/login1_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:erationshop/user/screens/login_screen.dart';
+
 class IntroPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -19,20 +22,27 @@ class _SplashScreenState extends State<SplashScreen> {
   // To track which card should be shown
   int _currentCardIndex = 0;
 
-  // List of card titles/content
+  // List of card titles/content related to e-ration shop theme
   final List<String> cardContents = [
-    'This is Card 1',
-    'This is Card 2',
-    'This is Card 3',
+    'Welcome to the E-Ration Shop!',
+    'Experience the real ration buying feeling online, we have everything you need at your fingertips.',
+    'No need to worry about your ration; we’ve got you covered with ordering monthly rations and ration card updates.',
   ];
 
-  // Controller for the PageView for smooth card transitions
+  // List of image paths corresponding to each card
+  final List<String> cardImages = [
+    'asset/bggrains.jpg',
+    'asset/bggrains.jpg',
+    'asset/bggrains.jpg',
+  ];
+
+  // Controller for smooth card transitions
   PageController _pageController = PageController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue, // Splash screen background color
+      backgroundColor: const Color.fromARGB(255, 206, 179, 29), // Splash screen background color
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -47,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 });
               },
               itemBuilder: (context, index) {
-                return _buildCard(cardContents[index]);
+                return _buildCard(cardContents[index], cardImages[index]);
               },
             ),
           ),
@@ -93,25 +103,73 @@ class _SplashScreenState extends State<SplashScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      _navigateToLoginPage(); // After the last card, go to the Login Page
+      _showUserTypeDialog(); // Show the user type dialog after the last card
     }
   }
 
   // Function to skip the onboarding and navigate to the Login page
   void _skipToLogin() {
-    _navigateToLoginPage();
+    _showUserTypeDialog();
   }
 
-  // Function to navigate to the Login page
-  void _navigateToLoginPage() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => Login_Screen()),
+  // Function to show the dialog for selecting user type
+  void _showUserTypeDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Select User Type'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _userTypeButton('Admin', _navigateToAdmin),
+              _userTypeButton('Owner', _navigateToOwner),
+              _userTypeButton('Client', _navigateToCustomer),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  // Widget to build a card
-  Widget _buildCard(String text) {
+  // Function to create a button for selecting user type
+  Widget _userTypeButton(String userType, Function onPressed) {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.pop(context); // Close the dialog immediately
+        onPressed(); // Navigate to respective page
+      },
+      child: Text(userType),
+      style: ElevatedButton.styleFrom(
+        padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+        textStyle: TextStyle(fontSize: 18),
+      ),
+    );
+  }
+
+  // Function to navigate to the Admin page
+  void _navigateToAdmin() {
+    Navigator.push(context,MaterialPageRoute(builder: (context){
+      return Admin_Login();
+      }));
+  }
+
+  // Function to navigate to the Owner page
+  void _navigateToOwner() {
+    Navigator.push(context,MaterialPageRoute(builder: (context){
+      return Login1_Screen();
+      }));
+  }
+
+  // Function to navigate to the Customer page
+  void _navigateToCustomer() {
+    Navigator.push(context,MaterialPageRoute(builder: (context){
+      return Login_Screen();
+      }));
+  }
+
+  // Widget to build a card with the image as the background covering the entire card
+  Widget _buildCard(String text, String cardImage) {
     return Card(
       margin: EdgeInsets.symmetric(vertical: 20, horizontal: 40),
       elevation: 10,
@@ -119,19 +177,29 @@ class _SplashScreenState extends State<SplashScreen> {
         borderRadius: BorderRadius.circular(15), // Rounded corners for the card
       ),
       child: Container(
-        padding: EdgeInsets.all(30),
+        // Set image as background for the card
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(15),
-          color: Colors.white,
+          borderRadius: BorderRadius.circular(15), // Rounded corners for the background
+          image: DecorationImage(
+            image: AssetImage(cardImage), // Set image as background
+            fit: BoxFit.cover, // Cover the entire card
+          ),
         ),
-        child: Center(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 24, // Larger text size for visibility
-              fontWeight: FontWeight.bold,
-              color: Colors.blue, // Text color
-            ),
+        child: Padding(
+          padding: EdgeInsets.all(30),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                text,
+                style: TextStyle(
+                  fontSize: 24, // Larger text size for visibility
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white, // Text color for contrast
+                ),
+                textAlign: TextAlign.center, // Center the text
+              ),
+            ],
           ),
         ),
       ),

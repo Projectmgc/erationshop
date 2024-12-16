@@ -35,9 +35,7 @@ class _Login_ScreenState extends State<Login_Screen> {
       context: context,
     );
 
-    setState(() {
       loading = false; // Set loading to false after login attempt
-    });
   }
 
   void forgotpassword() {
@@ -192,6 +190,7 @@ class _Login_ScreenState extends State<Login_Screen> {
                   ),
                 ),
                 SizedBox(height: 40),
+                loading ? CircularProgressIndicator():
                 ElevatedButton(
                   style: ButtonStyle(
                     backgroundColor: WidgetStatePropertyAll(const Color.fromARGB(255, 225, 157, 68)),

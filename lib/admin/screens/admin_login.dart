@@ -1,5 +1,6 @@
 import 'package:erationshop/admin/screens/admin_forgot.dart';
 import 'package:erationshop/admin/screens/admin_otp.dart';
+import 'package:erationshop/admin/services/Admin_firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,19 +14,32 @@ class Admin_Login extends StatefulWidget {
 
 class _Admin_LoginState extends State<Admin_Login> {
   final _formKey = GlobalKey<FormState>();
-  TextEditingController card_controller = TextEditingController();
+  TextEditingController email_controller = TextEditingController();
   TextEditingController password_controller = TextEditingController();
   bool passwordVisible = true;
+  bool loading = false;
 
-  void forgotpassword()
-  {
-    Navigator.push(context, MaterialPageRoute(builder: (context){
+  void login() async {
+    setState(() {
+      loading = true;
+    });
+
+    await Auth_Services().Admin_Login(
+      email: email_controller.text,
+      password: password_controller.text,
+      context: context,
+    );
+
+    setState(() {
+      loading = false;
+    });
+  }
+
+  void forgotpassword() {
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
       return Admin_Forgot();
     }));
   }
-
- 
-  
 
   void otpverification() {
     if (_formKey.currentState!.validate()) {
@@ -35,7 +49,6 @@ class _Admin_LoginState extends State<Admin_Login> {
           return Admin_Otp();
         },
       ));
-      
     }
   }
 
@@ -45,13 +58,13 @@ class _Admin_LoginState extends State<Admin_Login> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-                colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+            colors: [
+              const Color.fromARGB(255, 245, 184, 93),
+              const Color.fromARGB(255, 233, 211, 88),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
@@ -90,36 +103,35 @@ class _Admin_LoginState extends State<Admin_Login> {
                   ),
                 ),
                 SizedBox(height: 45),
-             
+
                 SizedBox(height: 10),
+                // Changed 'Admin Id' to 'Email Id'
                 TextFormField(
-                  controller: card_controller,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  controller: email_controller,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: const Color.fromARGB(255, 225, 157, 68),
                     hoverColor: const Color.fromARGB(255, 2, 9, 49),
                     prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
-                    hintText: 'Enter Admin Id',
-                    prefixIcon: Icon(Icons.book),
+                    hintText: 'Enter Email Id',
+                    prefixIcon: Icon(Icons.email),
                     border: OutlineInputBorder(
-                      borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),
-                      borderRadius: BorderRadius.circular(10)
+                      borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 81, 50, 12)),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return "Please enter the  correct store id";
-                    } else if (value.length != 5) {
-                      return "Store Id must be 5 digits";
+                      return "Please enter the email id";
+                    } else if (!RegExp(r"^[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(value)) {
+                      return "Please enter a valid email";
                     }
                     return null;
                   },
                 ),
                 SizedBox(height: 20),
-               
-                
+
                 TextFormField(
                   controller: password_controller,
                   obscureText: passwordVisible,
@@ -132,8 +144,8 @@ class _Admin_LoginState extends State<Admin_Login> {
                     hintText: 'Enter Password',
                     prefixIcon: Icon(Icons.lock),
                     border: OutlineInputBorder(
-                      borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),
-                      borderRadius: BorderRadius.circular(10)
+                      borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 81, 50, 12)),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     suffixIcon: IconButton(
                       onPressed: () {
@@ -156,29 +168,23 @@ class _Admin_LoginState extends State<Admin_Login> {
                   },
                 ),
                 SizedBox(height: 10,),
-                TextButton(onPressed: forgotpassword, child: Text('Forgot password ?',style:TextStyle(color: const Color.fromARGB(255, 11, 8, 1),fontSize: 15,fontWeight: FontWeight.bold))),
+                TextButton(onPressed: forgotpassword, child: Text('Forgot password ?', style: TextStyle(color: const Color.fromARGB(255, 11, 8, 1), fontSize: 15, fontWeight: FontWeight.bold))),
                 SizedBox(height: 40),
                 ElevatedButton(
                   style: ButtonStyle(
-                    backgroundColor: WidgetStatePropertyAll(
-                        const Color.fromARGB(255, 225, 157, 68)),
-                    shadowColor: WidgetStatePropertyAll(
-                        const Color.fromARGB(255, 62, 55, 5)),
+                    backgroundColor: WidgetStatePropertyAll(const Color.fromARGB(255, 225, 157, 68)),
+                    shadowColor: WidgetStatePropertyAll(const Color.fromARGB(255, 62, 55, 5)),
                     elevation: WidgetStatePropertyAll(10.0),
-                    
                   ),
-                  onPressed: otpverification,
+                  onPressed: login,
                   child: Text(
                     'LOGIN',
                     style: TextStyle(
-                        
                         color: const Color.fromARGB(255, 8, 6, 21),
                         fontWeight: FontWeight.bold),
                   ),
                 ),
                 SizedBox(height: 10),
-                
-                
               ],
             ),
           ),

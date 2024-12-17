@@ -1,23 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Ration Cards',
-      theme: ThemeData(primarySwatch: Colors.deepPurple),
-      //home: const UserCard(),
-    );
-  }
-}
-
 class UserCard extends StatelessWidget {
   const UserCard({super.key});
 

@@ -53,7 +53,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       'color': Colors.tealAccent,
       'description': 'New Updates and Notifications are here.',
       'image': 'asset/notification.jpg',
-      'page': const OwnerNotification(), // Navigation target
+      'page': OwnerNotification(), // Navigation target
     },
   ];
 

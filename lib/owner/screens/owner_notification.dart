@@ -1,117 +1,50 @@
-/*import 'package:flutter/material.dart';
-
-class NotificationPage extends StatelessWidget {
-  const NotificationPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Notification")),
-      body: Center(child: Text("Notification Page")),
-    );
-  }
-}
-*/
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class OwnerNotification extends StatefulWidget {
-  const OwnerNotification({super.key});
-
-  @override
-  _OwnerNotificationState createState() => _OwnerNotificationState();
-}
-
-class _OwnerNotificationState extends State<OwnerNotification> {
-  // Define a list of notifications with title and content
-  List<NotificationItem> notifications = [
-    NotificationItem(
-      title: 'New Item available in stores',
-      content: 'new item available in stores ',
-    ),
-    
-    NotificationItem(
-      title: 'Application Update Available',
-      content: 'A new Application update is ready to install. Update now!',
-    ),
-  ];
-
-  // Toggle expansion of content for each notification
-  void toggleExpansion(int index) {
-    setState(() {
-      notifications[index].isExpanded = !notifications[index].isExpanded;
-    });
-  }
+class OwnerNotification extends StatelessWidget {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 245, 184, 93),
       appBar: AppBar(
-        title: const Text("Notification"),
-        backgroundColor: const Color.fromARGB(255, 245, 184, 93),
-        elevation: 0,
+        title: const Text("Notifications"),
       ),
-      body: ListView.builder(
-        itemCount: notifications.length,
-        itemBuilder: (context, index) {
-          final notification = notifications[index];
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _firestore
+            .collection('Notifications')
+            .orderBy('timestamp', descending: true)  // Order by timestamp descending
+            .snapshots(),
+        builder: (context, snapshot) {
+          // Loading state
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
 
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-            decoration: BoxDecoration(
-              color: Color.fromARGB(255, 182, 229, 238),  // Standard background color for the notification item
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                ),
-              ],
-            ),
-            child: InkWell(
-              onTap: () => toggleExpansion(index),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ListTile(
-                    title: Text(
-                      notification.title,
-                      style: const TextStyle(
-                        fontFamily: 'Roboto', // Custom font, you can change this to any other font family
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Color.fromARGB(255, 56, 46, 2), // Set title text color to black for readability
-                      ),
-                    ),
-                    trailing: Icon(
-                      notification.isExpanded
-                          ? Icons.expand_less
-                          : Icons.expand_more,
-                      color: const Color.fromARGB(255, 56, 40, 2), // Icon color
-                    ),
-                  ),
-                  AnimatedCrossFade(
-                    firstChild: SizedBox.shrink(),
-                    secondChild: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        notification.content,
-                        style: const TextStyle(
-                          color: Colors.black, // Text color for content
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    crossFadeState: notification.isExpanded
-                        ? CrossFadeState.showSecond
-                        : CrossFadeState.showFirst,
-                    duration: const Duration(milliseconds: 300),
-                  ),
-                ],
-              ),
-            ),
+          // Error state
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          // No data state
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(child: Text('No Notifications'));
+          }
+
+          // Getting the list of notifications
+          var notifications = snapshot.data!.docs;
+
+          return ListView.builder(
+            padding: EdgeInsets.all(16.0),
+            itemCount: notifications.length,
+            itemBuilder: (context, index) {
+              var notification = notifications[index];
+              return NotificationCard(
+                title: notification['title'],
+                content: notification['content'],
+                timestamp: notification['timestamp'],
+              );
+            },
           );
         },
       ),
@@ -119,15 +52,54 @@ class _OwnerNotificationState extends State<OwnerNotification> {
   }
 }
 
-// Model class for notification item
-class NotificationItem {
+class NotificationCard extends StatelessWidget {
   final String title;
   final String content;
-  bool isExpanded;
+  final Timestamp timestamp;
 
-  NotificationItem({
+  NotificationCard({
     required this.title,
     required this.content,
-    this.isExpanded = false,
+    required this.timestamp,
   });
+
+  @override
+  Widget build(BuildContext context) {
+    DateTime dateTime = timestamp.toDate();
+    String formattedDate =
+        "${dateTime.day} ${dateTime.month} ${dateTime.year} at ${dateTime.hour}:${dateTime.minute}:${dateTime.second} UTC";
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(content),
+            SizedBox(height: 8),
+            Text(
+              "Sent on: $formattedDate",
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

@@ -44,6 +44,19 @@ class _AdminNotificationPageState extends State<AdminNotificationPage> {
     }
   }
 
+  // Function to delete a notification
+  Future<void> deleteNotification(String notificationId) async {
+    try {
+      // Delete the notification from Firestore
+      await _firestore.collection('Notifications').doc(notificationId).delete();
+    } catch (e) {
+      // Show error if there is an issue with the Firestore operation
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete notification: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,7 +94,10 @@ class _AdminNotificationPageState extends State<AdminNotificationPage> {
             // Display list of posted notifications
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
-                stream: _firestore.collection('Notifications').orderBy('timestamp', descending: true).snapshots(),
+                stream: _firestore
+                    .collection('Notifications')
+                    .orderBy('timestamp', descending: true)
+                    .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -101,6 +117,7 @@ class _AdminNotificationPageState extends State<AdminNotificationPage> {
                     itemCount: notifications.length,
                     itemBuilder: (context, index) {
                       final notification = notifications[index];
+                      final notificationId = notification.id; // Get the notification ID
                       final title = notification['title'] ?? 'No Title';
                       final content = notification['content'] ?? 'No Content';
 
@@ -109,6 +126,36 @@ class _AdminNotificationPageState extends State<AdminNotificationPage> {
                         child: ListTile(
                           title: Text(title),
                           subtitle: Text(content),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              // Confirm before deleting
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: const Text('Delete Notification'),
+                                    content: const Text('Are you sure you want to delete this notification?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text('Cancel'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () async {
+                                          await deleteNotification(notificationId);
+                                          Navigator.pop(context); // Close the dialog
+                                        },
+                                        child: const Text('Delete'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          ),
                         ),
                       );
                     },

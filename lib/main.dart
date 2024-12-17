@@ -10,6 +10,7 @@ import 'package:erationshop/user/screens/otp_screen.dart';
 import 'package:erationshop/user/screens/reset_password.dart';
 import 'package:erationshop/user/screens/signup_screen.dart';
 import 'package:erationshop/user/screens/uhome_screen.dart';
+import 'package:erationshop/user/screens/user_notification.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -18,7 +19,7 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
 );
 
-  runApp(MaterialApp(debugShowCheckedModeBanner: false,home: AdminHomeScreen()),);
+  runApp(MaterialApp(debugShowCheckedModeBanner: false,home: OwnerHomeScreen()),);
 
 
 }

@@ -51,7 +51,7 @@ class _UhomeScreenState extends State<UhomeScreen> {
       'color': Colors.tealAccent,
       'description': 'New Updations and Notifications are here.',
       'image': 'asset/notification.jpg',
-      'page': UserNotification(), // Navigation target
+      'page': NotificationsPage(), // Navigation target
     },
   ];
 

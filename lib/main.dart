@@ -1,3 +1,4 @@
+import 'package:erationshop/admin/screens/admin_complaint.dart';
 import 'package:erationshop/admin/screens/admin_home.dart';
 import 'package:erationshop/admin/screens/admin_login.dart';
 import 'package:erationshop/firebase_options.dart';
@@ -29,7 +30,7 @@ Future<void> main() async {
 
   card_no =prefs.getString('card_no');
 
-  runApp(MaterialApp(debugShowCheckedModeBanner: false,home: Login_Screen()),);
+  runApp(MaterialApp(debugShowCheckedModeBanner: false,home: AdminHomeScreen()),);
 
 
 }

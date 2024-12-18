@@ -102,6 +102,7 @@ void login() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -117,7 +118,7 @@ void login() async {
           padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
           child: Form(
             key: _formKey,
-            child: Column(
+            child: ListView(
               children: [
                 SizedBox(height: 80),
                 Row(
@@ -260,13 +261,17 @@ void login() async {
                   children: [
                     Text(
                       "Don't have an account?",
-                      style: TextStyle(color: const Color.fromARGB(255, 1, 4, 21), fontWeight: FontWeight.bold, fontSize: 18),
+                      style: TextStyle(color: const Color.fromARGB(255, 1, 4, 21), fontWeight: FontWeight.bold, fontSize: 16),
                     ),
-                    TextButton(
-                      onPressed: gotosignup,
-                      child: Text(
-                        'SignUp here',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: const Color.fromARGB(255, 10, 1, 61)),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: gotosignup,
+                        child: Text(
+                          'SignUp here',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: const Color.fromARGB(255, 10, 1, 61)),
+                        ),
                       ),
                     ),
                   ],

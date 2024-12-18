@@ -1,10 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:erationshop/user/screens/forgot_password.dart';
 import 'package:erationshop/user/screens/otp_screen.dart';
 import 'package:erationshop/user/screens/signup_screen.dart';
+import 'package:erationshop/user/screens/uhome_screen.dart';
 import 'package:erationshop/user/services/User_firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login_Screen extends StatefulWidget {
   const Login_Screen({super.key});
@@ -22,21 +25,69 @@ class _Login_ScreenState extends State<Login_Screen> {
   bool loading = false;
 
   // This function will handle the login process
-  void login() async {
-    setState(() {
-      loading = true; // Set loading to true while performing login
-    });
+ // This function will handle the login process
+void login() async {
+  setState(() {
+    loading = true; // Set loading to true while performing login
+  });
 
-    // Call the User_Login method from Auth_Services
-    await Auth_Services().User_Login(
-      email: email_controller.text,
-      password: password_controller.text,
-      cardno: card_controller.text ,
-      context: context,
+  // Fetch the email, password, and card number entered by the user
+  String email = email_controller.text;
+  String password = password_controller.text;
+  String cardno = card_controller.text;
+
+  try {
+    // Fetch the User document based on card number
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    QuerySnapshot userSnapshot = await firestore
+        .collection('User')
+        .where('card_no', isEqualTo: cardno)
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+        print(userSnapshot.docs.length);
+
+    if (userSnapshot.docs.isNotEmpty) {
+    
+      // User with the given card number and email exists
+      var userDoc = userSnapshot.docs.first;
+
+      // Check if the password matches (assuming it's stored as plain text or you have a hashing mechanism)
+      if (userDoc['password'] == password) { 
+        // If password matches, store the card number in SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setString('card_no', cardno);
+         print("object");  // Save the card number in SharedPreferences
+
+        // Navigate to the next screen (UhomeScreen in this case)
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => UhomeScreen()), // Replace 'UhomeScreen' with your next page
+        );
+      } else {
+        // If password doesn't match, show an error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Incorrect password')),
+        );
+      }
+    } else {
+      // If no user is found with the given card number and email, show an error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Card number or email does not exist')),
+      );
+    }
+  } catch (e) {
+    print(e);
+    // Handle errors, if any
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('An error occurred: $e')),
     );
-
-      loading = false; // Set loading to false after login attempt
   }
+
+  setState(() {
+    loading = false; // Set loading to false after login attempt
+  });
+}
 
   void forgotpassword() {
     // Navigate to Forgot Password Screen

@@ -4,6 +4,7 @@ import 'package:erationshop/firebase_options.dart';
 import 'package:erationshop/intro/screens/firstscreen.dart';
 import 'package:erationshop/owner/screens/home_screen.dart';
 import 'package:erationshop/owner/screens/login1_screen.dart';
+import 'package:erationshop/owner/screens/owner_selection.dart';
 import 'package:erationshop/user/screens/forgot_password.dart';
 import 'package:erationshop/user/screens/login_screen.dart';
 import 'package:erationshop/user/screens/otp_screen.dart';
@@ -19,7 +20,7 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
 );
 
-  runApp(MaterialApp(debugShowCheckedModeBanner: false,home: OwnerHomeScreen()),);
+  runApp(MaterialApp(debugShowCheckedModeBanner: false,home: StoreOwnerPage()),);
 
 
-}
+}                              

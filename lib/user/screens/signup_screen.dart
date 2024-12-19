@@ -40,96 +40,104 @@ class _Signup_ScreenState extends State<Signup_Screen> {
   }
 
   // Method to handle signup with Firebase Authentication and Firestore
-  void signp() async {
-    setState(() {
-      loading = true;
-    });
+ void signp() async {
+  setState(() {
+    loading = true;
+  });
 
-    try {
-      // Check if card exists in the Firestore collection 'Card'
-      QuerySnapshot cardSnapshot = await FirebaseFirestore.instance
-          .collection('Card')
-          .where('card_no', isEqualTo: card_controller.text)
-          .get();
+  try {
+    // Check if card exists in the User collection
+    QuerySnapshot userSnapshot = await FirebaseFirestore.instance
+        .collection('User')
+        .where('card_no', isEqualTo: card_controller.text)
+        .limit(1)
+        .get();
 
-      if (cardSnapshot.docs.isEmpty) {
-        setState(() {
-          loading = false;
-        });
-        // If no card is found, show an error message
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: Text("Error"),
-              content: Text("Card number does not exist!"),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text("OK"),
-                ),
-              ],
-            );
-          },
-        );
-        return; // Exit the function if card doesn't exist
-      }
-
-      // If the card exists, proceed with user authentication
-      UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-        email: email_controller.text,
-        password: password_controller.text,
-      );
-
-      // After successful authentication, store the additional user details in Firestore
-      await FirebaseFirestore.instance.collection('User').doc(userCredential.user!.uid).set({
-        'name': name_controller.text,
-        'card_id': cardSnapshot.docs.first.id, // Store the card ID from the Card collection
-        'email': email_controller.text,
-      });
-
+    if (userSnapshot.docs.isNotEmpty) {
+      // If the card number already exists in the User collection
       setState(() {
         loading = false;
       });
 
-      // After successful signup, navigate to OTP screen
-      Navigator.push(context, MaterialPageRoute(
+      // Show message that user is already registered and should log in
+      _showDialog("Already Registered", "This card number is already registered. Please log in.");
+      return; // Exit the function if card number already exists in User collection
+    }
+
+    // Check if card exists in the Card collection (for verification)
+    QuerySnapshot cardSnapshot = await FirebaseFirestore.instance
+        .collection('Card')
+        .where('card_no', isEqualTo: card_controller.text)
+        .limit(1)
+        .get();
+
+    if (cardSnapshot.docs.isEmpty) {
+      setState(() {
+        loading = false;
+      });
+      // If no card is found, show an error message
+      _showDialog("Error", "Card number does not exist!");
+      return; // Exit the function if card doesn't exist in Card collection
+    }
+
+    // After successful authentication, store the additional user details in Firestore
+    await FirebaseFirestore.instance.collection('User').add({
+      'name': name_controller.text,
+      'card_no': card_controller.text, // Store the card number
+      'card_id': cardSnapshot.docs.first.id, // Store the card ID from the Card collection
+      'email': email_controller.text,
+      'password' :password_controller.text,
+      // Optionally store the email as well
+      'created_at': FieldValue.serverTimestamp(), // Store the creation time (optional)
+    });
+
+    setState(() {
+      loading = false;
+    });
+
+    // After successful signup, navigate to OTP screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
         builder: (context) {
           return OtpScreen();
         },
-      ));
+      ),
+    );
 
-      print("Name: ${name_controller.text}");
-      print("Card No: ${card_controller.text}");
-      print("Email: ${email_controller.text}");
+    print("Name: ${name_controller.text}");
+    print("Card No: ${card_controller.text}");
+    print("Email: ${email_controller.text}");
 
-    } catch (e) {
-      setState(() {
-        loading = false;
-      });
-      // Show error message if something went wrong during the signup process
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text("Error"),
-            content: Text(e.toString()),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text("OK"),
-              ),
-            ],
-          );
-        },
-      );
-    }
+  } catch (e) {
+    setState(() {
+      loading = false;
+    });
+    // Show error message if something went wrong during the signup process
+    _showDialog("Error", e.toString());
   }
+}
+
+// Function to show a dialog with a custom title and message
+void _showDialog(String title, String message) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text("OK"),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {

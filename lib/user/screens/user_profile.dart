@@ -1,19 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:erationshop/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: UserProfile(),
-    );
-  }
-}
+
 
 class UserProfile extends StatelessWidget {
   @override
@@ -23,11 +15,9 @@ class UserProfile extends StatelessWidget {
         title: Text("User Profile"),
         backgroundColor: const Color.fromARGB(255, 245, 184, 93),
       ),
-      body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('User')
-            .doc(FirebaseAuth.instance.currentUser?.uid)
-            .snapshots(),
+      body: StreamBuilder(
+        stream: FirebaseFirestore.instance.collection('User').where('card_no',isEqualTo: card_no).snapshots(),
+    
         builder: (context, userSnapshot) {
           if (userSnapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -36,7 +26,9 @@ class UserProfile extends StatelessWidget {
           } else if (!userSnapshot.hasData || userSnapshot.data == null) {
             return Center(child: Text('No data found'));
           } else {
-            final userProfile = userSnapshot.data;
+            final userProfile = userSnapshot.data!.docs.first;
+
+            print(userProfile!.data());
             final String name = userProfile?['name'] ?? 'N/A';
             final String cardId = userProfile?['card_id'] ?? '';
             final String email = userProfile?['email'] ?? 'N/A';

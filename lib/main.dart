@@ -26,16 +26,13 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
 );
 
-<<<<<<< HEAD
-  runApp(MaterialApp(debugShowCheckedModeBanner: false,home: StoreOwnerPage()),);
-=======
+  runApp(MaterialApp(debugShowCheckedModeBanner: false,home: Login_Screen()));
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   card_no =prefs.getString('card_no');
 
-  runApp(MaterialApp(debugShowCheckedModeBanner: false,home: AdminHomeScreen()),);
->>>>>>> 56a63b7069692bd64cac4b3c939cf53fdbe996cf
+  
 
 
 }                              

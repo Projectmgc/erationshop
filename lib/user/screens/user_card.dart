@@ -1,11 +1,27 @@
+import 'package:erationshop/user/screens/uhome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+
+
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: const UserCard(),
+    );
+  }
+}
 
 class UserCard extends StatelessWidget {
   const UserCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    
     final List<Map<String, dynamic>> rationCards = [
       {
         'name': 'John Doe',
@@ -25,8 +41,10 @@ class UserCard extends StatelessWidget {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [ const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),],
+            colors: [
+              Color.fromARGB(255, 245, 184, 93),
+              Color.fromARGB(255, 233, 211, 88),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -105,8 +123,10 @@ class _CardDetailsPageState extends State<CardDetailsPage> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [ const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),],
+            colors: [
+              Color.fromARGB(255, 245, 184, 93),
+              Color.fromARGB(255, 233, 211, 88),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -181,7 +201,6 @@ class MemberRemovalPage extends StatefulWidget {
 
 class _MemberRemovalPageState extends State<MemberRemovalPage> {
   final TextEditingController _reasonController = TextEditingController();
-  final TextEditingController _otpController = TextEditingController();
   FilePickerResult? _consentFile;
 
   void _pickConsentFile() async {
@@ -197,7 +216,7 @@ class _MemberRemovalPageState extends State<MemberRemovalPage> {
     }
   }
 
-  void _verifyAndSubmitDeletion() {
+  void _confirmAndSubmitDeletion() {
     if (_reasonController.text.isEmpty || _consentFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please provide all required details.')),
@@ -209,30 +228,30 @@ class _MemberRemovalPageState extends State<MemberRemovalPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('OTP Verification'),
-          content: TextField(
-            controller: _otpController,
-            decoration: const InputDecoration(labelText: 'Enter OTP'),
-            keyboardType: TextInputType.number,
-          ),
+          title: const Text('Confirmation'),
+          content: const Text('Do you really want to continue with the member removal?'),
           actions: [
             TextButton(
               onPressed: () {
-                if (_otpController.text == '123456') {
-                  setState(() {
-                    widget.card['familyMembers'][widget.memberIndex]['removed'] = true;
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Member removed successfully!')),
-                  );
-                  Navigator.popUntil(context, (route) => route.isFirst);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Invalid OTP')),
-                  );
-                }
+                Navigator.pop(context); // Close the dialog without submitting
               },
-              child: const Text('Submit'),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  widget.card['familyMembers'][widget.memberIndex]['removed'] = true;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Request Successfully Submitted!')),
+                );
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => UhomeScreen()), 
+                  (Route<dynamic> route) => false,
+                );
+              },
+              child: const Text('Yes'),
             ),
           ],
         );
@@ -250,8 +269,10 @@ class _MemberRemovalPageState extends State<MemberRemovalPage> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [ const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),],
+            colors: [
+              Color.fromARGB(255, 245, 184, 93),
+              Color.fromARGB(255, 233, 211, 88),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -266,11 +287,13 @@ class _MemberRemovalPageState extends State<MemberRemovalPage> {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _pickConsentFile,
-              child: Text(_consentFile == null ? 'Attach Consent File' : 'Change Consent File'),
+              child: Text(_consentFile == null
+                  ? 'Attach Consent File'
+                  : 'Change Consent File'),
             ),
             const SizedBox(height: 40),
             ElevatedButton(
-              onPressed: _verifyAndSubmitDeletion,
+              onPressed: _confirmAndSubmitDeletion,
               child: const Text('Submit Deletion'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurpleAccent),
             ),
@@ -294,7 +317,6 @@ class _AddMemberPageState extends State<AddMemberPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _aadhaarController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
-  final TextEditingController _otpController = TextEditingController();
   FilePickerResult? _aadhaarFile;
 
   void _pickAadhaarFile() async {
@@ -306,7 +328,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
     }
   }
 
-  void _verifyAndSubmit() {
+  void _confirmAndSubmit() {
     if (_nameController.text.isEmpty ||
         _aadhaarController.text.isEmpty ||
         _ageController.text.isEmpty ||
@@ -321,33 +343,33 @@ class _AddMemberPageState extends State<AddMemberPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('OTP Verification'),
-          content: TextField(
-            controller: _otpController,
-            decoration: const InputDecoration(labelText: 'Enter OTP'),
-            keyboardType: TextInputType.number,
-          ),
+          title: const Text('Confirmation'),
+          content: const Text('Do you really want to continue and add this member?'),
           actions: [
             TextButton(
               onPressed: () {
-                if (_otpController.text == '123456') {
-                  widget.card['familyMembers'].add({
-                    'name': _nameController.text,
-                    'id': 'ID${DateTime.now().millisecondsSinceEpoch}',
-                    'aadhaar': _aadhaarController.text,
-                    'removed': false,
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Member added successfully!')),
-                  );
-                  Navigator.popUntil(context, (route) => route.isFirst);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Invalid OTP')),
-                  );
-                }
+                Navigator.pop(context); // Close the dialog without submitting
               },
-              child: const Text('Submit'),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                widget.card['familyMembers'].add({
+                  'name': _nameController.text,
+                  'id': 'ID${DateTime.now().millisecondsSinceEpoch}',
+                  'aadhaar': _aadhaarController.text,
+                  'removed': false,
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Request Successfully Submitted!')),
+                );
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => UhomeScreen()), 
+                  (Route<dynamic> route) => false,
+                );
+              },
+              child: const Text('Yes'),
             ),
           ],
         );
@@ -365,8 +387,10 @@ class _AddMemberPageState extends State<AddMemberPage> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [ const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),],
+            colors: [
+              Color.fromARGB(255, 245, 184, 93),
+              Color.fromARGB(255, 233, 211, 88),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -393,11 +417,13 @@ class _AddMemberPageState extends State<AddMemberPage> {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _pickAadhaarFile,
-              child: Text(_aadhaarFile == null ? 'Attach Aadhaar File' : 'Change Aadhaar File'),
+              child: Text(_aadhaarFile == null
+                  ? 'Attach Aadhaar File'
+                  : 'Change Aadhaar File'),
             ),
             const SizedBox(height: 40),
             ElevatedButton(
-              onPressed: _verifyAndSubmit,
+              onPressed: _confirmAndSubmit,
               child: const Text('Add Member'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurpleAccent),
             ),
@@ -408,6 +434,8 @@ class _AddMemberPageState extends State<AddMemberPage> {
   }
 }
 
+
+
 class BackgroundGradient extends StatelessWidget {
   const BackgroundGradient({super.key});
 
@@ -415,8 +443,15 @@ class BackgroundGradient extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: const Color.fromARGB(255, 245, 184, 93),
+        gradient: LinearGradient(
+          colors: [
+            Color.fromARGB(255, 245, 184, 93),
+            Color.fromARGB(255, 233, 211, 88),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-      );
+      ),
+    );
   }
 }

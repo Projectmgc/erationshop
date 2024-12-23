@@ -1,19 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'User Enquiry & Complaints',
-      theme: ThemeData(),
-      initialRoute: '/',
-      home: UserEnquiry(),
-    );
-  }
-}
+import 'package:firebase_auth/firebase_auth.dart';
 
 class UserEnquiry extends StatefulWidget {
+  final String user_id; // user_id will be passed instead of card_no
+
+  const UserEnquiry({super.key, required this.user_id});
+
   @override
   _UserEnquiryState createState() => _UserEnquiryState();
 }
@@ -22,64 +15,105 @@ class _UserEnquiryState extends State<UserEnquiry> {
   final TextEditingController _subjectController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   List<Map<String, String>> _enquiries = [];
-
-  // Firestore instance
+  bool _isLoading = true;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Method to fetch existing enquiries from Firestore
-  Future<void> _fetchEnquiries() async {
-    // Fetch the data from the "Enquiries" collection
-    QuerySnapshot querySnapshot = await _firestore.collection('Enquiries').orderBy('timestamp', descending: true).get();
-
-    setState(() {
-      // Map the fetched data into the local list
-      _enquiries = querySnapshot.docs.map((doc) {
-        return {
-          'subject': doc['subject']?.toString() ?? '',  // Ensure the 'subject' field is cast to String, default to empty string if null
-          'description': doc['description']?.toString() ?? '',  // Ensure the 'description' field is cast to String
-          'status': doc['status']?.toString() ?? '',    // Ensure the 'status' field is cast to String
-        };
-      }).toList();
-    });
+  @override
+  void initState() {
+    super.initState();
+    // Print the user ID (for debugging purposes)
+    print("User ID in initState: ${widget.user_id}");
   }
 
-  // Method to handle submission of enquiries or complaints
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Fetch the enquiries when the widget is initialized
+    print("didChangeDependencies called. User ID: ${widget.user_id}");
+    _fetchEnquiries();
+  }
+
+  // Fetch enquiries
+  Future<void> _fetchEnquiries() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Fetch the enquiries using the user_id (from the Enquiries collection)
+      QuerySnapshot querySnapshot = await _firestore
+          .collection('Enquiries')
+          .where('user_id', isEqualTo: widget.user_id)
+          .orderBy('timestamp', descending: true) // Ensure timestamp is indexed
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        setState(() {
+          _enquiries = [];
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Process the documents
+        setState(() {
+      _enquiries = querySnapshot.docs.map((doc) {
+        var data = doc.data() as Map<String, dynamic>;  // Firestore document data as dynamic
+
+        return {
+          'subject': data['subject']?.toString() ?? 'No Subject', // Explicit conversion to string
+          'description': data['description']?.toString() ?? 'No Description', // Explicit conversion to string
+          'status': data['status']?.toString() ?? 'No Status', // Explicit conversion to string
+          'response': data['response']?.toString() ?? 'No Response', // Explicit conversion to string
+        };
+      }).toList();
+      _isLoading = false;
+    });
+    } catch (e) {
+      print('Error fetching enquiries: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching enquiries. Please try again later.')),
+      );
+    }
+  }
+
+  // Method to handle submission of enquiries
   void _submitEnquiry() async {
     String subjectText = _subjectController.text.trim();
     String descriptionText = _descriptionController.text.trim();
 
     if (subjectText.isNotEmpty && descriptionText.isNotEmpty) {
-      // Add to Firestore
-      await _firestore.collection('Enquiries').add({
-        'subject': subjectText,
-        'description': descriptionText,
-        'status': 'Submitted',
-        'timestamp': FieldValue.serverTimestamp(), // Automatically adds timestamp
-      });
+      try {
+        await _firestore.collection('Enquiries').add({
+          'subject': subjectText,
+          'description': descriptionText,
+          'status': 'Submitted',
+          'timestamp': FieldValue.serverTimestamp(),
+          'response': null,
+          'user_id': widget.user_id,  // Store the user_id here
+        });
 
-      // Clear the text fields after submission
-      _subjectController.clear();
-      _descriptionController.clear();
+        _subjectController.clear();
+        _descriptionController.clear();
+        _fetchEnquiries();
 
-      // Fetch the updated list of enquiries after submission
-      _fetchEnquiries();
-
-      // Show a success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Your enquiry has been submitted.')),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Your enquiry has been submitted.')),
+        );
+      } catch (e) {
+        print('Error submitting enquiry: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error submitting enquiry. Please try again later.')),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please enter both subject and description.')),
       );
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    // Fetch existing enquiries when the screen is first loaded
-    _fetchEnquiries();
   }
 
   @override
@@ -89,34 +123,22 @@ class _UserEnquiryState extends State<UserEnquiry> {
         title: Text('User Enquiry & Complaints'),
         backgroundColor: Color.fromARGB(255, 245, 184, 93),
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              const Color.fromARGB(255, 245, 184, 93),
-              const Color.fromARGB(255, 233, 211, 88),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        constraints: BoxConstraints.expand(),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              _buildEnquiryForm(),
-              SizedBox(height: 20),
-              _buildEnquiryList(),
-            ],
-          ),
-        ),
-      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator()) // Show loading indicator
+          : SingleChildScrollView(
+              padding: EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  _buildEnquiryForm(),
+                  SizedBox(height: 20),
+                  _buildEnquiryList(),
+                ],
+              ),
+            ),
     );
   }
 
-  // Widget for the enquiry form where users can enter their complaint or enquiry
   Widget _buildEnquiryForm() {
     return Card(
       color: Colors.white.withOpacity(0.8),
@@ -157,7 +179,6 @@ class _UserEnquiryState extends State<UserEnquiry> {
                 'Submit Enquiry',
                 style: TextStyle(fontSize: 18),
               ),
-              style: ElevatedButton.styleFrom(),
             ),
           ],
         ),
@@ -165,7 +186,6 @@ class _UserEnquiryState extends State<UserEnquiry> {
     );
   }
 
-  // Widget to display the list of submitted enquiries/complaints
   Widget _buildEnquiryList() {
     return Card(
       color: Colors.white.withOpacity(0.8),
@@ -183,16 +203,20 @@ class _UserEnquiryState extends State<UserEnquiry> {
             SizedBox(height: 10),
             if (_enquiries.isEmpty)
               Text('No enquiries/complaints submitted yet.'),
-            for (int i = 0; i < _enquiries.length; i++)
-              _buildEnquiryItem(i),
+            for (int i = 0; i < _enquiries.length; i++) _buildEnquiryItem(i),
           ],
         ),
       ),
     );
   }
 
-  // Widget for displaying individual enquiry items
   Widget _buildEnquiryItem(int index) {
+    String status = _enquiries[index]['status']!;
+    String response = _enquiries[index]['response']!;
+
+    Color statusColor = status == 'Resolved' ? Colors.green : Colors.red;
+    Color responseColor = status == 'Resolved' ? Colors.green : Colors.red;
+
     return Card(
       margin: EdgeInsets.only(bottom: 10),
       child: Padding(
@@ -215,8 +239,13 @@ class _UserEnquiryState extends State<UserEnquiry> {
                   ),
                   SizedBox(height: 5),
                   Text(
-                    'Status: ${_enquiries[index]['status']}',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                    'Status: $status',
+                    style: TextStyle(fontSize: 14, color: statusColor),
+                  ),
+                  SizedBox(height: 5),
+                  Text(
+                    'Response: $response',
+                    style: TextStyle(fontSize: 14, color: responseColor),
                   ),
                 ],
               ),

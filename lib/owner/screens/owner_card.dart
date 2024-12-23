@@ -29,7 +29,7 @@ class _CardPageState extends State<CardPage> {
   void _addMember() {
     setState(() {
       _members.add({
-        'name': '',
+        'name': '',   
         'uid': '',
       });
     });

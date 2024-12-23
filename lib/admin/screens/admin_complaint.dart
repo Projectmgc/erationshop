@@ -4,22 +4,21 @@ import 'package:flutter/material.dart';
 class ComplaintsPage extends StatelessWidget {
   const ComplaintsPage({super.key});
 
-  // Fetch enquiries from Firestore
+  // Fetch complaints from Firestore
   Future<List<Map<String, dynamic>>> _fetchComplaints() async {
-    // Get a reference to the Firestore collection 'Enquiries'
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
         .collection('Enquiries')
         .orderBy('timestamp', descending: true)
         .get();
 
-    // Map the Firestore data into a list of complaints
     return querySnapshot.docs.map((doc) {
-      // Safely access each field and provide a default value if null
       return {
-        'subject': doc['subject'] != null ? doc['subject'] : 'No subject provided',  // 'subject' field now
-        'status': doc['status'] != null ? doc['status'] : 'No status provided',      // Provide a default value if 'status' is null
-        'timestamp': doc['timestamp'],                         // Timestamp (can be null, handled below)
-        'description': doc['description'] != null ? doc['description'] : 'No description provided', // Default value if 'description' is null
+        'subject': doc['subject'] != null ? doc['subject'] : 'No subject provided',
+        'status': doc['status'] != null ? doc['status'] : 'No status provided',
+        'timestamp': doc['timestamp'],
+        'description': doc['description'] != null ? doc['description'] : 'No description provided',
+        'complaintId': doc.id,  // Adding the document ID for reference
+        'response': doc['response'],  // Adding response data for display
       };
     }).toList();
   }
@@ -32,7 +31,7 @@ class ComplaintsPage extends StatelessWidget {
         backgroundColor: Colors.deepPurpleAccent,
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _fetchComplaints(),  // Fetch complaints from Firestore
+        future: _fetchComplaints(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -56,32 +55,39 @@ class ComplaintsPage extends StatelessWidget {
                   ),
                   child: ListTile(
                     leading: Icon(
-                      Icons.report_problem, // Icon for complaint type
+                      Icons.report_problem,
                       color: Colors.redAccent,
                     ),
                     title: Text(
-                      complaint['subject'], // Displaying the 'subject' text
+                      complaint['subject'],
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Status: ${complaint['status']}'), // Displaying the status
+                        Text('Status: ${complaint['status']}'),
                         const SizedBox(height: 5),
                         Text(
                           'Filed on: ${complaint['timestamp']?.toDate().toString() ?? 'No timestamp available'}',
                           style: const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
+                        if (complaint['response'] != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              'Response: ${complaint['response']}',
+                              style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Colors.green),
+                            ),
+                          ),
                       ],
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 18),
                     onTap: () {
-                      // Pass the complaint details to the ComplaintDetailsPage
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => ComplaintDetailsPage(
-                            complaint: complaint, // Pass the full complaint data
+                            complaint: complaint,
                           ),
                         ),
                       );
@@ -97,10 +103,53 @@ class ComplaintsPage extends StatelessWidget {
   }
 }
 
-class ComplaintDetailsPage extends StatelessWidget {
+class ComplaintDetailsPage extends StatefulWidget {
   final Map<String, dynamic> complaint;
 
   const ComplaintDetailsPage({required this.complaint, super.key});
+
+  @override
+  _ComplaintDetailsPageState createState() => _ComplaintDetailsPageState();
+}
+
+class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
+  final TextEditingController _responseController = TextEditingController();
+
+  // Submit the response and update the complaint status to 'Resolved'
+  Future<void> _submitResponse() async {
+    if (_responseController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a response before submitting')),
+      );
+      return;
+    }
+
+    try {
+      // Get the document reference for the current complaint
+      final complaintRef = FirebaseFirestore.instance.collection('Enquiries').doc(widget.complaint['complaintId']);
+
+      // Update the document with the response and set the status to 'Resolved'
+      await complaintRef.update({
+        'response': _responseController.text,
+        'responseTimestamp': FieldValue.serverTimestamp(),
+        'status': 'Resolved', // Changing the status to 'Resolved'
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Response submitted successfully')),
+      );
+
+      // Optionally, clear the text field after submission
+      _responseController.clear();
+
+      // Reload the current complaint to reflect the changes
+      setState(() {});
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error submitting response')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,12 +169,12 @@ class ComplaintDetailsPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'Subject: ${complaint['subject']}',  // Accessing 'subject' safely
+              'Subject: ${widget.complaint['subject']}',
               style: const TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 10),
             Text(
-              'Status: ${complaint['status']}',  // Accessing 'status' safely
+              'Status: ${widget.complaint['status']}',
               style: const TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 10),
@@ -135,27 +184,51 @@ class ComplaintDetailsPage extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              complaint['description'] ?? 'No description provided',  // Handle nullable description
+              widget.complaint['description'] ?? 'No description provided',
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 20),
             Text(
-              'Filed on: ${complaint['timestamp']?.toDate().toString() ?? 'No timestamp available'}',
+              'Filed on: ${widget.complaint['timestamp']?.toDate().toString() ?? 'No timestamp available'}',
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
-            const Spacer(),
+            const SizedBox(height: 20),
+            const Text(
+              'Response:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            if (widget.complaint['response'] != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  widget.complaint['response']!,
+                  style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic, color: Colors.green),
+                ),
+              )
+            else
+              const Text('No response yet.', style: TextStyle(fontSize: 16, color: Colors.grey)),
+            const SizedBox(height: 20),
+            const Text(
+              'Submit Response:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            TextField(
+              controller: _responseController,
+              maxLines: 5,
+              decoration: const InputDecoration(
+                hintText: 'Enter your response here...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 20),
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Complaint action pending...')),
-                  );
-                },
+                onPressed: _submitResponse,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurpleAccent,
                   padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                 ),
-                child: const Text('Mark as Resolved'),
+                child: const Text('Submit Response'),
               ),
             ),
           ],

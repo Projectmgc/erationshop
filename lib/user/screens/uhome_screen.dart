@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:erationshop/user/screens/user_card.dart';
 import 'package:erationshop/user/screens/user_enquiry.dart';
 import 'package:erationshop/user/screens/user_notification.dart';
 import 'package:erationshop/user/screens/user_outlet.dart';
 import 'package:erationshop/user/screens/user_profile.dart';
 import 'package:erationshop/user/screens/user_purchase.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -37,7 +39,7 @@ class _UhomeScreenState extends State<UhomeScreen> {
       'color': Colors.pinkAccent.shade100,
       'description': 'Address and Resolve Your Complaints.',
       'image': 'asset/enquiry.jpg',
-      'page': UserEnquiry(), // Navigation target
+      'page': null, // Handle separately
     },
     {
       'title': 'Card',
@@ -55,26 +57,15 @@ class _UhomeScreenState extends State<UhomeScreen> {
     },
   ];
 
-  void _onCardTapped(Widget page) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => page),
-    );
-  }
-
-  void gotoprofile() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) {
-        return UserProfile();
-      }),
-    );
-  }
+  String _userId = ''; // To hold the user_id from the user profile
 
   @override
   void initState() {
     super.initState();
-    // Listen for page changes to enable looping
+    // Fetch the user_id from the user profile or authentication service
+    _fetchUserId();
+
+    // Listen for page changes to enable looping (optional)
     _pageController.addListener(() {
       if (_pageController.position.pixels >= _pageController.position.maxScrollExtent ||
           _pageController.position.pixels <= _pageController.position.minScrollExtent) {
@@ -86,6 +77,62 @@ class _UhomeScreenState extends State<UhomeScreen> {
         }
       }
     });
+  }
+
+  // Fetch the user_id associated with the current user
+  void _fetchUserId() async {
+    try {
+      // Get the current user UID from FirebaseAuth
+      User? user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        // Get the current user's document from Firestore
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('Users')  // Assuming your collection is named 'Users'
+            .doc(user.uid)        // Using the current user's UID to get the document
+            .get();
+
+        if (userDoc.exists) {
+          // Assuming 'user_id' is the field in the user's document
+          setState(() {
+            _userId = userDoc['user_id'] ?? '';  // Fetch the user_id or set it to an empty string if not found
+          });
+        } else {
+          print("User document does not exist");
+        }
+      } else {
+        print("No user is logged in");
+      }
+    } catch (e) {
+      print("Error fetching user_id: $e");
+    }
+  }
+
+  // Handle the card tap event and navigate accordingly
+  void _onCardTapped(BuildContext context, Widget? page) {
+    if (page != null) {
+      // Navigate to the associated page directly
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => page),
+      );
+    } else {
+      // Handle the 'Enquiry' card tap by passing the userId
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => UserEnquiry( user_id: '_userId'), // Pass the userId to UserEnquiry
+        ),
+      );
+    }
+  }
+
+  // Navigate to user profile page
+  void gotoprofile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => UserProfile()),
+    );
   }
 
   @override
@@ -153,7 +200,7 @@ class _UhomeScreenState extends State<UhomeScreen> {
                   itemCount: null, // Infinite pages
                   itemBuilder: (context, index) {
                     final card = _cards[index % _cards.length]; // Looping
-                    return _buildPageCard(card);
+                    return _buildPageCard(context, card);
                   },
                 ),
               ),
@@ -178,10 +225,11 @@ class _UhomeScreenState extends State<UhomeScreen> {
     );
   }
 
-  Widget _buildPageCard(Map<String, dynamic> card) {
+  // Card UI for each PageView item
+  Widget _buildPageCard(BuildContext context, Map<String, dynamic> card) {
     return Center(
       child: GestureDetector(
-        onTap: () => _onCardTapped(card['page']),
+        onTap: () => _onCardTapped(context, card['page']),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,

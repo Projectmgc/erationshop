@@ -1,9 +1,8 @@
-import 'package:erationshop/owner/screens/forgot1_passwrd.dart';
-import 'package:erationshop/owner/screens/otp1_screen.dart';
-import 'package:erationshop/owner/services/Owner_firebase_auth.dart';
+import 'package:erationshop/owner/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Login1_Screen extends StatefulWidget {
   const Login1_Screen({super.key});
@@ -15,47 +14,69 @@ class Login1_Screen extends StatefulWidget {
 class _Login1_ScreenState extends State<Login1_Screen> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController shopid_controller = TextEditingController();
-  TextEditingController email_controller=TextEditingController();
+  TextEditingController email_controller = TextEditingController();
   TextEditingController password_controller = TextEditingController();
   bool passwordVisible = true;
-  bool loading= false;
+  bool loading = false;
 
-  void forgotpassword()
-  {
-    Navigator.push(context, MaterialPageRoute(builder: (context){
-      return Forgot1_Password();
-    }));
-  }
-
- 
-  
-
-  void otpverification() {
-    if (_formKey.currentState!.validate()) {
-      // If the form is valid, perform registration actions here
-      Navigator.push(context, MaterialPageRoute(
-        builder: (context) {
-          return Otp1_Screen();
-        },
-      ));
-      
-    }
-  }
-
-  void login()async{
-      setState(() {
+  void login() async {
+    setState(() {
       loading = true; // Set loading to true while performing login
     });
 
-        await Auth_Services().Owner_Login(
-      email: email_controller.text,
-      password: password_controller.text,
-      shopid: shopid_controller.text ,
-      context: context,
-    );
+    try {
+      // Query Firestore for a matching Shop Owner document
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Shop Owner')
+          .where('email', isEqualTo: email_controller.text)
+          .where('shop_id', isEqualTo: shopid_controller.text)
+          .get();
 
-    loading = false;
-    
+      // Check if the document exists
+      if (querySnapshot.docs.isEmpty) {
+        setState(() {
+          loading = false;
+        });
+        // No document found, show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid email or shop ID')),
+        );
+        return;
+      }
+
+      // Get the matching document (there should be only one)
+      final shopData = querySnapshot.docs.first;
+      final storedPassword = shopData['password'];
+
+      // Check if the password matches
+      if (password_controller.text == storedPassword) {
+        setState(() {
+          loading = false;
+        });
+
+        // Proceed to the next screen or main app page after successful login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => OwnerHomeScreen()), // You can replace this with your dashboard or main page
+        );
+      } else {
+        setState(() {
+          loading = false;
+        });
+        // Show error if password doesn't match
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Incorrect password')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        loading = false;
+      });
+      // Handle any errors during Firestore query or authentication
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error during login')),
+      );
+    }
   }
 
   @override
@@ -64,13 +85,13 @@ class _Login1_ScreenState extends State<Login1_Screen> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-                colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+            colors: [
+              const Color.fromARGB(255, 245, 184, 93),
+              const Color.fromARGB(255, 233, 211, 88),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
@@ -133,7 +154,7 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                     }
                     return null;
                   },
-                ),             
+                ),
                 SizedBox(height: 20),
                 TextFormField(
                   controller: shopid_controller,
@@ -147,22 +168,20 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                     hintText: 'Enter Store Id',
                     prefixIcon: Icon(Icons.book),
                     border: OutlineInputBorder(
-                      borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),
-                      borderRadius: BorderRadius.circular(10)
+                      borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 81, 50, 12)),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return "Please enter the  correct store id";
+                      return "Please enter the correct store id";
                     } else if (value.length != 5) {
                       return "Store Id must be 5 digits";
                     }
                     return null;
                   },
                 ),
-               
                 SizedBox(height: 20),
-                
                 TextFormField(
                   controller: password_controller,
                   obscureText: passwordVisible,
@@ -175,8 +194,8 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                     hintText: 'Enter Password',
                     prefixIcon: Icon(Icons.lock),
                     border: OutlineInputBorder(
-                      borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),
-                      borderRadius: BorderRadius.circular(10)
+                      borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 81, 50, 12)),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     suffixIcon: IconButton(
                       onPressed: () {
@@ -198,31 +217,22 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                     return null;
                   },
                 ),
-                SizedBox(height: 10,),
-                TextButton(onPressed: forgotpassword, child: Text('Forgot password ?',style:TextStyle(color: const Color.fromARGB(255, 11, 8, 1),fontSize: 15,fontWeight: FontWeight.bold))),
                 SizedBox(height: 40),
-                loading ?CircularProgressIndicator():
-                ElevatedButton(
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStatePropertyAll(
-                        const Color.fromARGB(255, 225, 157, 68)),
-                    shadowColor: WidgetStatePropertyAll(
-                        const Color.fromARGB(255, 62, 55, 5)),
-                    elevation: WidgetStatePropertyAll(10.0),
-                    
-                  ),
-                  onPressed: login,
-                  child: Text(
-                    'LOGIN',
-                    style: TextStyle(
-                        
-                        color: const Color.fromARGB(255, 8, 6, 21),
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
+                loading
+                    ? CircularProgressIndicator()
+                    : ElevatedButton(
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255, 225, 157, 68)),
+                          shadowColor: MaterialStateProperty.all(const Color.fromARGB(255, 62, 55, 5)),
+                          elevation: MaterialStateProperty.all(10.0),
+                        ),
+                        onPressed: login,
+                        child: Text(
+                          'LOGIN',
+                          style: TextStyle(color: const Color.fromARGB(255, 8, 6, 21), fontWeight: FontWeight.bold),
+                        ),
+                      ),
                 SizedBox(height: 10),
-                
-                
               ],
             ),
           ),

@@ -1,3 +1,5 @@
+import 'package:erationshop/admin/screens/admin.converse.dart';
+import 'package:erationshop/admin/screens/admin_shop.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart'; // Import the package
@@ -6,8 +8,9 @@ import 'admin_stoke.dart';
 import 'admin_sales.dart';
 import 'admin_complaint.dart';
 import 'admin_card.dart';
-import 'admin.converse.dart';
+
 import 'admin_notification.dart';
+// Import the AdminShopPage
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -41,7 +44,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'icon': Icons.report_problem,
       'color': Colors.pinkAccent.shade100,
       'description': 'Address and resolve customer complaints.',
-      'image': 'asset/stock.jpg',
+      'image': 'asset/enquiry.jpg',
       'page': ComplaintsPage(), // Navigation target
     },
     {
@@ -49,7 +52,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'icon': Icons.credit_card,
       'color': Colors.purpleAccent.shade100,
       'description': 'Manage credit or debit card-related operations.',
-      'image': 'asset/stock.jpg',
+      'image': 'asset/card.jpg',
       'page': CardPage(), // Navigation target
     },
     {
@@ -65,8 +68,17 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'icon': Icons.notifications,
       'color': Colors.orangeAccent,
       'description': 'View and manage important notifications.',
-      'image': 'asset/stock.jpg',
+      'image': 'asset/notification.jpg',
       'page': AdminNotificationPage(), // Navigation target
+    },
+    // New Card for AdminShopPage
+    {
+      'title': 'Shops',
+      'icon': Icons.shop,
+      'color': Colors.blueAccent,
+      'description': 'Manage and view shop details.',
+      'image': 'asset/outlet.jpg',
+      'page': AdminShopPage(), // Navigation target for AdminShopPage
     },
   ];
 
@@ -102,7 +114,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   void _goToProfile() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ProfilePage()), // Navigate to ProfilePage
+      MaterialPageRoute(builder: (context) => ProfilePage()), // Navigate to Profile screen
     );
   }
 

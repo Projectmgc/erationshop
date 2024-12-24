@@ -30,7 +30,7 @@ Future<void> main() async {
 
   card_no =prefs.getString('card_no');
 
-  runApp(MaterialApp(debugShowCheckedModeBanner: false,home: OwnerHomeScreen()));
+  runApp(MaterialApp(debugShowCheckedModeBanner: false,home: IntroPage()));
 
 
   

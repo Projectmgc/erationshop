@@ -1,6 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:erationshop/admin/screens/admin_forgot.dart';
-import 'package:erationshop/admin/screens/admin_otp.dart';
-import 'package:erationshop/admin/services/Admin_firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -19,37 +18,49 @@ class _Admin_LoginState extends State<Admin_Login> {
   bool passwordVisible = true;
   bool loading = false;
 
+  // Method to login using Firestore
   void login() async {
     setState(() {
       loading = true;
     });
 
-    await Auth_Services().Admin_Login(
-      email: email_controller.text,
-      password: password_controller.text,
-      context: context,
-    );
+    try {
+      // Get the email and password entered by the admin
+      String email = email_controller.text.trim();
+      String password = password_controller.text.trim();
 
-    setState(() {
-      loading = false;
-    });
+      // Query Firestore to find the admin with the matching email and password
+      var adminSnapshot = await FirebaseFirestore.instance
+          .collection('Admin')
+          .where('email', isEqualTo: email)
+          .where('password', isEqualTo: password)
+          .get();
+
+      if (adminSnapshot.docs.isNotEmpty) {
+        // If a matching admin is found, navigate to the admin dashboard
+        Navigator.pushReplacementNamed(context, '/adminDashboard'); // Change this to your actual dashboard screen
+      } else {
+        // If no matching admin is found, show an error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invalid email or password')),
+        );
+      }
+    } catch (e) {
+      // Handle errors during Firestore query
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
+      setState(() {
+        loading = false;
+      });
+    }
   }
 
   void forgotpassword() {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
       return Admin_Forgot();
     }));
-  }
-
-  void otpverification() {
-    if (_formKey.currentState!.validate()) {
-      // If the form is valid, perform registration actions here
-      Navigator.push(context, MaterialPageRoute(
-        builder: (context) {
-          return Admin_Otp();
-        },
-      ));
-    }
   }
 
   @override
@@ -103,17 +114,12 @@ class _Admin_LoginState extends State<Admin_Login> {
                   ),
                 ),
                 SizedBox(height: 45),
-
-                SizedBox(height: 10),
-                // Changed 'Admin Id' to 'Email Id'
                 TextFormField(
                   controller: email_controller,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: const Color.fromARGB(255, 225, 157, 68),
-                    hoverColor: const Color.fromARGB(255, 2, 9, 49),
-                    prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                     hintText: 'Enter Email Id',
                     prefixIcon: Icon(Icons.email),
                     border: OutlineInputBorder(
@@ -131,16 +137,12 @@ class _Admin_LoginState extends State<Admin_Login> {
                   },
                 ),
                 SizedBox(height: 20),
-
                 TextFormField(
                   controller: password_controller,
                   obscureText: passwordVisible,
                   decoration: InputDecoration(
-                    prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
-                    suffixIconColor: const Color.fromARGB(198, 14, 1, 62),
                     filled: true,
                     fillColor: const Color.fromARGB(255, 225, 157, 68),
-                    hoverColor: const Color.fromARGB(255, 2, 9, 49),
                     hintText: 'Enter Password',
                     prefixIcon: Icon(Icons.lock),
                     border: OutlineInputBorder(
@@ -167,14 +169,17 @@ class _Admin_LoginState extends State<Admin_Login> {
                     return null;
                   },
                 ),
-                SizedBox(height: 10,),
-                TextButton(onPressed: forgotpassword, child: Text('Forgot password ?', style: TextStyle(color: const Color.fromARGB(255, 11, 8, 1), fontSize: 15, fontWeight: FontWeight.bold))),
+                SizedBox(height: 10),
+                TextButton(
+                  onPressed: forgotpassword,
+                  child: Text('Forgot password ?', style: TextStyle(color: const Color.fromARGB(255, 11, 8, 1), fontSize: 15, fontWeight: FontWeight.bold)),
+                ),
                 SizedBox(height: 40),
                 ElevatedButton(
                   style: ButtonStyle(
-                    backgroundColor: WidgetStatePropertyAll(const Color.fromARGB(255, 225, 157, 68)),
-                    shadowColor: WidgetStatePropertyAll(const Color.fromARGB(255, 62, 55, 5)),
-                    elevation: WidgetStatePropertyAll(10.0),
+                    backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255, 225, 157, 68)),
+                    shadowColor: MaterialStateProperty.all(const Color.fromARGB(255, 62, 55, 5)),
+                    elevation: MaterialStateProperty.all(10.0),
                   ),
                   onPressed: login,
                   child: Text(

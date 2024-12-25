@@ -24,22 +24,22 @@ class ProfilePage extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
-          
+
           // Handle error scenario
           if (snapshot.hasError) {
             return Center(child: Text('Error :${snapshot.error}'));
           }
-          
+
           // Handle no data found scenario
           if (!snapshot.hasData || snapshot.data == null) {
             return Center(child: Text('No data found'));
           }
-          
-          // Extract profile data
+
+          // Extract profile data from Firestore document
           final profile = snapshot.data!.data() as Map<String, dynamic>;
           final String name = profile['name'] ?? 'N/A';
-          final String shopId = profile['shop_id'] ?? '**** **** ****'; 
-          final String email = profile['email'] ?? 'N/A'; 
+          final String shopId = profile['shop_id'] ?? '**** **** ****';
+          final String email = profile['email'] ?? 'N/A';
           final String phone = profile['phone'] ?? 'N/A';
           final String address = profile['address'] ?? 'N/A';
           final String storeName = profile['store_name'] ?? 'N/A';
@@ -51,7 +51,7 @@ class ProfilePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Profile Image Section
-                  Center(         
+                  Center(
                     child: CircleAvatar(
                       radius: 80,
                       backgroundImage: AssetImage('asset/profile_picture.jpg'), // Replace with your image path

@@ -234,6 +234,7 @@ class _AddCardPageState extends State<AddCardPage> {
   // List to hold category data from Firebase
   List<String> _categories = [];
   String? _selectedCategory;
+  String? _selectedCategoryId; // Variable to store the selected category's document ID
 
   @override
   void initState() {
@@ -244,7 +245,7 @@ class _AddCardPageState extends State<AddCardPage> {
   // Fetch categories from Firebase Firestore
   Future<void> _fetchCategories() async {
     try {
-      // Query the "Category" collection to get category names
+      // Query the "Category" collection to get category names and their document IDs
       QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('Category').get();
       final categories = snapshot.docs.map((doc) => doc['category_name'] as String).toList();
       setState(() {
@@ -262,31 +263,61 @@ class _AddCardPageState extends State<AddCardPage> {
     }
   }
 
+  // Fetch the selected category's document ID
+  Future<void> _getCategoryId(String categoryName) async {
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('Category')
+          .where('category_name', isEqualTo: categoryName)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        // Set the selected category's document ID
+        _selectedCategoryId = snapshot.docs[0].id;
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to fetch category ID')),
+      );
+    }
+  }
+
   // Function to submit form data and add card to Firestore
   Future<void> _addCard() async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
-        // Create a new Card document in Firestore
-        DocumentReference cardRef = await FirebaseFirestore.instance.collection('Card').add({
-          'owner_name': _ownerNameController.text,
-          'card_no': _cardNoController.text,
-          'category': _selectedCategory, // Use the selected category
-          'members_count': membersCount.toString(),
-          'mobile_no': _mobileNoController.text,
-        });
+        // Fetch the category document ID based on the selected category
+        await _getCategoryId(_selectedCategory!);
 
-        // Add members to the 'member_list' subcollection for this card
-        for (int i = 0; i < membersCount; i++) {
-          await cardRef.collection('member_list').doc('member${i + 1}').set({
-            'member_name': _memberNameControllers[i].text,
-            'mobile_no': _memberPhoneControllers[i].text,
+        // Check if the category ID was successfully retrieved
+        if (_selectedCategoryId != null) {
+          // Create a new Card document in Firestore
+          DocumentReference cardRef = await FirebaseFirestore.instance.collection('Card').add({
+            'owner_name': _ownerNameController.text,
+            'card_no': _cardNoController.text,
+            'category': _selectedCategory, // Use the selected category name
+            'category_id': _selectedCategoryId, // Store the category document ID
+            'members_count': membersCount.toString(),
+            'mobile_no': _mobileNoController.text,
           });
-        }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Card added successfully!')),
-        );
-        Navigator.pop(context);
+          // Add members to the 'member_list' subcollection for this card
+          for (int i = 0; i < membersCount; i++) {
+            await cardRef.collection('member_list').doc('member${i + 1}').set({
+              'member_name': _memberNameControllers[i].text,
+              'mobile_no': _memberPhoneControllers[i].text,
+            });
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Card added successfully!')),
+          );
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Category ID not found')),
+          );
+        }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to add card')),
@@ -458,3 +489,4 @@ class _AddCardPageState extends State<AddCardPage> {
     );
   }
 }
+

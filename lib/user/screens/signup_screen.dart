@@ -70,7 +70,7 @@ class _Signup_ScreenState extends State<Signup_Screen> {
         .where('card_no', isEqualTo: card_controller.text)
         .limit(1)
         .get();
-
+             
     if (cardSnapshot.docs.isEmpty) {
       setState(() {
         loading = false;

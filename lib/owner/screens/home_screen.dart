@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'owner_profile.dart';
-import 'owner_purchase.dart';
 import 'owner_outlet.dart';
 import 'owner_enquiry.dart';
-import 'owner_card.dart';
 import 'owner_notification.dart';
 
 class OwnerHomeScreen extends StatefulWidget {
@@ -19,6 +17,7 @@ class OwnerHomeScreen extends StatefulWidget {
 class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
   final PageController _pageController = PageController();
 
+  // Updated _cards list without the "Card" page
   final List<Map<String, dynamic>> _cards = [
     {
       'title': 'Purchase',
@@ -40,13 +39,6 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       'description': 'Address and Resolve Your Complaints.',
       'image': 'asset/enquiry.jpg',
       'page': const EnquiryPage(), // Navigation target
-    },
-    {
-      'title': 'Card',
-      'color': Colors.purpleAccent.shade100,
-      'description': 'Manage Ration-Card related operations.',
-      'image': 'asset/card.jpg',
-      'page': const CardPage(), // Navigation target
     },
     {
       'title': 'Notification',
@@ -119,7 +111,8 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
                       icon: CircleAvatar(
                         radius: 20,
                         backgroundColor: Colors.white,
-                        child: Icon(Icons.person, color: Colors.deepPurpleAccent),
+                        child:
+                            Icon(Icons.person, color: Colors.deepPurpleAccent),
                       ),
                       onPressed: _goToProfile, // Navigate to the profile screen
                     ),
@@ -146,13 +139,16 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 20.0),
                       child: SmoothPageIndicator(
-                        controller: _pageController, // Controller to sync with PageView
+                        controller:
+                            _pageController, // Controller to sync with PageView
                         count: _cards.length, // Number of dots
                         effect: ExpandingDotsEffect(
                           dotWidth: 10,
                           dotHeight: 10,
-                          activeDotColor: Colors.deepPurpleAccent, // Active dot color
-                          dotColor: Colors.white.withOpacity(0.5), // Inactive dot color
+                          activeDotColor:
+                              Colors.deepPurpleAccent, // Active dot color
+                          dotColor: Colors.white
+                              .withOpacity(0.5), // Inactive dot color
                         ),
                       ),
                     ),

@@ -1,122 +1,146 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:erationshop/main.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-
-
-
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProfile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("User Profile"),
-        backgroundColor: const Color.fromARGB(255, 245, 184, 93),
-      ),
-      body: StreamBuilder(
-        stream: FirebaseFirestore.instance.collection('User').where('card_no',isEqualTo: card_no).snapshots(),
-    
-        builder: (context, userSnapshot) {
-          if (userSnapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (userSnapshot.hasError) {
-            return Center(child: Text('Error: ${userSnapshot.error}'));
-          } else if (!userSnapshot.hasData || userSnapshot.data == null) {
-            return Center(child: Text('No data found'));
-          } else {
-            final userProfile = userSnapshot.data!.docs.first;
+    return FutureBuilder<String?>(
+      // Fetch card_no from SharedPreferences (or any persistent storage)
+      future: _getCardNo(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data == null) {
+          return Center(child: Text('No card number found.'));
+        } else {
+          final cardNo = snapshot.data!;
 
-            print(userProfile!.data());
-            final String name = userProfile?['name'] ?? 'N/A';
-            final String cardId = userProfile?['card_id'] ?? '';
-            final String email = userProfile?['email'] ?? 'N/A';
-
-            // Fetch card details using the card_id from the User profile
-            return StreamBuilder<DocumentSnapshot>(
+          return Scaffold(
+            appBar: AppBar(
+              title: Text("User Profile"),
+              backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+            ),
+            body: StreamBuilder(
+              // Stream to get the user data from Firestore using the retrieved card_no
               stream: FirebaseFirestore.instance
-                  .collection('Card')
-                  .doc(cardId)
+                  .collection('User')
+                  .where('card_no', isEqualTo: cardNo)
                   .snapshots(),
-              builder: (context, cardSnapshot) {
-                if (cardSnapshot.connectionState == ConnectionState.waiting) {
+              builder: (context, userSnapshot) {
+                if (userSnapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
-                } else if (cardSnapshot.hasError) {
-                  return Center(child: Text('Error: ${cardSnapshot.error}'));
-                } else if (!cardSnapshot.hasData || cardSnapshot.data == null) {
-                  return Center(child: Text('Card data not found'));
+                } else if (userSnapshot.hasError) {
+                  return Center(child: Text('Error: ${userSnapshot.error}'));
+                } else if (!userSnapshot.hasData || userSnapshot.data == null) {
+                  return Center(child: Text('No user data found.'));
                 } else {
-                  final cardData = cardSnapshot.data;
-                  final String cardNumber = cardData?['card_no'] ?? '**** **** ****';
-                  final String mobileNumber = cardData?['mobile_no'] ?? 'N/A';
-                  final String ownerName = cardData?['owner_name'] ?? 'N/A';
-                  final String category = cardData?['category'] ?? 'N/A';
+                  final userProfile = userSnapshot.data!.docs.first;
+                  final String name = userProfile['name'] ?? 'N/A';
+                  final String cardId = userProfile['card_id'] ?? '';
+                  final String email = userProfile['email'] ?? 'N/A';
 
-                  return Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color.fromARGB(255, 245, 184, 93), // Light yellow color
-                          const Color.fromARGB(255, 233, 211, 88), // Darker yellow color
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Profile Icon
-                          Center(
-                            child: CircleAvatar(
-                              radius: 60,
-                              backgroundColor: const Color.fromARGB(255, 80, 49, 2),
-                              child: Icon(
-                                Icons.person,
-                                size: 60,
-                                color: Colors.white,
-                              ),
+                  // Fetch card details using the card_id from the User profile
+                  return StreamBuilder<DocumentSnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('Card')
+                        .doc(cardId)
+                        .snapshots(),
+                    builder: (context, cardSnapshot) {
+                      if (cardSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator());
+                      } else if (cardSnapshot.hasError) {
+                        return Center(
+                            child: Text('Error: ${cardSnapshot.error}'));
+                      } else if (!cardSnapshot.hasData ||
+                          cardSnapshot.data == null) {
+                        return Center(child: Text('Card data not found.'));
+                      } else {
+                        final cardData = cardSnapshot.data!;
+                        final String cardNumber =
+                            cardData['card_no'] ?? '**** **** ****';
+                        final String mobileNumber =
+                            cardData['mobile_no'] ?? 'N/A';
+                        final String ownerName =
+                            cardData['owner_name'] ?? 'N/A';
+                        final String category = cardData['category'] ?? 'N/A';
+
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color.fromARGB(
+                                    255, 245, 184, 93), // Light yellow color
+                                const Color.fromARGB(
+                                    255, 233, 211, 88), // Darker yellow color
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
                             ),
                           ),
-                          SizedBox(height: 20),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Profile Icon
+                                Center(
+                                  child: CircleAvatar(
+                                    radius: 60,
+                                    backgroundColor:
+                                        const Color.fromARGB(255, 80, 49, 2),
+                                    child: Icon(
+                                      Icons.person,
+                                      size: 60,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 20),
 
-                          // Name
-                          _buildProfileTextField("Name:", name),
-                          SizedBox(height: 20),
+                                // Name
+                                _buildProfileTextField("Name:", name),
+                                SizedBox(height: 20),
 
-                          // Email
-                          _buildProfileTextField("Email:", email),
-                          SizedBox(height: 20),
+                                // Email
+                                _buildProfileTextField("Email:", email),
+                                SizedBox(height: 20),
 
-                          // Card Number with stars
-                          _buildProfileTextField("Card Number:", cardNumber),
-                          SizedBox(height: 20),
+                                // Card Number with stars
+                                _buildProfileTextField(
+                                    "Card Number:", cardNumber),
+                                SizedBox(height: 20),
 
-                          // Mobile Number
-                          _buildProfileTextField("Mobile Number:", mobileNumber),
-                          SizedBox(height: 20),
+                                // Mobile Number
+                                _buildProfileTextField(
+                                    "Mobile Number:", mobileNumber),
+                                SizedBox(height: 20),
 
-                          // Owner Name
-                          _buildProfileTextField("Card Owner:", ownerName),
-                          SizedBox(height: 20),
+                                // Owner Name
+                                _buildProfileTextField(
+                                    "Card Owner:", ownerName),
+                                SizedBox(height: 20),
 
-                          // Category
-                          _buildProfileTextField("Category:", category),
-                          SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
+                                // Category
+                                _buildProfileTextField("Category:", category),
+                                SizedBox(height: 20),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                    },
                   );
                 }
               },
-            );
-          }
-        },
-      ),
+            ),
+          );
+        }
+      },
     );
   }
 
@@ -149,5 +173,12 @@ class UserProfile extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  // Helper function to get the card_no from SharedPreferences
+  Future<String?> _getCardNo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(
+        'card_no'); // Assuming 'card_no' is stored in SharedPreferences
   }
 }

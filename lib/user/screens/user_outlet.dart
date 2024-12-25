@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UserOutlet extends StatefulWidget {
   @override
@@ -10,10 +12,27 @@ class _UserOutletState extends State<UserOutlet> {
   List<Map<String, dynamic>> allOutlets = [];
   List<Map<String, dynamic>> filteredOutlets = [];
   TextEditingController searchController = TextEditingController();
+  Position? currentPosition;
 
   @override
   void initState() {
     super.initState();
+    _getCurrentLocation();
+  }
+
+  // Function to fetch current location
+  Future<void> _getCurrentLocation() async {
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      setState(() {
+        currentPosition = position;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching location: $e')),
+      );
+    }
   }
 
   // Function to filter outlets based on the search query
@@ -41,8 +60,8 @@ class _UserOutletState extends State<UserOutlet> {
         elevation: 0,
       ),
       body: Container(
-        width: double.infinity, // Ensure the container takes up the full screen width
-        height: double.infinity, // Ensure the container takes up the full screen height
+        width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -55,14 +74,11 @@ class _UserOutletState extends State<UserOutlet> {
         ),
         child: Column(
           children: [
-            // Search bar
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: TextField(
                 controller: searchController,
-                onChanged: (query) {
-                  _filterOutlets(query); // Call filter function when user types
-                },
+                onChanged: (query) => _filterOutlets(query),
                 decoration: InputDecoration(
                   labelText: 'Search by Store Name, Owner, or Address',
                   prefixIcon: Icon(Icons.search),
@@ -72,50 +88,38 @@ class _UserOutletState extends State<UserOutlet> {
                 ),
               ),
             ),
-            // StreamBuilder to fetch and display data from Firestore
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('Shop Owner')
                     .snapshots(),
                 builder: (context, snapshot) {
-                  // Show loading indicator while waiting for data
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator());
                   }
 
-                  // Handle error scenario
                   if (snapshot.hasError) {
                     return Center(child: Text('Error: ${snapshot.error}'));
                   }
 
-                  // Handle no data found scenario
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     return Center(child: Text('No outlets found'));
                   }
 
-                  // Extract outlet details directly from Firestore documents
                   List<Map<String, dynamic>> outlets = [];
                   for (var doc in snapshot.data!.docs) {
                     final shopOwnerData = doc.data() as Map<String, dynamic>;
-
-                    final outletName = shopOwnerData['store_name'] ?? 'N/A';
-                    final ownerName = shopOwnerData['name'] ?? 'N/A';
-                    final address = shopOwnerData['address'] ?? 'N/A';
-                    final phone = shopOwnerData['phone'] ?? 'N/A';
-                    final stock = shopOwnerData['stock'] ?? [];
-
-                    // Add the outlet data to the list
                     outlets.add({
-                      'outletName': outletName,
-                      'ownerName': ownerName,
-                      'address': address,
-                      'phone': phone,
-                      'stock': stock,
+                      'outletName': shopOwnerData['store_name'] ?? 'N/A',
+                      'ownerName': shopOwnerData['name'] ?? 'N/A',
+                      'address': shopOwnerData['address'] ?? 'N/A',
+                      'phone': shopOwnerData['phone'] ?? 'N/A',
+                      'latitude': shopOwnerData['lat'],
+                      'longitude': shopOwnerData['long'],
+                      'stock': shopOwnerData['stock'] ?? [],
                     });
                   }
 
-                  // Save all outlets and initially display all
                   allOutlets = outlets;
                   filteredOutlets = allOutlets;
 
@@ -164,14 +168,27 @@ class _UserOutletState extends State<UserOutlet> {
               style: TextStyle(fontSize: 18),
             ),
             SizedBox(height: 20),
-            Text(
-              'Stock Details:',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Column(
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                for (var item in outlet['stock']) _buildStockItemCard(item),
+                ElevatedButton.icon(
+                  onPressed: () => _openMap(
+                      outlet['latitude'], outlet['longitude']),
+                  icon: Icon(Icons.location_on),
+                  label: Text('View Location'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () => _openRoute(outlet['latitude'],
+                      outlet['longitude']),
+                  icon: Icon(Icons.directions),
+                  label: Text('Get Route'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                  ),
+                ),
               ],
             ),
             SizedBox(height: 20),
@@ -181,48 +198,39 @@ class _UserOutletState extends State<UserOutlet> {
     );
   }
 
-  Widget _buildStockItemCard(Map<String, dynamic> item) {
-    return Card(
-      color: Colors.orange[50],
-      margin: EdgeInsets.only(bottom: 10),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Image.asset(
-                  item['image'] ?? 'asset/rawrice.jpeg', // Ensure an image path is provided
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
-                ),
-                SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item['item'] ?? 'Item Name',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Quantity: ${item['quantity']}',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Price: \$${item['price']}',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+  void _openMap(String? latitude, String? longitude) async {
+    if (latitude != null && longitude != null) {
+      final googleMapsUrl =
+          'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
+      if (await canLaunch(googleMapsUrl)) {
+        await launch(googleMapsUrl);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open Google Maps')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Location not available')),
+      );
+    }
+  }
+
+  void _openRoute(String? latitude, String? longitude) async {
+    if (latitude != null && longitude != null && currentPosition != null) {
+      final routeUrl =
+          'https://www.google.com/maps/dir/?api=1&origin=${currentPosition!.latitude},${currentPosition!.longitude}&destination=$latitude,$longitude';
+      if (await canLaunch(routeUrl)) {
+        await launch(routeUrl);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open route in Google Maps')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Route or current location not available')),
+      );
+    }
   }
 }

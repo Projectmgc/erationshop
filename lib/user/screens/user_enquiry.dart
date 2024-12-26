@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class UserEnquiry extends StatefulWidget {
-  final String user_id; // user_id will be passed instead of card_no
+  final String user_id; // card_no will be passed instead of user_id
 
   const UserEnquiry({super.key, required this.user_id});
 
@@ -43,7 +43,7 @@ class _UserEnquiryState extends State<UserEnquiry> {
       // Fetch the enquiries using the user_id (from the Enquiries collection)
       QuerySnapshot querySnapshot = await _firestore
           .collection('Enquiries')
-          .where('user_id', isEqualTo: widget.user_id)
+          .where('card_no', isEqualTo: widget.user_id)
           .orderBy('timestamp', descending: true) // Ensure timestamp is indexed
           .get();
 
@@ -56,26 +56,32 @@ class _UserEnquiryState extends State<UserEnquiry> {
       }
 
       // Process the documents
-        setState(() {
-      _enquiries = querySnapshot.docs.map((doc) {
-        var data = doc.data() as Map<String, dynamic>;  // Firestore document data as dynamic
+      setState(() {
+        _enquiries = querySnapshot.docs.map((doc) {
+          var data = doc.data()
+              as Map<String, dynamic>; // Firestore document data as dynamic
 
-        return {
-          'subject': data['subject']?.toString() ?? 'No Subject', // Explicit conversion to string
-          'description': data['description']?.toString() ?? 'No Description', // Explicit conversion to string
-          'status': data['status']?.toString() ?? 'No Status', // Explicit conversion to string
-          'response': data['response']?.toString() ?? 'No Response', // Explicit conversion to string
-        };
-      }).toList();
-      _isLoading = false;
-    });
+          return {
+            'subject': data['subject']?.toString() ??
+                'No Subject', // Explicit conversion to string
+            'description': data['description']?.toString() ??
+                'No Description', // Explicit conversion to string
+            'status': data['status']?.toString() ??
+                'No Status', // Explicit conversion to string
+            'response': data['response']?.toString() ??
+                'No Response', // Explicit conversion to string
+          };
+        }).toList();
+        _isLoading = false;
+      });
     } catch (e) {
       print('Error fetching enquiries: $e');
       setState(() {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching enquiries. Please try again later.')),
+        SnackBar(
+            content: Text('Error fetching enquiries. Please try again later.')),
       );
     }
   }
@@ -93,7 +99,7 @@ class _UserEnquiryState extends State<UserEnquiry> {
           'status': 'Submitted',
           'timestamp': FieldValue.serverTimestamp(),
           'response': null,
-          'user_id': widget.user_id,  // Store the user_id here
+          'card_no': widget.user_id, // Store the user_id here
         });
 
         _subjectController.clear();
@@ -106,7 +112,9 @@ class _UserEnquiryState extends State<UserEnquiry> {
       } catch (e) {
         print('Error submitting enquiry: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error submitting enquiry. Please try again later.')),
+          SnackBar(
+              content:
+                  Text('Error submitting enquiry. Please try again later.')),
         );
       }
     } else {

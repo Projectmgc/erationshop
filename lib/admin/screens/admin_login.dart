@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:erationshop/admin/screens/admin_forgot.dart';
+import 'package:erationshop/admin/screens/admin_home.dart'; // Import the AdminHome page
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,7 +19,7 @@ class _Admin_LoginState extends State<Admin_Login> {
   bool passwordVisible = true;
   bool loading = false;
 
-  // Method to login using Firestore
+  // Method to login using Firestore (without Firebase Authentication)
   void login() async {
     setState(() {
       loading = true;
@@ -37,8 +38,15 @@ class _Admin_LoginState extends State<Admin_Login> {
           .get();
 
       if (adminSnapshot.docs.isNotEmpty) {
-        // If a matching admin is found, navigate to the admin dashboard
-        Navigator.pushReplacementNamed(context, '/adminDashboard'); // Change this to your actual dashboard screen
+        // If a matching admin is found, navigate to the AdminHome screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login successful')),
+        );
+        // Navigate to AdminHome page
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => AdminHomeScreen()),
+        );
       } else {
         // If no matching admin is found, show an error
         ScaffoldMessenger.of(context).showSnackBar(
@@ -182,12 +190,14 @@ class _Admin_LoginState extends State<Admin_Login> {
                     elevation: MaterialStateProperty.all(10.0),
                   ),
                   onPressed: login,
-                  child: Text(
-                    'LOGIN',
-                    style: TextStyle(
-                        color: const Color.fromARGB(255, 8, 6, 21),
-                        fontWeight: FontWeight.bold),
-                  ),
+                  child: loading
+                      ? CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          'LOGIN',
+                          style: TextStyle(
+                              color: const Color.fromARGB(255, 8, 6, 21),
+                              fontWeight: FontWeight.bold),
+                        ),
                 ),
                 SizedBox(height: 10),
               ],

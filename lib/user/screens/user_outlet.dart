@@ -109,6 +109,7 @@ class _UserOutletState extends State<UserOutlet> {
                   List<Map<String, dynamic>> outlets = [];
                   for (var doc in snapshot.data!.docs) {
                     final shopOwnerData = doc.data() as Map<String, dynamic>;
+                    print(shopOwnerData['lat']);
                     outlets.add({
                       'outletName': shopOwnerData['store_name'] ?? 'N/A',
                       'ownerName': shopOwnerData['name'] ?? 'N/A',

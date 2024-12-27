@@ -18,13 +18,5 @@ Future<void> main() async {
 
   card_no = prefs.getString('card_no');
 
-<<<<<<< HEAD
-
-
-
   runApp(MaterialApp(debugShowCheckedModeBanner: false, home: IntroPage()));
-=======
-  runApp(
-      MaterialApp(debugShowCheckedModeBanner: false, home: AdminHomeScreen()));
->>>>>>> c226dd058b3c5252b202badeca98516b94ed94d7
 }

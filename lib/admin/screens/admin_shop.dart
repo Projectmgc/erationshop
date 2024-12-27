@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:map_location_picker/map_location_picker.dart';
+import 'package:geocoding/geocoding.dart';
 
 class AdminShopPage extends StatefulWidget {
   const AdminShopPage({super.key});
@@ -18,14 +17,13 @@ class _AdminShopPageState extends State<AdminShopPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _shopIdController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();  // New controller for password
+  final TextEditingController _passwordController = TextEditingController(); // New controller for password
 
   bool _isEditing = false;
   String? _shopIdToEdit;
-  bool _isPasswordVisible = false;  // Boolean variable to control password visibility
-  late GoogleMapController mapController;
-  LatLng _selectedLocation = LatLng(37.7749, -122.4194); // Default to San Francisco
-  Set<Marker> _markers = {};
+  bool _isPasswordVisible = false; // Boolean variable to control password visibility
+  late double _latitude;
+  late double _longitude;
 
   // Function to add a new shop
   Future<void> _addShop() async {
@@ -38,8 +36,9 @@ class _AdminShopPageState extends State<AdminShopPage> {
           'email': _emailController.text,
           'phone': _phoneController.text,
           'shop_id': _shopIdController.text,
-          'password': _passwordController.text,  // Save the password field
-          'location': GeoPoint(_selectedLocation.latitude, _selectedLocation.longitude), // Save location
+          'password': _passwordController.text, // Save the password field
+          'lat': _latitude,
+          'long': _longitude // Save location
         };
 
         await FirebaseFirestore.instance.collection('Shop Owner').add(newShop);
@@ -67,8 +66,8 @@ class _AdminShopPageState extends State<AdminShopPage> {
           'email': _emailController.text,
           'phone': _phoneController.text,
           'shop_id': _shopIdController.text,
-          'password': _passwordController.text,  // Update the password field
-          'location': GeoPoint(_selectedLocation.latitude, _selectedLocation.longitude), // Update location
+          'password': _passwordController.text, // Update the password field
+          'location': GeoPoint(_latitude, _longitude), // Update location
         };
 
         await FirebaseFirestore.instance
@@ -97,13 +96,13 @@ class _AdminShopPageState extends State<AdminShopPage> {
     _emailController.clear();
     _phoneController.clear();
     _shopIdController.clear();
-    _passwordController.clear();  // Clear password field
+    _passwordController.clear(); // Clear password field
     setState(() {
       _isEditing = false;
       _shopIdToEdit = null;
-      _isPasswordVisible = false;  // Reset password visibility
-      _selectedLocation = LatLng(37.7749, -122.4194); // Reset to default location
-      _markers.clear();
+      _isPasswordVisible = false; // Reset password visibility
+      _latitude = 0.0;
+      _longitude = 0.0;
     });
   }
 
@@ -115,41 +114,55 @@ class _AdminShopPageState extends State<AdminShopPage> {
     _emailController.text = shop['email'];
     _phoneController.text = shop['phone'];
     _shopIdController.text = shop['shop_id'];
-    _passwordController.text = shop['password'] ?? '';  // Load password field
+    _passwordController.text = shop['password'] ?? ''; // Load password field
 
     if (shop['location'] != null) {
       GeoPoint location = shop['location'];
-      _selectedLocation = LatLng(location.latitude, location.longitude);
-      _markers.add(Marker(
-        markerId: MarkerId('selected_location'),
-        position: _selectedLocation,
-        infoWindow: InfoWindow(title: 'Selected Location'),
-      ));
+      _latitude = location.latitude;
+      _longitude = location.longitude;
     }
 
     setState(() {
       _isEditing = true;
       _shopIdToEdit = shop.id;
-      _isPasswordVisible = false;  // Default to password hidden on edit
+      _isPasswordVisible = false; // Default to password hidden on edit
     });
   }
 
-  // Function to handle map taps and place a marker
-  void _onMapTapped(LatLng position) {
-    setState(() {
-      _selectedLocation = position;
+  // Function to handle geocoding
+  Future<void> _getLatLongFromAddress() async {
+    
+    try {
+      // Perform geocoding to get the latitude and longitude from the address
+     if(_addressController.text.isNotEmpty){
+       List<Location> locations = await locationFromAddress('Kannur');
+      if (locations.isNotEmpty) {
+        setState(() {
+          _latitude = locations.first.latitude;
+          _longitude = locations.first.longitude;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Address converted to coordinates')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No location found for the address')),
+        );
+      }
 
-      // Clear the existing markers and add a new marker
-      _markers.clear();
-      _markers.add(Marker(
-        markerId: MarkerId('selected_location'),
-        position: position,
-        infoWindow: InfoWindow(title: 'Selected Location'),
-      ));
-    });
+     }else{
 
-    // Move camera to the tapped location
-    mapController.animateCamera(CameraUpdate.newLatLng(position));
+       ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Complete the address fieldr')),
+        );
+
+
+     }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error in geocoding address')),
+      );
+    }
   }
 
   @override
@@ -197,6 +210,14 @@ class _AdminShopPageState extends State<AdminShopPage> {
                       return null;
                     },
                   ),
+                  // Button to trigger geocoding
+                  ElevatedButton(
+                    onPressed: _getLatLongFromAddress,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurpleAccent,
+                    ),
+                    child: const Text('FGet Latitude & Longitude'),
+                  ),
                   TextFormField(
                     controller: _emailController,
                     decoration: const InputDecoration(labelText: 'Email'),
@@ -229,7 +250,7 @@ class _AdminShopPageState extends State<AdminShopPage> {
                   ),
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: !_isPasswordVisible,  // Toggle visibility
+                    obscureText: !_isPasswordVisible, // Toggle visibility
                     decoration: InputDecoration(
                       labelText: 'Password',
                       suffixIcon: IconButton(
@@ -240,7 +261,7 @@ class _AdminShopPageState extends State<AdminShopPage> {
                         ),
                         onPressed: () {
                           setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;  // Toggle password visibility
+                            _isPasswordVisible = !_isPasswordVisible; // Toggle password visibility
                           });
                         },
                       ),
@@ -261,78 +282,12 @@ class _AdminShopPageState extends State<AdminShopPage> {
                     ),
                     child: Text(_isEditing ? 'Update Shop' : 'Add Shop'),
                   ),
-
-                  ElevatedButton(
-                    onPressed: () async {
-                      var address;
-
-
-
-
-                      Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return MapLocationPicker(
-                        apiKey: 'AIzaSyCzu6eo_x-We7qK2SIKlkRy5EvJhnfSGv4',
-                        popOnNextButtonTaped: true,
-                        currentLatLng: const LatLng(29.146727, 76.464895),
-                        debounceDuration: const Duration(milliseconds: 500),
-                        onNext: (GeocodingResult? result) {
-                          if (result != null) {
-                            setState(() {
-                              address = result.formattedAddress ?? "";
-                            });
-                          }
-                        },
-                        onSuggestionSelected: (PlacesDetailsResponse? result) {
-                          if (result != null) {
-                            setState(() {
-                              
-                            });
-                          }
-                        },
-                      );
-                    },
-                  ),
-                );
-
-                      
-
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurpleAccent,
-                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                    ),
-                    child: Text(_isEditing ? 'Update Shop' : 'Add Shop'),
-                  ),
                 ],
               ),
             ),
-
-
-            
-            // const SizedBox(height: 20),
-            // // Google Maps Widget to select location
-            // SizedBox(
-            //   height: 300,
-            //   child: GoogleMap(
-            //     initialCameraPosition: CameraPosition(
-            //       target: _selectedLocation,
-            //       zoom: 14.0,
-            //     ),
-            //     onMapCreated: (GoogleMapController controller) {
-            //       mapController = controller;
-            //     },
-            //     onTap: _onMapTapped, // Handle tap to select location
-            //     markers: _markers, // Show the selected marker
-            //   ),
-            // ),
-          
-          
-          
           ],
         ),
       ),
     );
-  }}
+  }
+}

@@ -1,16 +1,16 @@
-import 'package:erationshop/admin/screens/admin.converse.dart';
-import 'package:erationshop/admin/screens/admin_shop.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart'; // Import the package
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'admin_product.dart'; // Import your AdminProductPage
 import 'admin_profile.dart';
 import 'admin_stoke.dart';
 import 'admin_sales.dart';
 import 'admin_complaint.dart';
 import 'admin_card.dart';
-
 import 'admin_notification.dart';
-// Import the AdminShopPage
+import 'admin_shop.dart';
+import 'admin.converse.dart';
+import 'admin_request.dart'; // Import AdminRequestPage
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -79,6 +79,24 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'description': 'Manage and view shop details.',
       'image': 'asset/outlet.jpg',
       'page': AdminShopPage(), // Navigation target for AdminShopPage
+    },
+    // New Card for AdminProductPage (Add Product to Stock)
+    {
+      'title': 'Add Product',
+      'icon': Icons.add_box,
+      'color': Colors.deepOrangeAccent,
+      'description': 'Add new products to the stock.',
+      'image': 'asset/outlet.jpg',
+      'page': AdminProduct(), // Navigation target for AdminProductPage
+    },
+    // New Card for AdminRequestPage (Approve Member Requests)
+    {
+      'title': 'Member Requests',
+      'icon': Icons.check_circle,
+      'color': Colors.blueGrey,
+      'description': 'Approve or reject member addition requests.',
+      'image': 'asset/outlet.jpg', // Add your own image path
+      'page': AdminRequest(), // Navigation target for AdminRequestPage
     },
   ];
 

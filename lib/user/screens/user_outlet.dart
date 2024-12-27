@@ -174,7 +174,7 @@ class _UserOutletState extends State<UserOutlet> {
               children: [
                 ElevatedButton.icon(
                   onPressed: () => _openMap(
-                      outlet['latitude'], outlet['longitude']),
+                      outlet['latitude'].toString(), outlet['longitude'].toString()),
                   icon: Icon(Icons.location_on),
                   label: Text('View Location'),
                   style: ElevatedButton.styleFrom(

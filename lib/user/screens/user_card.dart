@@ -1,440 +1,327 @@
-import 'package:erationshop/user/screens/uhome_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const UserCard(),
-    );
-  }
-}
-
-class UserCard extends StatelessWidget {
+class UserCard extends StatefulWidget {
   const UserCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    
-    final List<Map<String, dynamic>> rationCards = [
-      {
-        'name': 'John Doe',
-        'cardNumber': '**** **** 1234',
-        'familyMembers': [
-          {'name': 'John Doe', 'id': 'ID123', 'aadhaar': '1234-5678-9012', 'removed': false},
-          {'name': 'Jane Doe', 'id': 'ID124', 'aadhaar': '1234-5678-9013', 'removed': false},
-        ],
-      },
-    ];
+  _UserCardState createState() => _UserCardState();
+}
 
+class _UserCardState extends State<UserCard> {
+  // A list of family members. This will be fetched from Firestore.
+  List<Map<String, String>> familyMembers = [];
+  
+  // List of approved and rejected requests
+  List<Map<String, dynamic>> approvedRequests = [];
+  List<Map<String, dynamic>> rejectedRequests = [];
+
+  // Flags to check if the data is loaded
+  bool isLoading = true;
+  String? userCardNo;
+
+  // Retrieve the card_no from SharedPreferences
+  Future<String?> _getUserCardNo() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('card_no'); // 'card_no' is the key used to store the card number
+  }
+
+  // Fetch card data from Firestore using the card number
+  Future<Map<String, dynamic>?> _getUserCardData(String cardNo) async {
+    try {
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('Card')
+          .where('card_no', isEqualTo: cardNo)
+          .limit(1)
+          .get();
+      if (docSnapshot.docs.isNotEmpty) {
+        return docSnapshot.docs.first.data() as Map<String, dynamic>?; // Return card data
+      } else {
+        return null; // If card doesn't exist
+      }
+    } catch (e) {
+      print('Error fetching card data: $e');
+      return null; // In case of any error
+    }
+  }
+
+  // Fetch pending, approved, and rejected requests from Firestore
+  Future<void> _fetchRequests(String cardNo) async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('RequestMember')
+          .where('card_no', isEqualTo: cardNo)
+          .get();
+
+      setState(() {
+        approvedRequests = [];
+        rejectedRequests = [];
+
+        // Process the requests and categorize them into approved and rejected
+        for (var doc in querySnapshot.docs) {
+          final request = doc.data() as Map<String, dynamic>;
+          if (request['status'] == 'approved') {
+            approvedRequests.add(request);
+          } else if (request['status'] == 'rejected') {
+            rejectedRequests.add(request);
+          }
+        }
+      });
+    } catch (e) {
+      print('Error fetching requests: $e');
+    }
+  }
+
+  // Initialize the state and fetch the user card data and requests
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  // Load user data once on widget initialization
+  Future<void> _loadUserData() async {
+    final cardNo = await _getUserCardNo();
+    if (cardNo != null) {
+      setState(() {
+        userCardNo = cardNo;
+      });
+
+      final cardData = await _getUserCardData(cardNo);
+      if (cardData != null) {
+        setState(() {
+          familyMembers = List.generate(
+            int.parse(cardData['members_count']),
+            (index) => {
+              'name': 'Member $index',
+              'id': 'ID${index + 1}',
+            },
+          );
+        });
+        // Fetch approved and rejected requests once the card data is loaded
+        _fetchRequests(cardNo);
+      }
+      setState(() {
+        isLoading = false; // Data is now loaded
+      });
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  // Function to add a new family member
+  void _addMember(String name, String id, String cardno) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      await FirebaseFirestore.instance.collection('RequestMember').add({
+        'card_no': cardno,
+        'member_id': id,
+        'member_name': name,
+        'timestamp': FieldValue.serverTimestamp(), // Add the current server timestamp
+        'status': 'pending', // Default status is 'pending'
+      });
+
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      print('Error adding member: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ration Cards'),
         flexibleSpace: const BackgroundGradient(),
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color.fromARGB(255, 245, 184, 93),
-              Color.fromARGB(255, 233, 211, 88),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: ListView.builder(
-          padding: const EdgeInsets.all(16.0),
-          itemCount: rationCards.length,
-          itemBuilder: (context, index) {
-            final card = rationCards[index];
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 8.0),
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: ListTile(
-                leading: const Icon(Icons.credit_card, color: Colors.deepPurpleAccent),
-                title: Text(card['name']),
-                subtitle: Text('Card Number: ${card['cardNumber']}'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 18),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CardDetailsPage(card: card),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator()) // Loading indicator
+          : userCardNo == null
+              ? const Center(child: Text('No card number found in preferences'))
+              : Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Color.fromARGB(255, 245, 184, 93),
+                        Color.fromARGB(255, 233, 211, 88),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  );
-                },
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class CardDetailsPage extends StatefulWidget {
-  final Map<String, dynamic> card;
-
-  const CardDetailsPage({required this.card, super.key});
-
-  @override
-  _CardDetailsPageState createState() => _CardDetailsPageState();
-}
-
-class _CardDetailsPageState extends State<CardDetailsPage> {
-  void _navigateToMemberRemovalPage(int index) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MemberRemovalPage(
-          card: widget.card,
-          memberIndex: index,
-        ),
-      ),
-    );
-  }
-
-  void _navigateToAddMemberPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddMemberPage(card: widget.card),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Card Details'),
-        flexibleSpace: const BackgroundGradient(),
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color.fromARGB(255, 245, 184, 93),
-              Color.fromARGB(255, 233, 211, 88),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Cardholder: ${widget.card['name']}',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Card Number: ${widget.card['cardNumber']}',
-              style: const TextStyle(fontSize: 18),
-            ),
-            const SizedBox(height: 30),
-            const Text(
-              'Family Members',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: widget.card['familyMembers'].length,
-                itemBuilder: (context, index) {
-                  final member = widget.card['familyMembers'][index];
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.deepPurpleAccent,
-                      child: const Icon(Icons.person, color: Colors.white),
-                    ),
-                    title: Text(member['name']),
-                    subtitle: Text('ID: ${member['id']}'),
-                    trailing: IconButton(
-                      icon: Icon(
-                        Icons.delete,
-                        color: member['removed'] ? Colors.grey : Colors.red,
+                  ),
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Cardholder: ${familyMembers.isNotEmpty ? familyMembers[0]['name'] : 'Loading...'}',
+                        style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepPurple),
                       ),
-                      onPressed: member['removed']
-                          ? null
-                          : () => _navigateToMemberRemovalPage(index),
-                    ),
-                  );
-                },
-              ),
-            ),
-            ElevatedButton.icon(
-              onPressed: _navigateToAddMemberPage,
-              icon: const Icon(Icons.person_add),
-              label: const Text('Add Member'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-              ),
-            ),
-          ],
-        ),
-      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Card Number: $userCardNo',
+                        style: const TextStyle(fontSize: 18, color: Colors.black87),
+                      ),
+                      const SizedBox(height: 30),
+                      const Text(
+                        'Family Members',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: familyMembers.length,
+                          itemBuilder: (context, index) {
+                            final member = familyMembers[index];
+                            return Card(
+                              margin: const EdgeInsets.symmetric(vertical: 8.0),
+                              elevation: 4,
+                              child: ListTile(
+                                leading: const CircleAvatar(
+                                  backgroundColor: Colors.deepPurpleAccent,
+                                  child: Icon(Icons.person, color: Colors.white),
+                                ),
+                                title: Text(member['name']!),
+                                subtitle: Text('id: ${member['id']}'),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () {
+                                    setState(() {
+                                      familyMembers.removeAt(index);
+                                    });
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          _showAddMemberDialog(context);
+                        },
+                        icon: const Icon(Icons.person_add),
+                        label: const Text('Add Member'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      const Text(
+                        'Approved Requests',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: approvedRequests.length,
+                        itemBuilder: (context, index) {
+                          final request = approvedRequests[index];
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 8.0),
+                            elevation: 4,
+                            child: ListTile(
+                              title: Text(request['member_name']),
+                              subtitle: Text('ID: ${request['member_id']}'),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Rejected Requests',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: rejectedRequests.length,
+                        itemBuilder: (context, index) {
+                          final request = rejectedRequests[index];
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 8.0),
+                            elevation: 4,
+                            child: ListTile(
+                              title: Text(request['member_name']),
+                              subtitle: Text('ID: ${request['member_id']}'),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
     );
   }
-}
 
-class MemberRemovalPage extends StatefulWidget {
-  final Map<String, dynamic> card;
-  final int memberIndex;
-
-  const MemberRemovalPage({required this.card, required this.memberIndex, super.key});
-
-  @override
-  _MemberRemovalPageState createState() => _MemberRemovalPageState();
-}
-
-class _MemberRemovalPageState extends State<MemberRemovalPage> {
-  final TextEditingController _reasonController = TextEditingController();
-  FilePickerResult? _consentFile;
-
-  void _pickConsentFile() async {
-    final consentFile = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf', 'docx'],
-    );
-
-    if (consentFile != null) {
-      setState(() {
-        _consentFile = consentFile;
-      });
-    }
-  }
-
-  void _confirmAndSubmitDeletion() {
-    if (_reasonController.text.isEmpty || _consentFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please provide all required details.')),
-      );
-      return;
-    }
+  // Show dialog to add a new member
+  void _showAddMemberDialog(BuildContext context) {
+    final nameController = TextEditingController();
+    final idController = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Confirmation'),
-          content: const Text('Do you really want to continue with the member removal?'),
+          title: const Text('Add Family Member'),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Name',
+                  hintText: 'Enter family member\'s name',
+                ),
+              ),
+              TextField(
+                controller: idController,
+                decoration: const InputDecoration(
+                  labelText: 'Adhar number',
+                  hintText: 'Enter family member\'s ID',
+                ),
+              ),
+            ],
+          ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close the dialog without submitting
+                Navigator.pop(context);
               },
-              child: const Text('No'),
+              child: const Text('Cancel'),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () {
-                setState(() {
-                  widget.card['familyMembers'][widget.memberIndex]['removed'] = true;
-                });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Request Successfully Submitted!')),
-                );
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => UhomeScreen()), 
-                  (Route<dynamic> route) => false,
-                );
+                final name = nameController.text.trim();
+                final id = idController.text.trim();
+                if (name.isNotEmpty && id.isNotEmpty) {
+                  _addMember(name, id, userCardNo!);
+                  Navigator.pop(context);
+                }
               },
-              child: const Text('Yes'),
+              child: const Text('Add'),
             ),
           ],
         );
       },
     );
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Remove Member'),
-        flexibleSpace: const BackgroundGradient(),
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color.fromARGB(255, 245, 184, 93),
-              Color.fromARGB(255, 233, 211, 88),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _reasonController,
-              decoration: const InputDecoration(labelText: 'Reason for Removal'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _pickConsentFile,
-              child: Text(_consentFile == null
-                  ? 'Attach Consent File'
-                  : 'Change Consent File'),
-            ),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: _confirmAndSubmitDeletion,
-              child: const Text('Submit Deletion'),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurpleAccent),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
-
-class AddMemberPage extends StatefulWidget {
-  final Map<String, dynamic> card;
-
-  const AddMemberPage({required this.card, super.key});
-
-  @override
-  _AddMemberPageState createState() => _AddMemberPageState();
-}
-
-class _AddMemberPageState extends State<AddMemberPage> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _aadhaarController = TextEditingController();
-  final TextEditingController _ageController = TextEditingController();
-  FilePickerResult? _aadhaarFile;
-
-  void _pickAadhaarFile() async {
-    final file = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf', 'docx']);
-    if (file != null) {
-      setState(() {
-        _aadhaarFile = file;
-      });
-    }
-  }
-
-  void _confirmAndSubmit() {
-    if (_nameController.text.isEmpty ||
-        _aadhaarController.text.isEmpty ||
-        _ageController.text.isEmpty ||
-        _aadhaarFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please provide all required details.')),
-      );
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Confirmation'),
-          content: const Text('Do you really want to continue and add this member?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close the dialog without submitting
-              },
-              child: const Text('No'),
-            ),
-            TextButton(
-              onPressed: () {
-                widget.card['familyMembers'].add({
-                  'name': _nameController.text,
-                  'id': 'ID${DateTime.now().millisecondsSinceEpoch}',
-                  'aadhaar': _aadhaarController.text,
-                  'removed': false,
-                });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Request Successfully Submitted!')),
-                );
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => UhomeScreen()), 
-                  (Route<dynamic> route) => false,
-                );
-              },
-              child: const Text('Yes'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Member'),
-        flexibleSpace: const BackgroundGradient(),
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color.fromARGB(255, 245, 184, 93),
-              Color.fromARGB(255, 233, 211, 88),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Member Name'),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _aadhaarController,
-              decoration: const InputDecoration(labelText: 'Aadhaar Number'),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _ageController,
-              decoration: const InputDecoration(labelText: 'Age'),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _pickAadhaarFile,
-              child: Text(_aadhaarFile == null
-                  ? 'Attach Aadhaar File'
-                  : 'Change Aadhaar File'),
-            ),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: _confirmAndSubmit,
-              child: const Text('Add Member'),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurpleAccent),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-
 
 class BackgroundGradient extends StatelessWidget {
   const BackgroundGradient({super.key});

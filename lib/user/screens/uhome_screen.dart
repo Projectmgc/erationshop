@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UhomeScreen extends StatefulWidget {
   const UhomeScreen({super.key});
@@ -67,8 +68,10 @@ class _UhomeScreenState extends State<UhomeScreen> {
 
     // Listen for page changes to enable looping (optional)
     _pageController.addListener(() {
-      if (_pageController.position.pixels >= _pageController.position.maxScrollExtent ||
-          _pageController.position.pixels <= _pageController.position.minScrollExtent) {
+      if (_pageController.position.pixels >=
+              _pageController.position.maxScrollExtent ||
+          _pageController.position.pixels <=
+              _pageController.position.minScrollExtent) {
         // After reaching the last or first card, jump to the opposite end
         if (_pageController.page == _cards.length - 1) {
           _pageController.jumpToPage(0);
@@ -79,34 +82,13 @@ class _UhomeScreenState extends State<UhomeScreen> {
     });
   }
 
-  // Fetch the user_id associated with the current user
-  void _fetchUserId() async {
-    try {
-      // Get the current user UID from FirebaseAuth
-      User? user = FirebaseAuth.instance.currentUser;
-
-      if (user != null) {
-        // Get the current user's document from Firestore
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('Users')  // Assuming your collection is named 'Users'
-            .doc(user.uid)        // Using the current user's UID to get the document
-            .get();
-
-        if (userDoc.exists) {
-          // Assuming 'user_id' is the field in the user's document
-          setState(() {
-            _userId = userDoc['user_id'] ?? '';  // Fetch the user_id or set it to an empty string if not found
-          });
-        } else {
-          print("User document does not exist");
-        }
-      } else {
-        print("No user is logged in");
-      }
-    } catch (e) {
-      print("Error fetching user_id: $e");
-    }
+  Future<void> _fetchUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    _userId = prefs.getString(
+        'card_no')!; // Assuming 'card_no' is stored in SharedPreferences
   }
+
+  // Fetch the user_id associated with the current user
 
   // Handle the card tap event and navigate accordingly
   void _onCardTapped(BuildContext context, Widget? page) {
@@ -121,7 +103,8 @@ class _UhomeScreenState extends State<UhomeScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => UserEnquiry( user_id: '_userId'), // Pass the userId to UserEnquiry
+          builder: (context) =>
+              UserEnquiry(user_id: _userId), // Pass the userId to UserEnquiry
         ),
       );
     }
@@ -184,7 +167,8 @@ class _UhomeScreenState extends State<UhomeScreen> {
                       icon: CircleAvatar(
                         radius: 20,
                         backgroundColor: const Color.fromARGB(255, 85, 50, 4),
-                        child: Icon(Icons.person, color: const Color.fromARGB(255, 250, 250, 250)),
+                        child: Icon(Icons.person,
+                            color: const Color.fromARGB(255, 250, 250, 250)),
                       ),
                       onPressed: gotoprofile,
                     ),
@@ -208,13 +192,15 @@ class _UhomeScreenState extends State<UhomeScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 20.0),
                 child: SmoothPageIndicator(
-                  controller: _pageController, // Controller to sync with PageView
+                  controller:
+                      _pageController, // Controller to sync with PageView
                   count: _cards.length, // Number of dots
                   effect: ExpandingDotsEffect(
                     dotWidth: 10,
                     dotHeight: 10,
                     activeDotColor: Colors.deepPurpleAccent, // Active dot color
-                    dotColor: Colors.white.withOpacity(0.5), // Inactive dot color
+                    dotColor:
+                        Colors.white.withOpacity(0.5), // Inactive dot color
                   ),
                 ),
               ),

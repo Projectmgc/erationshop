@@ -13,12 +13,15 @@ class ComplaintsPage extends StatelessWidget {
 
     return querySnapshot.docs.map((doc) {
       return {
-        'subject': doc['subject'] != null ? doc['subject'] : 'No subject provided',
+        'subject':
+            doc['subject'] != null ? doc['subject'] : 'No subject provided',
         'status': doc['status'] != null ? doc['status'] : 'No status provided',
         'timestamp': doc['timestamp'],
-        'description': doc['description'] != null ? doc['description'] : 'No description provided',
-        'complaintId': doc.id,  // Adding the document ID for reference
-        'response': doc['response'],  // Adding response data for display
+        'description': doc['description'] != null
+            ? doc['description']
+            : 'No description provided',
+        'complaintId': doc.id, // Adding the document ID for reference
+        'response': doc['response'], // Adding response data for display
       };
     }).toList();
   }
@@ -54,10 +57,15 @@ class ComplaintsPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: ListTile(
-                    leading: Icon(
-                      Icons.report_problem,
-                      color: Colors.redAccent,
-                    ),
+                    leading: complaint['response'] == null
+                        ? Icon(
+                            Icons.check,
+                            color: Colors.green,
+                          )
+                        : Icon(
+                            Icons.report_problem,
+                            color: Colors.redAccent,
+                          ),
                     title: Text(
                       complaint['subject'],
                       style: const TextStyle(fontWeight: FontWeight.bold),
@@ -69,14 +77,18 @@ class ComplaintsPage extends StatelessWidget {
                         const SizedBox(height: 5),
                         Text(
                           'Filed on: ${complaint['timestamp']?.toDate().toString() ?? 'No timestamp available'}',
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          style:
+                              const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                         if (complaint['response'] != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
                               'Response: ${complaint['response']}',
-                              style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Colors.green),
+                              style: const TextStyle(
+                                  fontSize: 14,
+                                  fontStyle: FontStyle.italic,
+                                  color: Colors.green),
                             ),
                           ),
                       ],
@@ -119,14 +131,17 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
   Future<void> _submitResponse() async {
     if (_responseController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a response before submitting')),
+        const SnackBar(
+            content: Text('Please enter a response before submitting')),
       );
       return;
     }
 
     try {
       // Get the document reference for the current complaint
-      final complaintRef = FirebaseFirestore.instance.collection('Enquiries').doc(widget.complaint['complaintId']);
+      final complaintRef = FirebaseFirestore.instance
+          .collection('Enquiries')
+          .doc(widget.complaint['complaintId']);
 
       // Update the document with the response and set the status to 'Resolved'
       await complaintRef.update({
@@ -202,11 +217,15 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
                   widget.complaint['response']!,
-                  style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic, color: Colors.green),
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.green),
                 ),
               )
             else
-              const Text('No response yet.', style: TextStyle(fontSize: 16, color: Colors.grey)),
+              const Text('No response yet.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey)),
             const SizedBox(height: 20),
             const Text(
               'Submit Response:',
@@ -226,7 +245,8 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
                 onPressed: _submitResponse,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurpleAccent,
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                 ),
                 child: const Text('Submit Response'),
               ),

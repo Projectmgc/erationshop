@@ -173,8 +173,8 @@ class _UserOutletState extends State<UserOutlet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 ElevatedButton.icon(
-                  onPressed: () => _openMap(
-                      outlet['latitude'].toString(), outlet['longitude'].toString()),
+                  onPressed: () => _openMap(outlet['latitude'].toString(),
+                      outlet['longitude'].toString()),
                   icon: Icon(Icons.location_on),
                   label: Text('View Location'),
                   style: ElevatedButton.styleFrom(
@@ -182,8 +182,8 @@ class _UserOutletState extends State<UserOutlet> {
                   ),
                 ),
                 ElevatedButton.icon(
-                  onPressed: () => _openRoute(outlet['latitude'],
-                      outlet['longitude']),
+                  onPressed: () => _openRoute(outlet['latitude'].toString(),
+                      outlet['longitude'].toString()),
                   icon: Icon(Icons.directions),
                   label: Text('Get Route'),
                   style: ElevatedButton.styleFrom(

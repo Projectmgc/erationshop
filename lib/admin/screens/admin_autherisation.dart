@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class RequestDetailPage extends StatefulWidget {
   final String requestId;
 
-  const RequestDetailPage({super.key, required this.requestId, required memberName, required cardNo, required status, required DateTime timestamp, required mobileNo});
+  const RequestDetailPage({super.key, required this.requestId, required DateTime timestamp, required status, required mobileNo, required memberName, required cardNo});
 
   @override
   _RequestDetailPageState createState() => _RequestDetailPageState();
@@ -35,36 +35,43 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
   Future<void> _approveRequest() async {
     try {
       final cardNo = requestDetails['card_no'];
-      final memberId = requestDetails['member_id'];
+      final memberId = requestDetails['mobile_no']; // Using 'mobile_no' as member identifier
       final memberName = requestDetails['member_name'];
 
-      // Step 1: Add the new member to the member_list sub-collection of the Card collection
-      final cardDocRef = FirebaseFirestore.instance.collection('Card').doc(cardNo);
+      // Step 1: Find the Card document based on card_no field in the collection
+      final cardQuerySnapshot = await FirebaseFirestore.instance
+          .collection('Card')
+          .where('card_no', isEqualTo: cardNo)
+          .limit(1)  // Limit to 1 document as there should only be one match
+          .get();
+
+      if (cardQuerySnapshot.docs.isEmpty) {
+        throw Exception('Card not found');
+      }
+
+      // Get the Card document from the query
+      final cardDocSnapshot = cardQuerySnapshot.docs.first;
+      final cardDocRef = cardDocSnapshot.reference;
       final memberListRef = cardDocRef.collection('member_list'); // member_list as a sub-collection
 
       await FirebaseFirestore.instance.runTransaction((transaction) async {
-        final cardSnapshot = await transaction.get(cardDocRef);
-
-        if (!cardSnapshot.exists) {
-          throw Exception('Card not found');
-        }
-
         // Step 2: Add the new member to the member_list sub-collection using set()
-        // Creating a new document with the memberId as the documentId
         transaction.set(
-          memberListRef.doc(memberId), // Use memberId as the document ID
+          memberListRef.doc(), // Use memberId (mobile_no) as the document ID
           {
-            'member_id': memberId,
+            'mobile_no': memberId,
             'member_name': memberName,
-            'added_timestamp': FieldValue.serverTimestamp(),
+            // No added_timestamp here
           },
         );
 
-        // Step 3: Update the members_count by fetching the updated member count
-        final updatedMemberCount = (cardSnapshot['members_count'] ?? 0) + 1;
+        // Step 3: Update the members_count by fetching the current member count and incrementing it
+        final currentMemberCount = int.tryParse(cardDocSnapshot['members_count'] ?? '0') ?? 0;
+        final updatedMemberCount = currentMemberCount + 1;
 
+        // Only update members_count, nothing else in the Card collection
         transaction.update(cardDocRef, {
-          'members_count': updatedMemberCount,
+          'members_count': updatedMemberCount.toString(),  // Update as string since it's a string field in Firestore
         });
       });
 
@@ -117,7 +124,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                 children: [
                   Text('Member Name: ${requestDetails['member_name']}',
                       style: const TextStyle(fontSize: 18)),
-                  Text('Member ID: ${requestDetails['member_id']}'),
+                  Text('Member ID: ${requestDetails['mobile_no']}'),
                   Text('Card No: ${requestDetails['card_no']}'),
                   const SizedBox(height: 20),
                   Row(

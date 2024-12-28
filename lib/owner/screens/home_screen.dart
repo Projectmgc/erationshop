@@ -1,11 +1,13 @@
 import 'package:erationshop/owner/screens/owner_selection.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'owner_profile.dart';
 import 'owner_outlet.dart';
 import 'owner_enquiry.dart';
 import 'owner_notification.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class OwnerHomeScreen extends StatefulWidget {
   const OwnerHomeScreen({super.key});
@@ -16,6 +18,8 @@ class OwnerHomeScreen extends StatefulWidget {
 
 class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
   final PageController _pageController = PageController();
+  String shopId = '';
+  Map<String, dynamic>? ownerData;
 
   // Updated _cards list without the "Card" page
   final List<Map<String, dynamic>> _cards = [
@@ -49,6 +53,44 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
     },
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _getShopId();
+  }
+
+  // Retrieve shop_id from SharedPreferences
+  void _getShopId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      shopId = prefs.getString('shop_id') ?? '';
+    });
+
+    if (shopId.isNotEmpty) {
+      _fetchOwnerData(shopId);
+    }
+  }
+
+  // Fetch shop owner data from Firestore
+  void _fetchOwnerData(String shopId) async {
+    try {
+      // Query Firestore for the owner data using shop_id
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Shop Owner')
+          .where('shop_id', isEqualTo: shopId)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        setState(() {
+          ownerData = querySnapshot.docs.first.data();
+        });
+      }
+    } catch (e) {
+      // Handle any errors that occur during the Firestore query
+      print('Error fetching owner data: $e');
+    }
+  }
+
   void _onCardTapped(Widget page) {
     Navigator.push(
       context,
@@ -59,7 +101,10 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
   void _goToProfile() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const ProfilePage()),
+      MaterialPageRoute(
+          builder: (context) => const ProfilePage(
+                shopId: '',
+              )),
     );
   }
 
@@ -84,42 +129,50 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Header Section
+              // Header Section with padding adjustments to move title and profile icon down
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
+                child: Column(
                   children: [
-                    ClipOval(
-                      child: Image.asset(
-                        'asset/logo.jpg',
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.contain,
-                      ),
+                    SizedBox(
+                        height: 30), // Added extra space to move elements down
+                    Row(
+                      children: [
+                        ClipOval(
+                          child: Image.asset(
+                            'asset/logo.jpg',
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Text(
+                          'OWNER HOME',
+                          style: GoogleFonts.merriweather(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22.0,
+                          ),
+                        ),
+                        Spacer(),
+                        IconButton(
+                          icon: CircleAvatar(
+                            radius: 20,
+                            backgroundColor: Colors.white,
+                            child: Icon(Icons.person,
+                                color: Colors.deepPurpleAccent),
+                          ),
+                          onPressed:
+                              _goToProfile, // Navigate to the profile screen
+                        ),
+                      ],
                     ),
-                    SizedBox(width: 10),
-                    Text(
-                      'OWNER HOME',
-                      style: GoogleFonts.merriweather(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22.0,
-                      ),
-                    ),
-                    Spacer(),
-                    IconButton(
-                      icon: CircleAvatar(
-                        radius: 20,
-                        backgroundColor: Colors.white,
-                        child:
-                            Icon(Icons.person, color: Colors.deepPurpleAccent),
-                      ),
-                      onPressed: _goToProfile, // Navigate to the profile screen
-                    ),
+                    SizedBox(
+                        height: 40), // Move title and profile icon down more
                   ],
                 ),
               ),
-              SizedBox(height: 30),
               // Cards Section with PageView.builder
               Expanded(
                 child: Column(
@@ -143,8 +196,8 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
                             _pageController, // Controller to sync with PageView
                         count: _cards.length, // Number of dots
                         effect: ExpandingDotsEffect(
-                          dotWidth: 10,
-                          dotHeight: 10,
+                          dotWidth: 12,
+                          dotHeight: 12,
                           activeDotColor:
                               Colors.deepPurpleAccent, // Active dot color
                           dotColor: Colors.white
@@ -172,12 +225,12 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
           width: MediaQuery.of(context).size.width * 0.8,
           height: MediaQuery.of(context).size.height * 0.6,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(30), // More rounded corners
             boxShadow: [
               BoxShadow(
-                color: card['color'].withOpacity(0.4),
-                blurRadius: 20,
-                offset: Offset(0, 10),
+                color: card['color'].withOpacity(0.6), // Softer shadow effect
+                blurRadius: 25,
+                offset: Offset(0, 15),
               ),
             ],
           ),
@@ -185,7 +238,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
             fit: StackFit.expand,
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(30),
                 child: Image.asset(
                   card['image'],
                   fit: BoxFit.cover,
@@ -193,11 +246,11 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
               ),
               Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(30),
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withOpacity(0.4),
-                      Colors.black.withOpacity(0.1),
+                      Colors.black.withOpacity(0.5),
+                      Colors.black.withOpacity(0.2),
                     ],
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
@@ -211,23 +264,27 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
                   Text(
                     card['title'],
                     style: GoogleFonts.roboto(
-                      fontSize: 28,
+                      fontSize: 30, // Increased size for better readability
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 10),
+                  SizedBox(height: 12),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Text(
                       card['description'],
                       textAlign: TextAlign.center,
                       style: GoogleFonts.roboto(
-                        fontSize: 16,
+                        fontSize:
+                            18, // Slightly larger font for better readability
+                        fontWeight:
+                            FontWeight.w500, // Adjusted weight for clarity
                         color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
+                  SizedBox(height: 20),
                 ],
               ),
             ],

@@ -1,11 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:erationshop/user/screens/user_card.dart';
 import 'package:erationshop/user/screens/user_enquiry.dart';
 import 'package:erationshop/user/screens/user_notification.dart';
 import 'package:erationshop/user/screens/user_outlet.dart';
 import 'package:erationshop/user/screens/user_profile.dart';
 import 'package:erationshop/user/screens/user_purchase.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';

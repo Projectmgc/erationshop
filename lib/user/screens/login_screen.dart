@@ -1,9 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:erationshop/user/screens/forgot_password.dart';
-import 'package:erationshop/user/screens/otp_screen.dart';
 import 'package:erationshop/user/screens/signup_screen.dart';
 import 'package:erationshop/user/screens/uhome_screen.dart';
-import 'package:erationshop/user/services/User_firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login1_Screen extends StatefulWidget {
   const Login1_Screen({super.key});
@@ -53,6 +54,10 @@ class _Login1_ScreenState extends State<Login1_Screen> {
         setState(() {
           loading = false;
         });
+
+        // Store the shop_id in SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setString('shop_id', shopid_controller.text);
 
         // Proceed to the next screen or main app page after successful login
         Navigator.pushReplacement(

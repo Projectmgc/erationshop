@@ -22,6 +22,7 @@ class ComplaintsPage extends StatelessWidget {
             : 'No description provided',
         'complaintId': doc.id, // Adding the document ID for reference
         'response': doc['response'], // Adding response data for display
+        'cardNo': doc['card_no'], // Adding card number
       };
     }).toList();
   }
@@ -59,12 +60,12 @@ class ComplaintsPage extends StatelessWidget {
                   child: ListTile(
                     leading: complaint['response'] == null
                         ? Icon(
-                            Icons.check,
-                            color: Colors.green,
-                          )
-                        : Icon(
                             Icons.report_problem,
                             color: Colors.redAccent,
+                          )
+                        : Icon(
+                            Icons.check,
+                            color: Colors.green,
                           ),
                     title: Text(
                       complaint['subject'],
@@ -91,6 +92,15 @@ class ComplaintsPage extends StatelessWidget {
                                   color: Colors.green),
                             ),
                           ),
+                        // Display Card Number
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            'Card No: ${complaint['cardNo']}',
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.blue),
+                          ),
+                        ),
                       ],
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 18),
@@ -131,8 +141,7 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
   Future<void> _submitResponse() async {
     if (_responseController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Please enter a response before submitting')),
+        const SnackBar(content: Text('Please enter a response before submitting')),
       );
       return;
     }
@@ -162,6 +171,29 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error submitting response')),
+      );
+    }
+  }
+
+  // Delete the complaint from Firestore
+  Future<void> _deleteComplaint() async {
+    try {
+      final complaintRef = FirebaseFirestore.instance
+          .collection('Enquiries')
+          .doc(widget.complaint['complaintId']);
+
+      // Delete the complaint document
+      await complaintRef.delete();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Complaint deleted successfully')),
+      );
+
+      // Navigate back to the previous page
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error deleting complaint')),
       );
     }
   }
@@ -208,6 +240,124 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 20),
+            Text(
+              'Card Number: ${widget.complaint['cardNo']}',
+              style: const TextStyle(fontSize: 16, color: Colors.blue),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Response:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            if (widget.complaint['response'] != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  widget.complaint['response']!,
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.green),
+                ),
+              )
+            else
+              const Text('No response yet.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey)),
+            const SizedBox(height: 20),
+            const Text(
+              'Submit Response:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            TextField(
+              controller: _responseController,
+              maxLines: 5,
+              decoration: const InputDecoration(
+                hintText: 'Enter your response here...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Center(
+              child: ElevatedButton(
+                onPressed: _submitResponse,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurpleAccent,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                ),
+                child: const Text('Submit Response'),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Delete Complaint Button
+            Center(
+              child: ElevatedButton(
+                onPressed: _deleteComplaint,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                ),
+                child: const Text('Delete Complaint'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+  @override
+  Widget build(BuildContext context, dynamic widget, dynamic _submitResponse, dynamic _responseController) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Complaint Details'),
+        backgroundColor: Colors.deepPurpleAccent,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Complaint Details',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Subject: ${widget.complaint['subject']}',
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Status: ${widget.complaint['status']}',
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Description:',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              widget.complaint['description'] ?? 'No description provided',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Filed on: ${widget.complaint['timestamp']?.toDate().toString() ?? 'No timestamp available'}',
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+
+            // Display Card Number
+            Text(
+              'Card Number: ${widget.complaint['cardNo']}',
+              style: const TextStyle(fontSize: 16, color: Colors.blue),
+            ),
+            const SizedBox(height: 20),
+
             const Text(
               'Response:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -256,4 +406,3 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
       ),
     );
   }
-}

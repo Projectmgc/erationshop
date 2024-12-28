@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:erationshop/admin/screens/admin_product.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,9 +11,9 @@ class UserCard extends StatefulWidget {
 }
 
 class _UserCardState extends State<UserCard> {
-  // A list of family members. This will be fetched from Firestore.
+  // List of family members to be fetched from Firestore
   List<Map<String, String>> familyMembers = [];
-  
+
   // List of approved and rejected requests
   List<Map<String, dynamic>> approvedRequests = [];
   List<Map<String, dynamic>> rejectedRequests = [];
@@ -20,6 +21,9 @@ class _UserCardState extends State<UserCard> {
   // Flags to check if the data is loaded
   bool isLoading = true;
   String? userCardNo;
+
+  // Card details
+  Map<String, dynamic>? cardData;
 
   // Retrieve the card_no from SharedPreferences
   Future<String?> _getUserCardNo() async {
@@ -30,19 +34,59 @@ class _UserCardState extends State<UserCard> {
   // Fetch card data from Firestore using the card number
   Future<Map<String, dynamic>?> _getUserCardData(String cardNo) async {
     try {
-      final docSnapshot = await FirebaseFirestore.instance
+      final querySnapshot = await FirebaseFirestore.instance
           .collection('Card')
           .where('card_no', isEqualTo: cardNo)
           .limit(1)
           .get();
-      if (docSnapshot.docs.isNotEmpty) {
-        return docSnapshot.docs.first.data() as Map<String, dynamic>?; // Return card data
+      if (querySnapshot.docs.isNotEmpty) {
+        return querySnapshot.docs.first.data() as Map<String, dynamic>?; // Return card data
       } else {
         return null; // If card doesn't exist
       }
     } catch (e) {
       print('Error fetching card data: $e');
       return null; // In case of any error
+    }
+  }
+
+  // Fetch family members from the member_list sub-collection in Firestore
+  Future<void> _fetchFamilyMembers(String cardNo) async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Card')
+          .where('card_no', isEqualTo: cardNo) // Use card_no field to fetch the document
+          .limit(1) // Make sure only one document is returned (since card_no is unique)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final cardDoc = querySnapshot.docs.first; // Get the first (and only) document
+
+        // Now fetch the family members from the 'member_list' sub-collection
+        final memberSnapshot = await cardDoc.reference
+            .collection('member_list')
+            .get();
+
+        setState(() {
+          // Populate the familyMembers list with the fetched data
+          familyMembers = memberSnapshot.docs.map((doc) {
+            return {
+              'member_name': doc['member_name']?.toString() ?? 'N/A',
+              'mobile_no': doc['mobile_no']?.toString() ?? 'N/A',
+            };
+          }).toList();
+        });
+      } else {
+        print('No card document found for card_no: $cardNo');
+        setState(() {
+          familyMembers = [];
+        });
+      }
+    } catch (e) {
+      print('Error fetching family members: $e');
+      setState(() {
+        familyMembers = [];
+      });
     }
   }
 
@@ -91,15 +135,10 @@ class _UserCardState extends State<UserCard> {
       final cardData = await _getUserCardData(cardNo);
       if (cardData != null) {
         setState(() {
-          familyMembers = List.generate(
-            int.parse(cardData['members_count']),
-            (index) => {
-              'name': 'Member $index',
-              'id': 'ID${index + 1}',
-            },
-          );
+          this.cardData = cardData; // Store the card data
         });
-        // Fetch approved and rejected requests once the card data is loaded
+        // Fetch family members and requests once the card data is loaded
+        _fetchFamilyMembers(cardNo);
         _fetchRequests(cardNo);
       }
       setState(() {
@@ -113,23 +152,34 @@ class _UserCardState extends State<UserCard> {
   }
 
   // Function to add a new family member
-  void _addMember(String name, String id, String cardno) async {
+  void _addMember(String memberName, String mobileNo, String cardno) async {
     setState(() {
       isLoading = true;
     });
 
     try {
-      await FirebaseFirestore.instance.collection('RequestMember').add({
-        'card_no': cardno,
-        'member_id': id,
-        'member_name': name,
+      // First, add the member to the 'member_list' sub-collection
+      await FirebaseFirestore.instance.collection('Card').doc(cardno).collection('member_list').add({
+        'member_name': memberName,
+        'mobile_no': mobileNo,
         'timestamp': FieldValue.serverTimestamp(), // Add the current server timestamp
-        'status': 'pending', // Default status is 'pending'
+      });
+
+      // Now, add the request to the 'RequestMember' collection
+      await FirebaseFirestore.instance.collection('RequestMember').add({
+        'card_no': cardno, // Card number to associate the request with the card
+        'member_name': memberName,
+        'mobile_no': mobileNo,
+        'status': 'pending', // Default status can be 'pending' until approved or rejected
+        'timestamp': FieldValue.serverTimestamp(), // Add the current server timestamp
       });
 
       setState(() {
         isLoading = false;
       });
+
+      // After adding a member, fetch updated family members list
+      _fetchFamilyMembers(cardno);
     } catch (e) {
       setState(() {
         isLoading = false;
@@ -164,19 +214,35 @@ class _UserCardState extends State<UserCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Cardholder: ${familyMembers.isNotEmpty ? familyMembers[0]['name'] : 'Loading...'}',
-                        style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.deepPurple),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Card Number: $userCardNo',
-                        style: const TextStyle(fontSize: 18, color: Colors.black87),
-                      ),
-                      const SizedBox(height: 30),
+                      // Card details section
+                      cardData != null
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Cardholder: ${cardData!['owner_name'] ?? 'N/A'}',
+                                  style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.deepPurple),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  'Card Type: ${cardData!['category'] ?? 'N/A'}',
+                                  style: const TextStyle(
+                                      fontSize: 18, color: Colors.black87),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  'Card Number: $userCardNo',
+                                  style: const TextStyle(fontSize: 18, color: Colors.black87),
+                                ),
+                                const SizedBox(height: 20),
+                              ],
+                            )
+                          : const Center(child: Text('Loading Card Details...')),
+
+                      // Family members section
                       const Text(
                         'Family Members',
                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -195,14 +261,12 @@ class _UserCardState extends State<UserCard> {
                                   backgroundColor: Colors.deepPurpleAccent,
                                   child: Icon(Icons.person, color: Colors.white),
                                 ),
-                                title: Text(member['name']!),
-                                subtitle: Text('id: ${member['id']}'),
+                                title: Text(member['member_name']!),
+                                subtitle: Text('Mobile: ${member['mobile_no']}'),
                                 trailing: IconButton(
                                   icon: const Icon(Icons.delete, color: Colors.red),
                                   onPressed: () {
-                                    setState(() {
-                                      familyMembers.removeAt(index);
-                                    });
+                                    // Logic to delete a member can be added here
                                   },
                                 ),
                               ),
@@ -271,7 +335,7 @@ class _UserCardState extends State<UserCard> {
   // Show dialog to add a new member
   void _showAddMemberDialog(BuildContext context) {
     final nameController = TextEditingController();
-    final idController = TextEditingController();
+    final mobileNoController = TextEditingController();
 
     showDialog(
       context: context,
@@ -285,15 +349,15 @@ class _UserCardState extends State<UserCard> {
               TextField(
                 controller: nameController,
                 decoration: const InputDecoration(
-                  labelText: 'Name',
+                  labelText: 'Member Name',
                   hintText: 'Enter family member\'s name',
                 ),
               ),
               TextField(
-                controller: idController,
+                controller: mobileNoController,
                 decoration: const InputDecoration(
-                  labelText: 'Adhar number',
-                  hintText: 'Enter family member\'s ID',
+                  labelText: 'Mobile Number',
+                  hintText: 'Enter family member\'s mobile number',
                 ),
               ),
             ],
@@ -307,10 +371,10 @@ class _UserCardState extends State<UserCard> {
             ),
             ElevatedButton(
               onPressed: () {
-                final name = nameController.text.trim();
-                final id = idController.text.trim();
-                if (name.isNotEmpty && id.isNotEmpty) {
-                  _addMember(name, id, userCardNo!);
+                final memberName = nameController.text.trim();
+                final mobileNo = mobileNoController.text.trim();
+                if (memberName.isNotEmpty && mobileNo.isNotEmpty) {
+                  _addMember(memberName, mobileNo, userCardNo!);
                   Navigator.pop(context);
                 }
               },
@@ -319,26 +383,6 @@ class _UserCardState extends State<UserCard> {
           ],
         );
       },
-    );
-  }
-}
-
-class BackgroundGradient extends StatelessWidget {
-  const BackgroundGradient({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color.fromARGB(255, 245, 184, 93),
-            Color.fromARGB(255, 233, 211, 88),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
     );
   }
 }

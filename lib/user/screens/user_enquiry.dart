@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class UserEnquiry extends StatefulWidget {
   final String user_id; // card_no will be passed instead of user_id

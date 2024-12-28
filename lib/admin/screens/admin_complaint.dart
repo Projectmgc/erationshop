@@ -13,8 +13,7 @@ class ComplaintsPage extends StatelessWidget {
 
     return querySnapshot.docs.map((doc) {
       return {
-        'subject':
-            doc['subject'] != null ? doc['subject'] : 'No subject provided',
+        'subject': doc['subject'] != null ? doc['subject'] : 'No subject provided',
         'status': doc['status'] != null ? doc['status'] : 'No status provided',
         'timestamp': doc['timestamp'],
         'description': doc['description'] != null
@@ -78,8 +77,7 @@ class ComplaintsPage extends StatelessWidget {
                         const SizedBox(height: 5),
                         Text(
                           'Filed on: ${complaint['timestamp']?.toDate().toString() ?? 'No timestamp available'}',
-                          style:
-                              const TextStyle(fontSize: 12, color: Colors.grey),
+                          style: const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                         if (complaint['response'] != null)
                           Padding(
@@ -200,6 +198,9 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if the complaint already has a response
+    bool isResponded = widget.complaint['response'] != null;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Complaint Details'),
@@ -264,32 +265,38 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
               const Text('No response yet.',
                   style: TextStyle(fontSize: 16, color: Colors.grey)),
             const SizedBox(height: 20),
-            const Text(
-              'Submit Response:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            TextField(
-              controller: _responseController,
-              maxLines: 5,
-              decoration: const InputDecoration(
-                hintText: 'Enter your response here...',
-                border: OutlineInputBorder(),
+            if (!isResponded)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Submit Response:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  TextField(
+                    controller: _responseController,
+                    maxLines: 5,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter your response here...',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: _submitResponse,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurpleAccent,
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                      ),
+                      child: const Text('Submit Response'),
+                    ),
+                  ),
+                ],
               ),
-            ),
             const SizedBox(height: 20),
-            Center(
-              child: ElevatedButton(
-                onPressed: _submitResponse,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurpleAccent,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                ),
-                child: const Text('Submit Response'),
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Delete Complaint Button
+            // Delete button
             Center(
               child: ElevatedButton(
                 onPressed: _deleteComplaint,
@@ -307,102 +314,3 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
     );
   }
 }
-
-  @override
-  Widget build(BuildContext context, dynamic widget, dynamic _submitResponse, dynamic _responseController) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Complaint Details'),
-        backgroundColor: Colors.deepPurpleAccent,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Complaint Details',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Subject: ${widget.complaint['subject']}',
-              style: const TextStyle(fontSize: 18),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Status: ${widget.complaint['status']}',
-              style: const TextStyle(fontSize: 18),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Description:',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              widget.complaint['description'] ?? 'No description provided',
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Filed on: ${widget.complaint['timestamp']?.toDate().toString() ?? 'No timestamp available'}',
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 20),
-
-            // Display Card Number
-            Text(
-              'Card Number: ${widget.complaint['cardNo']}',
-              style: const TextStyle(fontSize: 16, color: Colors.blue),
-            ),
-            const SizedBox(height: 20),
-
-            const Text(
-              'Response:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            if (widget.complaint['response'] != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(
-                  widget.complaint['response']!,
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontStyle: FontStyle.italic,
-                      color: Colors.green),
-                ),
-              )
-            else
-              const Text('No response yet.',
-                  style: TextStyle(fontSize: 16, color: Colors.grey)),
-            const SizedBox(height: 20),
-            const Text(
-              'Submit Response:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            TextField(
-              controller: _responseController,
-              maxLines: 5,
-              decoration: const InputDecoration(
-                hintText: 'Enter your response here...',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Center(
-              child: ElevatedButton(
-                onPressed: _submitResponse,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurpleAccent,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                ),
-                child: const Text('Submit Response'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }

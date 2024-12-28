@@ -1,143 +1,139 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:erationshop/admin/screens/admin_autherisation.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class AdminRequest extends StatefulWidget {
-  const AdminRequest({super.key});
-
-  @override
-  _AdminRequestState createState() => _AdminRequestState();
-}
-
-class _AdminRequestState extends State<AdminRequest> {
-  // List of member requests pending approval
-  List<Map<String, dynamic>> pendingRequests = [];
-
-  // Fetch all pending member requests from Firestore
-  Future<void> _fetchPendingRequests() async {
-    try {
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('RequestMember') // Fetching from the RequestMember collection
-          .where('status', isEqualTo: 'pending') // Filtering only pending requests
-          .orderBy('timestamp', descending: true) // Sorting by timestamp in descending order
-          .get();
-
-      setState(() {
-        pendingRequests = querySnapshot.docs.map((doc) {
-          return {
-            'card_no': doc['card_no'],
-            'member_id': doc['member_id'],
-            'member_name': doc['member_name'],
-            'request_id': doc.id,
-          };
-        }).toList();
-      });
-    } catch (e) {
-      print('Error fetching pending requests: $e');
-    }
-  }
-
-  // Approve the member request and update Firestore
-  Future<void> _approveRequest(String requestId) async {
-    try {
-      // Update the status to 'approved' in RequestMember collection
-      await FirebaseFirestore.instance.collection('RequestMember').doc(requestId).update({
-        'status': 'approved', // Change status to approved
-        'approval_timestamp': FieldValue.serverTimestamp(), // Add approval timestamp
-      });
-
-      // Refresh the pending requests after approval
-      _fetchPendingRequests();
-
-      print('Request approved!');
-    } catch (e) {
-      print('Error approving request: $e');
-    }
-  }
-
-  // Reject the member request and update Firestore
-  Future<void> _rejectRequest(String requestId) async {
-    try {
-      await FirebaseFirestore.instance.collection('RequestMember').doc(requestId).update({
-        'status': 'rejected', // Change status to rejected
-        'rejection_timestamp': FieldValue.serverTimestamp(), // Add rejection timestamp
-      });
-
-      // Refresh the pending requests after rejection
-      _fetchPendingRequests();
-
-      print('Request rejected!');
-    } catch (e) {
-      print('Error rejecting request: $e');
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchPendingRequests(); // Fetch the pending requests when the page loads
-  }
-
+class AdminRequest extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin - Member Requests'),
-        flexibleSpace: const BackgroundGradient(),
+        title: Text("User Requests", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.deepPurple,
       ),
-      body: pendingRequests.isEmpty
-          ? const Center(child: Text('No pending requests')) // Show message if no requests
-          : ListView.builder(
-              itemCount: pendingRequests.length, // Number of requests to display
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('RequestMember')
+              .orderBy('timestamp', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
+
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return Center(child: Text("No requests available", style: TextStyle(fontSize: 18, color: Colors.grey)));
+            }
+
+            final requests = snapshot.data!.docs;
+
+            return ListView.builder(
+              itemCount: requests.length,
               itemBuilder: (context, index) {
-                final request = pendingRequests[index]; // Get each request from the list
+                var request = requests[index];
+                var cardNo = request['card_no'] ?? 'No card number';
+                var memberName = request['member_name'] ?? 'No name';
+                var mobileNo = request['mobile_no'] ?? 'No mobile number';
+                var status = request['status'] ?? 'No status';
+                var timestamp = (request['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
+
                 return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 8.0),
-                  elevation: 4,
-                  child: ListTile(
-                    title: Text(request['member_name']), // Member's name
-                    subtitle: Text('ID: ${request['member_id']}'), // Member's ID
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Approve button
-                        IconButton(
-                          icon: const Icon(Icons.check, color: Colors.green),
-                          onPressed: () {
-                            _approveRequest(request['request_id']); // Approve the request
-                          },
+                  elevation: 5,
+                  margin: EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: InkWell(
+                    onTap: () {
+                      // Navigate to the request approval page with the request details
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RequestDetailPage(
+                            requestId: request.id,
+                            cardNo: cardNo,
+                            memberName: memberName,
+                            mobileNo: mobileNo,
+                            status: status,
+                            timestamp: timestamp,
+                          ),
                         ),
-                        // Reject button
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.red),
-                          onPressed: () {
-                            _rejectRequest(request['request_id']); // Reject the request
-                          },
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(15),
+                    child: Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.purple.shade200, Colors.deepPurple.shade300],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                      ],
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Card No: $cardNo",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 6),
+                          Text(
+                            "Member Name: $memberName",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          SizedBox(height: 6),
+                          Text(
+                            "Mobile No: $mobileNo",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          SizedBox(height: 6),
+                          Text(
+                            "Status: $status",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: status == 'pending' ? Colors.orange : Colors.green,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.access_time,
+                                color: Colors.white70,
+                                size: 18,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                "${timestamp.toLocal()}",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
               },
-            ),
-    );
-  }
-}
-
-class BackgroundGradient extends StatelessWidget {
-  const BackgroundGradient({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color.fromARGB(255, 245, 184, 93),
-            Color.fromARGB(255, 233, 211, 88),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+            );
+          },
         ),
       ),
     );

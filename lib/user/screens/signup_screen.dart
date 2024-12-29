@@ -1,11 +1,8 @@
 import 'package:erationshop/user/screens/otp_screen.dart';
 import 'package:erationshop/user/screens/login_screen.dart';
-import 'package:erationshop/user/screens/uhome_screen.dart';
-import 'package:erationshop/user/services/User_firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // For Firebase Authentication
 import 'package:cloud_firestore/cloud_firestore.dart'; // For Firestore
 
 class Signup_Screen extends StatefulWidget {
@@ -29,15 +26,6 @@ class _Signup_ScreenState extends State<Signup_Screen> {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
       return Login_Screen();
     }));
-  }
-
-  // Method for OTP Verification (you can modify this if necessary)
-  void otpverification() {
-    if (_formKey.currentState!.validate()) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) {
-        return UhomeScreen();
-      }));
-    }
   }
 
   // Method to handle signup with Firebase Authentication and Firestore

@@ -284,27 +284,6 @@ class _UserCardState extends State<UserCard> {
                           backgroundColor: Colors.deepPurple,
                         ),
                       ),
-                      const SizedBox(height: 30),
-                      const Text(
-                        'Approved Requests',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: approvedRequests.length,
-                        itemBuilder: (context, index) {
-                          final request = approvedRequests[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 8.0),
-                            elevation: 4,
-                            child: ListTile(
-                              title: Text(request['member_name']),
-                              subtitle: Text('ID: ${request['member_id']}'),
-                            ),
-                          );
-                        },
-                      ),
                       const SizedBox(height: 20),
                       const Text(
                         'Rejected Requests',
@@ -321,7 +300,7 @@ class _UserCardState extends State<UserCard> {
                             elevation: 4,
                             child: ListTile(
                               title: Text(request['member_name']),
-                              subtitle: Text('ID: ${request['member_id']}'),
+                              subtitle: Text('ID: ${request['mobile_no']}'),
                             ),
                           );
                         },

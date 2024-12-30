@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloudinary/cloudinary.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CardPage extends StatelessWidget {
   const CardPage({super.key});
@@ -231,6 +235,15 @@ class _AddCardPageState extends State<AddCardPage> {
   List<TextEditingController> _memberNameControllers = [];
   List<TextEditingController> _memberPhoneControllers = [];
 
+  // Cloudinary config
+  final Cloudinary _cloudinary = Cloudinary.signedConfig(
+    cloudName: 'dfoid6qev', // Replace with your Cloudinary cloud name
+    apiKey: '948219642975793', // Replace with your Cloudinary API key
+    apiSecret: 'Zzea0hJAlegwGmiGVRBKK8inbOs', // Replace with your Cloudinary API secret
+  );
+
+  String? _profileImageUrl; // URL to store the uploaded profile picture
+
   // List to hold category data from Firebase
   List<String> _categories = [];
   String? _selectedCategory;
@@ -282,6 +295,43 @@ class _AddCardPageState extends State<AddCardPage> {
     }
   }
 
+  // Function to select profile image and upload to Cloudinary
+  Future<void> _pickAndUploadImage() async {
+    final picker = ImagePicker();
+    // Pick an image
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _profileImageUrl=File(pickedFile.path) as String?;
+      });
+      try {
+        // Upload the image to Cloudinary
+        final CloudinaryResponse response = await _cloudinary.upload(
+          file:pickedFile.path, 
+          folder: 'profile_pictures', // Cloudinary folder
+        );
+
+        // If the upload is successful, get the URL
+        if (response.isSuccessful) {
+          setState(() {
+            _profileImageUrl = response.secureUrl;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile picture uploaded successfully')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to upload image')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error uploading image')),
+        );
+      }
+    }
+  }
+
   // Function to submit form data and add card to Firestore
   Future<void> _addCard() async {
     if (_formKey.currentState?.validate() ?? false) {
@@ -299,6 +349,7 @@ class _AddCardPageState extends State<AddCardPage> {
             'category_id': _selectedCategoryId, // Store the category document ID
             'members_count': membersCount.toString(),
             'mobile_no': _mobileNoController.text,
+            'profile_picture_url': _profileImageUrl, // Store the profile image URL
           });
 
           // Add members to the 'member_list' subcollection for this card
@@ -325,6 +376,7 @@ class _AddCardPageState extends State<AddCardPage> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -471,6 +523,16 @@ class _AddCardPageState extends State<AddCardPage> {
                   ),
                 ),
               const SizedBox(height: 20),
+              // Image Upload Button
+              ElevatedButton(
+                onPressed: _pickAndUploadImage,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurpleAccent,
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                ),
+                child: const Text('Upload Profile Picture'),
+              ),
+              const SizedBox(height: 20),
               // Submit button
               Center(
                 child: ElevatedButton(
@@ -489,4 +551,3 @@ class _AddCardPageState extends State<AddCardPage> {
     );
   }
 }
-

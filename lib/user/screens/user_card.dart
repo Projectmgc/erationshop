@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:erationshop/admin/screens/admin_product.dart';
+import 'package:erationshop/main.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -73,6 +74,7 @@ class _UserCardState extends State<UserCard> {
             return {
               'member_name': doc['member_name']?.toString() ?? 'N/A',
               'mobile_no': doc['mobile_no']?.toString() ?? 'N/A',
+              'member_id': doc.id, // Save the document ID for later reference
             };
           }).toList();
         });
@@ -152,25 +154,19 @@ class _UserCardState extends State<UserCard> {
   }
 
   // Function to add a new family member
-  void _addMember(String memberName, String mobileNo, String cardno) async {
+  void _addMember(String memberName, String mobileNo, String userCardNo) async {
     setState(() {
       isLoading = true;
     });
 
     try {
-      // First, add the member to the 'member_list' sub-collection
-      await FirebaseFirestore.instance.collection('Card').doc(cardno).collection('member_list').add({
-        'member_name': memberName,
-        'mobile_no': mobileNo,
-        'timestamp': FieldValue.serverTimestamp(), // Add the current server timestamp
-      });
-
-      // Now, add the request to the 'RequestMember' collection
+      // Add the request to the 'RequestMember' collection for adding a member
       await FirebaseFirestore.instance.collection('RequestMember').add({
-        'card_no': cardno, // Card number to associate the request with the card
+        'card_no': userCardNo, // Card number to associate the request with the card
         'member_name': memberName,
         'mobile_no': mobileNo,
         'status': 'pending', // Default status can be 'pending' until approved or rejected
+        'request_type': 'add',
         'timestamp': FieldValue.serverTimestamp(), // Add the current server timestamp
       });
 
@@ -179,12 +175,43 @@ class _UserCardState extends State<UserCard> {
       });
 
       // After adding a member, fetch updated family members list
-      _fetchFamilyMembers(cardno);
+      _fetchFamilyMembers(userCardNo);
     } catch (e) {
       setState(() {
         isLoading = false;
       });
       print('Error adding member: $e');
+    }
+  }
+
+  // Function to send a deletion request for a family member
+  void _deleteMember(String memberName, String mobileNo, String userCardNo) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      // Send a deletion request to the 'RequestMember' collection
+      await FirebaseFirestore.instance.collection('RequestMember').add({
+        'card_no': userCardNo, // Card number to associate the request with the card
+        'member_name': memberName,
+        'mobile_no': mobileNo,
+        'status': 'pending', // Set the status to pending for review
+        'request_type': 'delete', // Specify the request type as 'delete'
+        'timestamp': FieldValue.serverTimestamp(), // Add the current server timestamp
+      });
+
+      setState(() {
+        isLoading = false;
+      });
+
+      // After sending the deletion request, fetch updated family members list
+      _fetchFamilyMembers(userCardNo!);
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      print('Error deleting member: $e');
     }
   }
 
@@ -197,7 +224,7 @@ class _UserCardState extends State<UserCard> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator()) // Loading indicator
-          : userCardNo == null
+          : card_no == null
               ? const Center(child: Text('No card number found in preferences'))
               : Container(
                   decoration: const BoxDecoration(
@@ -266,7 +293,8 @@ class _UserCardState extends State<UserCard> {
                                 trailing: IconButton(
                                   icon: const Icon(Icons.delete, color: Colors.red),
                                   onPressed: () {
-                                    // Logic to delete a member can be added here
+                                    // Send the delete request for this member
+                                    _deleteMember(member['member_name']!, member['mobile_no']!, userCardNo!,);
                                   },
                                 ),
                               ),
@@ -355,7 +383,7 @@ class _UserCardState extends State<UserCard> {
                 if (memberName.isNotEmpty && mobileNo.isNotEmpty) {
                   _addMember(memberName, mobileNo, userCardNo!);
                   Navigator.pop(context);
-                }
+                }           
               },
               child: const Text('Add'),
             ),

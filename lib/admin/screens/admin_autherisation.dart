@@ -4,7 +4,16 @@ import 'package:flutter/material.dart';
 class RequestDetailPage extends StatefulWidget {
   final String requestId;
 
-  const RequestDetailPage({super.key, required this.requestId, required DateTime timestamp, required status, required mobileNo, required memberName, required cardNo});
+  const RequestDetailPage({
+    super.key,
+    required this.requestId,
+    required DateTime timestamp,
+    required status,
+    required mobileNo,
+    required memberName,
+    required cardNo,
+    required requestType,
+  });
 
   @override
   _RequestDetailPageState createState() => _RequestDetailPageState();
@@ -55,34 +64,38 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
       final memberListRef = cardDocRef.collection('member_list'); // member_list as a sub-collection
 
       await FirebaseFirestore.instance.runTransaction((transaction) async {
-        // Step 2: Add the new member to the member_list sub-collection using set()
-        transaction.set(
-          memberListRef.doc(), // Use memberId (mobile_no) as the document ID
-          {
-            'mobile_no': memberId,
-            'member_name': memberName,
-            // No added_timestamp here
-          },
-        );
+        if (requestDetails['request_type'] == 'add') {
+          // Step 2: Add the new member to the member_list sub-collection using set()
+          transaction.set(
+            memberListRef.doc(), // Create a new document for the member in member_list
+            {
+              'mobile_no': memberId,
+              'member_name': memberName,
+            },
+          );
+        } else if (requestDetails['request_type'] == 'delete') {
+          // Handle delete request (delete member from the list)
+          final memberDocSnapshot = await memberListRef
+              .where('mobile_no', isEqualTo: memberId)
+              .limit(1)
+              .get();
 
-        // Step 3: Update the members_count by fetching the current member count and incrementing it
-        final currentMemberCount = int.tryParse(cardDocSnapshot['members_count'] ?? '0') ?? 0;
-        final updatedMemberCount = currentMemberCount + 1;
+          if (memberDocSnapshot.docs.isNotEmpty) {
+            // Step 3: If the member is found, delete the member document
+            transaction.delete(memberDocSnapshot.docs.first.reference);
+          } else {
+            throw Exception('Member not found in member list');
+          }
+        }
 
-        // Only update members_count, nothing else in the Card collection
-        transaction.update(cardDocRef, {
-          'members_count': updatedMemberCount.toString(),  // Update as string since it's a string field in Firestore
+        // Step 4: Update the status of the request to 'approved' in RequestMember collection
+        transaction.update(FirebaseFirestore.instance.collection('RequestMember').doc(widget.requestId), {
+          'status': 'approved',
         });
       });
 
-      // Step 4: Update the status of the request to 'approved' in RequestMember collection
-      await FirebaseFirestore.instance.collection('RequestMember').doc(widget.requestId).update({
-        'status': 'approved',
-        'approval_timestamp': FieldValue.serverTimestamp(),
-      });
-
       Navigator.pop(context); // Go back to the previous screen after approval
-      print('Request approved and member added!');
+      print('Request approved!');
     } catch (e) {
       print('Error approving request: $e');
     }
@@ -93,7 +106,6 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
     try {
       await FirebaseFirestore.instance.collection('RequestMember').doc(widget.requestId).update({
         'status': 'rejected',
-        'rejection_timestamp': FieldValue.serverTimestamp(),
       });
 
       Navigator.pop(context); // Go back to the previous screen after rejection
@@ -126,6 +138,11 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                       style: const TextStyle(fontSize: 18)),
                   Text('Member ID: ${requestDetails['mobile_no']}'),
                   Text('Card No: ${requestDetails['card_no']}'),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Request Type: ${requestDetails['request_type'] == "add" ? "Add Member" : "Delete Member"}',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,

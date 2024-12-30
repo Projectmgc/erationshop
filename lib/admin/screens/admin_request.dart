@@ -35,6 +35,7 @@ class AdminRequest extends StatelessWidget {
                 var cardNo = request['card_no'] ?? 'No card number';
                 var memberName = request['member_name'] ?? 'No name';
                 var mobileNo = request['mobile_no'] ?? 'No mobile number';
+                var requestType = request['request_type'] ?? 'No type';
                 var status = request['status'] ?? 'No status';
                 var timestamp = (request['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
 
@@ -55,6 +56,7 @@ class AdminRequest extends StatelessWidget {
                             cardNo: cardNo,
                             memberName: memberName,
                             mobileNo: mobileNo,
+                            requestType: requestType,
                             status: status,
                             timestamp: timestamp,
                           ),
@@ -75,13 +77,24 @@ class AdminRequest extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Card No: $cardNo",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Card No: $cardNo",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete, color: Colors.red),
+                                onPressed: () {
+                                  _confirmDelete(context, request.id);
+                                },
+                              ),
+                            ],
                           ),
                           SizedBox(height: 6),
                           Text(
@@ -94,6 +107,14 @@ class AdminRequest extends StatelessWidget {
                           SizedBox(height: 6),
                           Text(
                             "Mobile No: $mobileNo",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          SizedBox(height: 6),
+                          Text(
+                            "Request Type: $requestType",
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.white70,
@@ -126,6 +147,7 @@ class AdminRequest extends StatelessWidget {
                               ),
                             ],
                           ),
+                         
                         ],
                       ),
                     ),
@@ -136,6 +158,36 @@ class AdminRequest extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+
+  // Show confirmation dialog before deleting
+  void _confirmDelete(BuildContext context, String requestId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Delete Request"),
+          content: Text("Are you sure you want to delete this request?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Delete the request from Firestore
+                await FirebaseFirestore.instance.collection('RequestMember').doc(requestId).delete();
+                Navigator.of(context).pop(); // Close the dialog after deletion
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Request deleted successfully")));
+              },
+              child: Text("Delete"),
+            ),
+          ],
+        );
+      },
     );
   }
 }

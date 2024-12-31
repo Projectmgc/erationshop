@@ -134,17 +134,16 @@ class _CardDetailsPageState extends State<CardDetailsPage> {
                 const SizedBox(height: 20),
                 Row(
                   children: [
+                    // Show profile picture if available, otherwise fallback to icon
                     CircleAvatar(
                       radius: 40,
                       backgroundColor: Colors.deepPurpleAccent,
-                      child: IconButton(
-                        icon: const Icon(Icons.person, color: Colors.white, size: 30),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Add or change profile picture.')),
-                          );
-                        },
-                      ),
+                      backgroundImage: card['profile_picture_url'] != null
+                          ? NetworkImage(card['profile_picture_url']) 
+                          : null, // Load image if available, else use background color
+                      child: card['profile_picture_url'] == null
+                          ? const Icon(Icons.person, color: Colors.white, size: 30)
+                          : null, // Show icon only if no image is available
                     ),
                     const SizedBox(width: 20),
                     Expanded(
@@ -214,6 +213,7 @@ class _CardDetailsPageState extends State<CardDetailsPage> {
     );
   }
 }
+
 
 
 class AddCardPage extends StatefulWidget {
@@ -301,9 +301,6 @@ class _AddCardPageState extends State<AddCardPage> {
     // Pick an image
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() {
-        _profileImageUrl=File(pickedFile.path) as String?;
-      });
       try {
         // Upload the image to Cloudinary
         final CloudinaryResponse response = await _cloudinary.upload(

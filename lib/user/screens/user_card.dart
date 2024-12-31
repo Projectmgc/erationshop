@@ -224,7 +224,7 @@ class _UserCardState extends State<UserCard> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator()) // Loading indicator
-          : card_no == null
+          : userCardNo == null
               ? const Center(child: Text('No card number found in preferences'))
               : Container(
                   decoration: const BoxDecoration(
@@ -246,6 +246,17 @@ class _UserCardState extends State<UserCard> {
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // Profile picture
+                                CircleAvatar(
+                                  radius: 50,
+                                  backgroundColor: Colors.deepPurpleAccent,
+                                  backgroundImage: NetworkImage(
+                                      cardData!['profile_picture_url'] ??
+                                          'https://via.placeholder.com/150'), // Default image if no profile picture is available
+                                ),
+                                const SizedBox(height: 10),
+
+                                // Cardholder details
                                 Text(
                                   'Cardholder: ${cardData!['owner_name'] ?? 'N/A'}',
                                   style: const TextStyle(
@@ -294,7 +305,7 @@ class _UserCardState extends State<UserCard> {
                                   icon: const Icon(Icons.delete, color: Colors.red),
                                   onPressed: () {
                                     // Send the delete request for this member
-                                    _deleteMember(member['member_name']!, member['mobile_no']!, userCardNo!,);
+                                    _deleteMember(member['member_name']!, member['mobile_no']!, userCardNo!);
                                   },
                                 ),
                               ),

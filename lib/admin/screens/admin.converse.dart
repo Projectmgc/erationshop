@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 class ConversePage extends StatefulWidget {
   const ConversePage({super.key});
 
@@ -7,12 +9,7 @@ class ConversePage extends StatefulWidget {
 }
 
 class _ConversePageState extends State<ConversePage> {
-  // Sample data for shop owners
-  final List<Map<String, String>> shopOwners = [
-    {'name': 'John Doe', 'store': 'Doe Grocery'},
-    {'name': 'Jane Smith', 'store': 'Smith Supermart'},
-    {'name': 'Robert Brown', 'store': 'Brown Supplies'},
-  ];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -21,32 +18,55 @@ class _ConversePageState extends State<ConversePage> {
         title: const Text('Shop Owners'),
         backgroundColor: Colors.deepPurpleAccent,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: shopOwners.length,
-        itemBuilder: (context, index) {
-          final shopOwner = shopOwners[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 8.0),
-            elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            child: ListTile(
-              leading: const Icon(Icons.store, color: Colors.deepPurpleAccent),
-              title: Text(shopOwner['name']!),
-              subtitle: Text('Store: ${shopOwner['store']}'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 18),
-              onTap: () {
-                // Navigate to chat page for the selected shop owner
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ShopOwnerChatPage(
-                      shopOwner: shopOwner,
-                    ),
-                  ),
-                );
-              },
-            ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _firestore.collection('converse').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text('No shop owners available.'));
+          }
+
+          final shopOwners = snapshot.data!.docs;
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16.0),
+            itemCount: shopOwners.length,
+            itemBuilder: (context, index) {
+              final shopOwnerDoc = shopOwners[index];
+              final shopId = shopOwnerDoc.id;  // This is the dynamic document ID
+              final shopName = shopOwnerDoc['name'];
+              final storeName = shopOwnerDoc['store'];
+
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8.0),
+                elevation: 4,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                child: ListTile(
+                  leading: const Icon(Icons.store, color: Colors.deepPurpleAccent),
+                  title: Text(shopName),
+                  subtitle: Text('Store: $storeName'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+                  onTap: () {
+                    // Navigate to the chat screen with the selected shop's information
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ShopOwnerChatPage(
+                          shopOwner: {
+                            'name': shopName,
+                            'store': storeName,
+                            'shop_id': shopId,  // Passing the shop document ID (dynamic)
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
           );
         },
       ),
@@ -64,19 +84,32 @@ class ShopOwnerChatPage extends StatefulWidget {
 }
 
 class _ShopOwnerChatPageState extends State<ShopOwnerChatPage> {
-  final List<Map<String, String>> messages = [
-    {'sender': 'Admin', 'message': 'Hello, how can I assist you today?'},
-    {'sender': 'Shop Owner', 'message': 'I need help updating my inventory.'},
-  ];
-
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _messageController = TextEditingController();
+  late CollectionReference _chatCollection;
 
-  void _sendMessage() {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize Firestore chat collection based on the selected shop's document ID
+    _chatCollection = _firestore.collection('converse').doc(widget.shopOwner['shop_id']).collection('messages');
+  }
+
+  // Function to send a message
+  Future<void> _sendMessage() async {
     if (_messageController.text.trim().isNotEmpty) {
-      setState(() {
-        messages.add({'sender': 'Admin', 'message': _messageController.text.trim()});
-        _messageController.clear();
+      String messageText = _messageController.text.trim();
+      String sender = 'Admin';  // Always from admin
+
+      // Send message to Firestore
+      await _chatCollection.add({
+        'sender': sender,
+        'message': messageText,
+        'timestamp': FieldValue.serverTimestamp(),
       });
+
+      // Clear the input field
+      _messageController.clear();
     }
   }
 
@@ -91,41 +124,56 @@ class _ShopOwnerChatPageState extends State<ShopOwnerChatPage> {
         children: [
           // Chat display area
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16.0),
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final message = messages[index];
-                final isAdmin = message['sender'] == 'Admin';
-                return Align(
-                  alignment: isAdmin ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 5.0),
-                    padding: const EdgeInsets.all(12.0),
-                    decoration: BoxDecoration(
-                      color: isAdmin ? Colors.deepPurpleAccent : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: isAdmin ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          message['sender']!,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: isAdmin ? Colors.white : Colors.black,
-                          ),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _chatCollection.orderBy('timestamp', descending: true).snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(child: Text('No messages yet.'));
+                }
+
+                final messages = snapshot.data!.docs;
+                return ListView.builder(
+                  reverse: true,
+                  padding: const EdgeInsets.all(16.0),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final message = messages[index];
+                    final isAdmin = message['sender'] == 'Admin';
+                    return Align(
+                      alignment: isAdmin ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 5.0),
+                        padding: const EdgeInsets.all(12.0),
+                        decoration: BoxDecoration(
+                          color: isAdmin ? Colors.deepPurpleAccent : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        const SizedBox(height: 5),
-                        Text(
-                          message['message']!,
-                          style: TextStyle(
-                            color: isAdmin ? Colors.white : Colors.black,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: isAdmin ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              message['sender']!,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isAdmin ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              message['message']!,
+                              style: TextStyle(
+                                color: isAdmin ? Colors.white : Colors.black,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 );
               },
             ),

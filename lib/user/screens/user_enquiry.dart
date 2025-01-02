@@ -127,7 +127,7 @@ class _UserEnquiryState extends State<UserEnquiry> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('User Enquiry & Complaints'),
+        title: Text('User Enquiry'),
         backgroundColor: Color.fromARGB(255, 245, 184, 93),
       ),
       body: _isLoading
@@ -204,12 +204,11 @@ class _UserEnquiryState extends State<UserEnquiry> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Your Submitted Enquiries/Complaints:',
+              'Your Submitted Enquiries:',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
-            if (_enquiries.isEmpty)
-              Text('No enquiries/complaints submitted yet.'),
+            if (_enquiries.isEmpty) Text('No enquiries submitted yet.'),
             for (int i = 0; i < _enquiries.length; i++) _buildEnquiryItem(i),
           ],
         ),

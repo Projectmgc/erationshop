@@ -42,7 +42,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       'color': Colors.pinkAccent.shade100,
       'description': 'Address and Resolve Your Complaints.',
       'image': 'asset/enquiry.jpg',
-      'page': const EnquiryPage(), // Navigation target
+      'page': EnquiryPage(), // Navigation target
     },
     {
       'title': 'Notification',

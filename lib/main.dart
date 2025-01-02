@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 String? card_no;
+String? shopId;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -14,6 +15,8 @@ Future<void> main() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   card_no = prefs.getString('card_no');
+
+  shopId = prefs.getString('shop_id');
 
   runApp(MaterialApp(debugShowCheckedModeBanner: false, home: IntroPage()));
 }

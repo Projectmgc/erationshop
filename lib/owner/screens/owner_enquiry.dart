@@ -1,209 +1,184 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class EnquiryPage extends StatefulWidget {
-  const EnquiryPage({super.key});
-
   @override
   _EnquiryPageState createState() => _EnquiryPageState();
 }
 
 class _EnquiryPageState extends State<EnquiryPage> {
-  final TextEditingController _controller = TextEditingController();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String shopId = '';  // Initialize shopId to an empty string
-  String shopOwnerName = '';  // To store the shop owner's name
-  late CollectionReference chatCollection;
-
-  /// Fetch shopId and shop owner name from SharedPreferences
-void _getShopIdAndName() async {
-  // Fetch shopId from SharedPreferences
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  setState(() {
-    shopId = prefs.getString('shop_id') ?? '';  // Fetch and set shopId
-  });
-  
-  print(shopId);
-   print(shopId);
-    print(shopId);
-     print(shopId);
-      print(shopId);
-       print(shopId);
-        print(shopId);
-         print(shopId);
-  // Fetch the shop owner's name using the shopId
-  if (shopId.isNotEmpty) {
-    // Query the Shop Owner collection to get the shop owner's document by shop_id
-    QuerySnapshot shopOwnerSnapshot = await _firestore
-        .collection('Shop Owner')
-        .where('shop_id', isEqualTo: shopId)  // Match the shop_id field
-        .limit(1)  // Ensure only one document is returned
-        .get();
-
-    if (shopOwnerSnapshot.docs.isNotEmpty) {
-      DocumentSnapshot shopOwnerDoc = shopOwnerSnapshot.docs.first;
-
-      // Retrieve shop owner's name and set it
-      setState(() {
-        shopOwnerName = shopOwnerDoc['name'] ?? 'Unknown';  // Retrieve shop owner's name
-      });
-
-      print(shopOwnerName);
-      print(shopOwnerName);
-      print(shopOwnerName);
-      print(shopOwnerName);
-      print(shopOwnerName);
-      print(shopOwnerName);
-      print(shopOwnerName);
-      print(shopOwnerName);
-
-      print(shopOwnerName);
-
-      // Initialize Firestore collection for messages using the shopId
-      chatCollection = _firestore.collection('converse').doc(shopId).collection('messages');
-    } else {
-      // Handle case where no shop owner is found
-      print('No shop owner found for shop_id: $shopId');
-    }
-  }
-}
-
-
+  TextEditingController messageController = TextEditingController();
+  String? shopName;
+  String? shopId; // The shop_id will be fetched from SharedPreferences.
 
   @override
   void initState() {
     super.initState();
-    _getShopIdAndName();  // Fetch shopId and shop owner name as soon as the screen is initialized
+    fetchShopId(); // Fetch shop_id from SharedPreferences
+    fetchShopName(); // Fetch shop_name from Firestore
   }
 
-  // Function to send message
-  Future<void> _sendMessage() async {
-    if (_controller.text.isNotEmpty && shopId.isNotEmpty) {  // Check if shopId is not empty
-      String messageText = _controller.text.trim();
-      String sender = shopOwnerName.isNotEmpty ? shopOwnerName : 'Shop Owner';  // Use shop owner name as sender
+  // Fetch the shop_id from SharedPreferences
+  Future<void> fetchShopId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      shopId =
+          prefs.getString('shop_id'); // Assuming shop_id is saved as 'shop_id'
+    });
+  }
 
-      // Send message to Firestore under the respective shop's collection
-      await chatCollection.add({
-        'shop_id': shopId,
-        'sender': sender,
-        'message': messageText,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+  // Fetch the shop name using the shop_id from the Shop Owner collection
+  Future<void> fetchShopName() async {
+    if (shopId != null) {
+      try {
+        // Query the Shop Owner collection based on shop_id field
+        QuerySnapshot shopSnapshot = await FirebaseFirestore.instance
+            .collection('Shop Owner')
+            .where('shop_id',
+                isEqualTo: shopId) // Filter based on shop_id field
+            .get();
 
-      // Clear the input field after sending the message
-      _controller.clear();
+        if (shopSnapshot.docs.isNotEmpty) {
+          setState(() {
+            shopName = shopSnapshot.docs[0]['store_name']; // Assuming 'shop_name' field exists
+            print(shopName);
+          });
+        }
+      } catch (e) {
+        print("Error fetching shop name: $e");
+      }
     }
   }
 
-  // Function to build message bubbles based on sender type
-  Widget _buildMessageBubble(String sender, String message) {
-    return Align(
-      alignment: sender == 'Admin' ? Alignment.topLeft : Alignment.topRight,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-        child: Material(
-          color: sender == 'Admin' ? Colors.blueAccent.shade100 : Colors.greenAccent.shade100,
-          borderRadius: BorderRadius.circular(15),
-          elevation: 4,
-          child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Text(
-              message,
-              style: TextStyle(color: Colors.black87, fontSize: 16),
-            ),
-          ),
-        ),
-      ),
-    );
+  // Submit message to Firestore
+  Future<void> submitMessage(String content) async {
+    if (content.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Please provide the content of your message."),
+      ));
+      return;
+    }
+
+    try {
+      // Add the data to the "messages" collection in Firestore
+      await FirebaseFirestore.instance.collection('messages').add({
+        'shop_id': shopId,
+        'store_name': shopName,
+        'sender':
+            'shop_owner', // You can change this depending on the sender role
+        'content': content,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      // Show confirmation
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Message sent successfully!"),
+      ));
+
+      // Clear text field
+      messageController.clear();
+    } catch (e) {
+      print("Error submitting message: $e");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Error sending message. Please try again."),
+      ));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Chat with Admin"),
-        backgroundColor: Colors.deepPurpleAccent,
+        backgroundColor: Colors.deepPurple,
+        title: Text('Message Admin'),
+        centerTitle: true,
       ),
-      body: Column(
-        children: [
-          // Chat messages list
-         Expanded(
-  child: StreamBuilder<QuerySnapshot>(
-    stream: (shopId.isNotEmpty && chatCollection != null) 
-      ? chatCollection.orderBy('timestamp').snapshots()
-      : null,  // Only listen to the collection if chatCollection is not null
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
-
-      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-        return const Center(child: Text('No messages yet.'));
-      }
-
-      final messages = snapshot.data!.docs;
-      return ListView.builder(
-        reverse: true,
-        padding: const EdgeInsets.all(16.0),
-        itemCount: messages.length,
-        itemBuilder: (context, index) {
-          final message = messages[index];
-          final sender = message['sender'] as String;
-          return _buildMessageBubble(sender, message['message'] as String);
-        },
-      );
-    },
-  ),
-),
-
-          
-          // Message input field and send button
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: InputDecoration(
-                      hintText: "Type your message...",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide(color: Colors.grey.shade400),
-                      ),
-                      contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                    ),
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Display shop name (if fetched)
+              if (shopName != null)
+                Text(
+                  'Hello, $shopName',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurpleAccent,
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.send, color: Colors.deepPurpleAccent),
-                  onPressed: _sendMessage,
-                ),
-              ],
-            ),
+              SizedBox(height: 20),
+
+              // Message Section in a Card
+              _buildMessageCard(),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
-}
 
-// Example of how to navigate to this EnquiryPage from another screen:
-
-// This is an example function to navigate to the EnquiryPage, which accepts shopId.
-void navigateToChatPage(BuildContext context, String shopId) {
-  if (shopId.isNotEmpty) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EnquiryPage(),
+  // Helper function to build the message section with a text field and submit button
+  Widget _buildMessageCard() {
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
-    );
-  } else {
-    // Handle invalid shopId (if needed)
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Invalid shop ID!')),
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Icon(Icons.message, color: Colors.deepPurpleAccent),
+                SizedBox(width: 10),
+                Text(
+                  'Send a Message to Admin',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
+            TextField(
+              controller: messageController,
+              maxLines: 5,
+              decoration: InputDecoration(
+                hintText: 'Write your message here...',
+                border: OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.deepPurpleAccent),
+                ),
+                contentPadding:
+                    EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+              ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () => submitMessage(messageController.text),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Send Message',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

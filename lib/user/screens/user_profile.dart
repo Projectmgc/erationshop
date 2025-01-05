@@ -113,9 +113,7 @@ class UserProfile extends StatelessWidget {
                                 SizedBox(height: 20),
 
                                 // Mobile Number
-                                _buildProfileTextField(
-                                    "Mobile Number:", mobileNumber),
-                                SizedBox(height: 20),
+                              
 
                                 // Owner Name
                                 _buildProfileTextField(
@@ -123,8 +121,7 @@ class UserProfile extends StatelessWidget {
                                 SizedBox(height: 20),
 
                                 // Category
-                                _buildProfileTextField("Category:", category),
-                                SizedBox(height: 20),
+                                
                               ],
                             ),
                           ),

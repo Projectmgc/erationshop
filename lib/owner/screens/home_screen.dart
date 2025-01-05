@@ -1,13 +1,12 @@
-import 'package:erationshop/owner/screens/owner_selection.dart';
+import 'package:erationshop/owner/screens/owner_enquiry.dart';
+import 'package:erationshop/owner/screens/owner_notification.dart';
+import 'package:erationshop/owner/screens/owner_outlet.dart';
+import 'package:erationshop/owner/screens/owner_profile.dart';
+import 'package:erationshop/owner/screens/owner_purchase.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'owner_profile.dart';
-import 'owner_outlet.dart';
-import 'owner_enquiry.dart';
-import 'owner_notification.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OwnerHomeScreen extends StatefulWidget {
   const OwnerHomeScreen({super.key});
@@ -18,38 +17,37 @@ class OwnerHomeScreen extends StatefulWidget {
 
 class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
   final PageController _pageController = PageController();
-  String shopId = '';
-  Map<String, dynamic>? ownerData;
+  String shop_id = ''; // To hold the shop_id from SharedPreferences
 
-  // Updated _cards list without the "Card" page
+  // Updated card list to navigate to correct pages
   final List<Map<String, dynamic>> _cards = [
     {
       'title': 'Purchase',
       'color': Colors.lightGreenAccent,
       'description': 'Keep track of available inventory and supplies.',
       'image': 'asset/purchase.jpg',
-      'page': const StoreOwnerPage(), 
+      'page': PurchasePage(), // Navigation target
     },
     {
       'title': 'Outlet',
       'color': Colors.amberAccent,
       'description': 'Find and Analyse the Ration Outlets.',
       'image': 'asset/outlet.jpg',
-      'page': const OutletPage(), 
+      'page': OutletPage(), // Navigation target
     },
     {
       'title': 'Converse',
       'color': Colors.pinkAccent.shade100,
       'description': 'Address and Resolve Your Complaints.',
       'image': 'asset/enquiry.jpg',
-      'widget': EnquiryPage, // Widget class itself to pass shopId later
+      'page': null, // Handle separately (for Enquiry)
     },
     {
       'title': 'Notification',
       'color': Colors.tealAccent,
       'description': 'New Updates and Notifications are here.',
       'image': 'asset/notification.jpg',
-      'page': OwnerNotification(), 
+      'page': OwnerNotification(), // Navigation target
     },
   ];
 
@@ -59,38 +57,42 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
     _getShopId();
   }
 
-
+  // Fetch shop_id from SharedPreferences
   void _getShopId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      shopId = prefs.getString('shop_id') ?? '';
+      shop_id = prefs.getString('shop_id') ?? '';
     });
   }
 
-
-  void _onCardTapped(Map<String, dynamic> card) {
-
-      if (card.containsKey('page')) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => card['page']),
-        );
-      } else if (card.containsKey('widget')) { // Handle widgets that need shopId
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => card['widget'](shopId: shopId)),
-        );
-      }
+  // Handle card tap and navigate accordingly
+  void _onCardTapped(BuildContext context, Widget? page) {
+    if (page != null) {
+      // Navigate to the associated page directly
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => page),
+      );
+    } else {
+      // Handle 'Converse' card by passing the shopId
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              EnquiryPage(shop_id: shop_id), // Pass the shopId to Enquiry
+        ),
+      );
+    }
   }
 
+  // Navigate to owner profile page
   void _goToProfile() {
-    if(shopId.isNotEmpty){
-        Navigator.push(
+    if (shop_id.isNotEmpty) {
+      Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => ProfilePage(shopId: shopId)),
-    );
+        MaterialPageRoute(builder: (context) => ProfilePage(shopId: shop_id)),
+      );
     }
-    
   }
 
   @override
@@ -114,83 +116,69 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Header Section with padding adjustments to move title and profile icon down
+              SizedBox(height: 20), // Adjusted top margin
+              // Header Section
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
+                child: Row(
                   children: [
-                    SizedBox(
-                        height: 30), // Added extra space to move elements down
-                    Row(
-                      children: [
-                        ClipOval(
-                          child: Image.asset(
-                            'asset/logo.jpg',
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Text(
-                          'OWNER HOME',
-                          style: GoogleFonts.merriweather(
-                            color: Colors.black87,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 22.0,
-                          ),
-                        ),
-                        Spacer(),
-                        IconButton(
-                          icon: CircleAvatar(
-                            radius: 20,
-                            backgroundColor: Colors.white,
-                            child: Icon(Icons.person,
-                                color: Colors.deepPurpleAccent),
-                          ),
-                          onPressed:
-                              _goToProfile, // Navigate to the profile screen
-                        ),
-                      ],
+                    ClipOval(
+                      child: Image.asset(
+                        'asset/logo.jpg',
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                    SizedBox(
-                        height: 40), // Move title and profile icon down more
+                    SizedBox(width: 10),
+                    Text(
+                      'OWNER HOME',
+                      style: GoogleFonts.merriweather(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 26.0, // Increased font size
+                      ),
+                    ),
+                    Spacer(),
+                    IconButton(
+                      icon: CircleAvatar(
+                        radius: 20,
+                        backgroundColor: Colors.white,
+                        child: Icon(
+                          Icons.person,
+                          color: Colors.deepPurpleAccent,
+                        ),
+                      ),
+                      onPressed: _goToProfile, // Navigate to profile screen
+                    ),
                   ],
                 ),
               ),
+              SizedBox(height: 50), // Increased spacing from the top
+
               // Cards Section with PageView.builder
               Expanded(
-                child: Column(
-                  children: [
-                    // PageView Section
-                    Expanded(
-                      child: PageView.builder(
-                        controller: _pageController,
-                        itemCount: _cards.length,
-                        itemBuilder: (context, index) {
-                          final card = _cards[index];
-                          return _buildPageCard(card);
-                        },
-                      ),
-                    ),
-                    // Dot indicator (SmoothPageIndicator)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 20.0),
-                      child: SmoothPageIndicator(
-                        controller:
-                            _pageController, // Controller to sync with PageView
-                        count: _cards.length, // Number of dots
-                        effect: ExpandingDotsEffect(
-                          dotWidth: 12,
-                          dotHeight: 12,
-                          activeDotColor:
-                              Colors.deepPurpleAccent, // Active dot color
-                          dotColor: Colors.white
-                              .withOpacity(0.5), // Inactive dot color
-                        ),
-                      ),
-                    ),
-                  ],
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: _cards.length,
+                  itemBuilder: (context, index) {
+                    final card = _cards[index];
+                    return _buildPageCard(context, card);
+                  },
+                ),
+              ),
+              // Dot indicator (SmoothPageIndicator)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                child: SmoothPageIndicator(
+                  controller: _pageController, // Sync with PageView
+                  count: _cards.length,
+                  effect: ExpandingDotsEffect(
+                    dotWidth: 10,
+                    dotHeight: 10,
+                    activeDotColor: Colors.deepPurpleAccent,
+                    dotColor: Colors.white.withOpacity(0.5),
+                  ),
                 ),
               ),
             ],
@@ -200,22 +188,23 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
     );
   }
 
-  Widget _buildPageCard(Map<String, dynamic> card) {
+  // Card UI for each PageView item
+  Widget _buildPageCard(BuildContext context, Map<String, dynamic> card) {
     return Center(
       child: GestureDetector(
-        onTap: () => _onCardTapped(card['page']),
+        onTap: () => _onCardTapped(context, card['page']),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
           width: MediaQuery.of(context).size.width * 0.8,
           height: MediaQuery.of(context).size.height * 0.6,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30), // More rounded corners
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: card['color'].withOpacity(0.6), // Softer shadow effect
-                blurRadius: 25,
-                offset: Offset(0, 15),
+                color: card['color'].withOpacity(0.4),
+                blurRadius: 20,
+                offset: Offset(0, 10),
               ),
             ],
           ),
@@ -223,7 +212,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
             fit: StackFit.expand,
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(20),
                 child: Image.asset(
                   card['image'],
                   fit: BoxFit.cover,
@@ -231,11 +220,11 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
               ),
               Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(20),
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withOpacity(0.5),
-                      Colors.black.withOpacity(0.2),
+                      Colors.black.withOpacity(0.4),
+                      Colors.black.withOpacity(0.1),
                     ],
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
@@ -249,27 +238,23 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
                   Text(
                     card['title'],
                     style: GoogleFonts.roboto(
-                      fontSize: 30, // Increased size for better readability
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 12),
+                  SizedBox(height: 10),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Text(
                       card['description'],
                       textAlign: TextAlign.center,
                       style: GoogleFonts.roboto(
-                        fontSize:
-                            18, // Slightly larger font for better readability
-                        fontWeight:
-                            FontWeight.w500, // Adjusted weight for clarity
+                        fontSize: 16,
                         color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
-                  SizedBox(height: 20),
                 ],
               ),
             ],

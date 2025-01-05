@@ -39,7 +39,7 @@ Future<void> _fetchCardsFromFirestore() async {
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
   final cardId = prefs.getString('card_no');
-
+  print(cardId);
   try {
     QuerySnapshot querySnapshot = await firestore
         .collection('Card')

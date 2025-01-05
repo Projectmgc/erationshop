@@ -4,6 +4,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class EnquiryPage extends StatefulWidget {
+  final String shop_id;
+
+  const EnquiryPage({super.key, required this.shop_id});
+
   @override
   _EnquiryPageState createState() => _EnquiryPageState();
 }
@@ -11,22 +15,24 @@ class EnquiryPage extends StatefulWidget {
 class _EnquiryPageState extends State<EnquiryPage> {
   TextEditingController messageController = TextEditingController();
   String? shopName;
-  String? shopId; // The shop_id will be fetched from SharedPreferences.
+  String? shopId;
 
   @override
   void initState() {
     super.initState();
     fetchShopId(); // Fetch shop_id from SharedPreferences
-    fetchShopName(); // Fetch shop_name from Firestore
   }
 
   // Fetch the shop_id from SharedPreferences
   Future<void> fetchShopId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      shopId =
-          prefs.getString('shop_id'); // Assuming shop_id is saved as 'shop_id'
+      shopId = prefs.getString('shop_id'); // Assuming shop_id is saved as 'shop_id'
     });
+
+    if (shopId != null) {
+      fetchShopName(); // Only fetch shopName if shopId is available
+    }
   }
 
   // Fetch the shop name using the shop_id from the Shop Owner collection
@@ -36,14 +42,17 @@ class _EnquiryPageState extends State<EnquiryPage> {
         // Query the Shop Owner collection based on shop_id field
         QuerySnapshot shopSnapshot = await FirebaseFirestore.instance
             .collection('Shop Owner')
-            .where('shop_id',
-                isEqualTo: shopId) // Filter based on shop_id field
+            .where('shop_id', isEqualTo: shopId)
             .get();
 
         if (shopSnapshot.docs.isNotEmpty) {
           setState(() {
-            shopName = shopSnapshot.docs[0]['store_name']; // Assuming 'shop_name' field exists
-            print(shopName);
+            shopName = shopSnapshot.docs[0]['store_name']; // Assuming 'store_name' field exists
+            print("Fetched Store Name: $shopName");
+          });
+        } else {
+          setState(() {
+            shopName = 'Shop Not Found';
           });
         }
       } catch (e) {
@@ -61,13 +70,19 @@ class _EnquiryPageState extends State<EnquiryPage> {
       return;
     }
 
+    if (shopName == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Unable to retrieve store name. Please try again."),
+      ));
+      return;
+    }
+
     try {
       // Add the data to the "messages" collection in Firestore
       await FirebaseFirestore.instance.collection('messages').add({
         'shop_id': shopId,
-        'store_name': shopName,
-        'sender':
-            'shop_owner', // You can change this depending on the sender role
+        'store_name': shopName, // Ensure store_name is not null here
+        'sender': 'shop_owner', // You can change this depending on the sender role
         'content': content,
         'timestamp': FieldValue.serverTimestamp(),
       });
@@ -115,6 +130,11 @@ class _EnquiryPageState extends State<EnquiryPage> {
 
               // Message Section in a Card
               _buildMessageCard(),
+
+              SizedBox(height: 20),
+
+              // Enquiry Messages Section
+              _buildEnquiryMessages(),
             ],
           ),
         ),
@@ -179,6 +199,81 @@ class _EnquiryPageState extends State<EnquiryPage> {
           ],
         ),
       ),
+    );
+  }
+
+  // Helper function to build the list of previously sent messages
+  Widget _buildEnquiryMessages() {
+    return FutureBuilder<QuerySnapshot>(
+      future: FirebaseFirestore.instance
+          .collection('messages')
+          .where('shop_id', isEqualTo: widget.shop_id)
+          .orderBy('timestamp', descending: true)
+          .get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(child: Text('Error fetching messages.'));
+        }
+
+        final messages = snapshot.data?.docs ?? [];
+
+        if (messages.isEmpty) {
+          return Center(child: Text('No messages found.'));
+        }
+
+        return ListView.builder(
+          shrinkWrap: true,
+          itemCount: messages.length,
+          itemBuilder: (context, index) {
+            final message = messages[index].data() as Map<String, dynamic>;
+            final sender = message['sender'] ?? 'Unknown';
+            final content = message['content'] ?? 'No content';
+            final timestamp = message['timestamp'] ?? DateTime.now();
+
+            return Card(
+              margin: EdgeInsets.only(bottom: 10),
+              elevation: 5,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  children: [
+                    Icon(Icons.message, color: Colors.deepPurpleAccent),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'From: $sender',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepPurple,
+                            ),
+                          ),
+                          SizedBox(height: 5),
+                          Text(content),
+                          SizedBox(height: 5),
+                          Text(
+                            'Sent on: ${timestamp.toDate()}',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

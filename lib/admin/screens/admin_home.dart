@@ -10,7 +10,6 @@ import 'admin_card.dart';
 import 'admin_notification.dart';
 import 'admin_shop.dart';
 import 'admin.converse.dart';
-import 'admin_request.dart'; // Import AdminRequestPage
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -31,14 +30,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'image': 'asset/stock.jpg',
       'page': StockPage(), // Navigation target
     },
-    {
-      'title': 'Sales',
-      'icon': Icons.show_chart,
-      'color': Colors.amberAccent,
-      'description': 'Analyze and monitor your sales data.',
-      'image': 'asset/sales.jpg',
-      'page': SalesPage(), // Navigation target
-    },
+   
     {
       'title': 'Complaints',
       'icon': Icons.report_problem,
@@ -53,7 +45,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'color': Colors.purpleAccent.shade100,
       'description': 'Manage credit or debit card-related operations.',
       'image': 'asset/card.jpg',
-      'page': CardPage(), // Navigation target
+      'page': AddCardPage(), // Navigation target
     },
     {
       'title': 'Converse',
@@ -90,14 +82,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'page': AdminProduct(), // Navigation target for AdminProductPage
     },
     // New Card for AdminRequestPage (Approve Member Requests)
-    {
-      'title': 'Member Requests',
-      'icon': Icons.check_circle,
-      'color': Colors.blueGrey,
-      'description': 'Approve or reject member addition requests.',
-      'image': 'asset/outlet.jpg', // Add your own image path
-      'page': AdminRequest(), // Navigation target for AdminRequestPage
-    },
+    // {
+    //   'title': 'Member Requests',
+    //   'icon': Icons.check_circle,
+    //   'color': Colors.blueGrey,
+    //   'description': 'Approve or reject member addition requests.',
+    //   'image': 'asset/outlet.jpg', // Add your own image path
+    //   'page': AdminCardDetailPage(), // Navigation target for AdminRequestPage
+    // },
   ];
 
   // Function to handle infinite scrolling

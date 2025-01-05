@@ -32,7 +32,7 @@ class _UserPurchaseState extends State<UserPurchase> {
     _razorpay.clear();
   }
 
- Future<void> _fetchCardsFromFirestore() async {
+Future<void> _fetchCardsFromFirestore() async {
   setState(() {
     _isLoading = true;
   });
@@ -47,13 +47,43 @@ class _UserPurchaseState extends State<UserPurchase> {
         .limit(1)
         .get();
 
+    if (querySnapshot.docs.isEmpty) {
+      // Handle the case where no card is found
+      print('No card found with card_no: $cardId');
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    final cardData = querySnapshot.docs.first.data() as Map<String, dynamic>;
+    final categoryId = cardData['category_id']; // Accessing by 'category_id'
+
+    if (categoryId == null) {
+      // Handle the case where 'category_id' is missing in the card document
+      print('Card document is missing category_id');
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+
     final categorySnapshot = await firestore
         .collection('Category')
-        .doc(querySnapshot.docs.first['category'])
+        .doc(categoryId) // Use categoryId here
         .get();
 
-    final categoryData = categorySnapshot.data();
-    if (categoryData == null) return;
+    final categoryData = categorySnapshot.data() as Map<String, dynamic>?;
+
+     if (categoryData == null) {
+      // Handle the case where category data is not found
+      print('Category data not found for ID: $categoryId');
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
 
     List<Future<void>> productFutures = [];
 
@@ -91,10 +121,10 @@ class _UserPurchaseState extends State<UserPurchase> {
                 'price': productInfo['price'],
                 'isOrderd':isOrderd,
                 'total': double.parse(productInfo['price']) *
-                    double.parse(querySnapshot.docs.first['members']),
+                    double.parse(querySnapshot.docs.first['members_count']),
                 'image': productData['image'],
                 'quantity': double.parse(productInfo['quantity']) *
-                    double.parse(querySnapshot.docs.first['members']),
+                    double.parse(querySnapshot.docs.first['members_count']),
                 'name': productData['name'],
                 'description': productData['description'],
               });
@@ -110,7 +140,7 @@ class _UserPurchaseState extends State<UserPurchase> {
       return {
         'card_no': doc['card_no'],
         'category': categoryData['category_name'],
-        'members': doc['members'],
+        'members': doc['members_count'],
         'mobile_no': doc['mobile_no'],
         'owner_name': doc['owner_name'],
       };
@@ -455,7 +485,7 @@ class ProductCard extends StatelessWidget {
                   ),
                   SizedBox(height: 5),
                   Text(
-                    '₹${product['price']}/person',
+                    '₹${product['price']}/kg',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.green,

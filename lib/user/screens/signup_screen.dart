@@ -92,7 +92,7 @@ class _Signup_ScreenState extends State<Signup_Screen> {
         context,
         MaterialPageRoute(
           builder: (context) {
-            return OtpScreen();
+            return Login_Screen();
           },
         ),
       );

@@ -100,10 +100,7 @@ class UserProfile extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: 20),
-
-                                // Name
-                                _buildProfileTextField("Name:", name),
+                           
                                 SizedBox(height: 20),
 
                                 // Email

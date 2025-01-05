@@ -28,28 +28,28 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       'color': Colors.lightGreenAccent,
       'description': 'Keep track of available inventory and supplies.',
       'image': 'asset/purchase.jpg',
-      'page': const StoreOwnerPage(), // Navigation target
+      'page': const StoreOwnerPage(), 
     },
     {
       'title': 'Outlet',
       'color': Colors.amberAccent,
       'description': 'Find and Analyse the Ration Outlets.',
       'image': 'asset/outlet.jpg',
-      'page': const OutletPage(), // Navigation target
+      'page': const OutletPage(), 
     },
     {
-      'title': 'Connverse',
+      'title': 'Converse',
       'color': Colors.pinkAccent.shade100,
       'description': 'Address and Resolve Your Complaints.',
       'image': 'asset/enquiry.jpg',
-      'page': EnquiryPage(), // Navigation target
+      'widget': EnquiryPage, // Widget class itself to pass shopId later
     },
     {
       'title': 'Notification',
       'color': Colors.tealAccent,
       'description': 'New Updates and Notifications are here.',
       'image': 'asset/notification.jpg',
-      'page': OwnerNotification(), // Navigation target
+      'page': OwnerNotification(), 
     },
   ];
 
@@ -59,53 +59,38 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
     _getShopId();
   }
 
-  // Retrieve shop_id from SharedPreferences
+
   void _getShopId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       shopId = prefs.getString('shop_id') ?? '';
     });
-
-    if (shopId.isNotEmpty) {
-      _fetchOwnerData(shopId);
-    }
   }
 
-  // Fetch shop owner data from Firestore
-  void _fetchOwnerData(String shopId) async {
-    try {
-      // Query Firestore for the owner data using shop_id
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('Shop Owner')
-          .where('shop_id', isEqualTo: shopId)
-          .get();
 
-      if (querySnapshot.docs.isNotEmpty) {
-        setState(() {
-          ownerData = querySnapshot.docs.first.data();
-        });
+  void _onCardTapped(Map<String, dynamic> card) {
+
+      if (card.containsKey('page')) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => card['page']),
+        );
+      } else if (card.containsKey('widget')) { // Handle widgets that need shopId
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => card['widget'](shopId: shopId)),
+        );
       }
-    } catch (e) {
-      // Handle any errors that occur during the Firestore query
-      print('Error fetching owner data: $e');
-    }
-  }
-
-  void _onCardTapped(Widget page) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => page),
-    );
   }
 
   void _goToProfile() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => const ProfilePage(
-                shopId: '',
-              )),
+    if(shopId.isNotEmpty){
+        Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ProfilePage(shopId: shopId)),
     );
+    }
+    
   }
 
   @override

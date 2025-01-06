@@ -1,10 +1,10 @@
+import 'package:erationshop/user/screens/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:erationshop/owner/screens/owner_enquiry.dart';
 import 'package:erationshop/owner/screens/owner_notification.dart';
 import 'package:erationshop/owner/screens/owner_outlet.dart';
-import 'package:erationshop/owner/screens/owner_purchase.dart';
 import 'package:erationshop/owner/screens/owner_profile.dart';
 
 class OwnerHomeScreen extends StatefulWidget {
@@ -25,7 +25,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       'color': Colors.lightGreenAccent,
       'description': 'Keep track of available inventory and supplies.',
       'image': 'asset/purchase.jpg',
-      'page': PurchasePage(), // Navigation target
+      'page': Signup_Screen(), // Navigation target
     },
     {
       'title': 'Outlet',

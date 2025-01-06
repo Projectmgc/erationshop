@@ -1,115 +1,204 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class ConversePage extends StatefulWidget {
+class ConversePage extends StatelessWidget {
   const ConversePage({super.key});
 
-  @override
-  State<ConversePage> createState() => _ConversePageState();
-}
+  // Fetch messages from Firestore
+  Future<List<Map<String, dynamic>>> _fetchMessages() async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .get();
 
-class _ConversePageState extends State<ConversePage> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+    return querySnapshot.docs.map((doc) {
+      return {
+        'content': doc['content'] ?? 'No content provided',
+        'status': doc['status'] ?? 'No status provided',
+        'timestamp': doc['timestamp'],
+        'reply': doc['reply'] ?? '',
+        'messageId': doc.id, // Adding the document ID for reference
+        'shopId': doc['shop_id'], // Adding shopId for reference
+      };
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Shop Owners'),
+        title: const Text('Messages'),
         backgroundColor: Colors.deepPurpleAccent,
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _firestore.collection('converse').snapshots(),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _fetchMessages(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          }
+          } else if (snapshot.hasError) {
+            return const Center(child: Text('Error fetching messages'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No messages available'));
+          } else {
+            final messages = snapshot.data!;
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('No shop owners available.'));
-          }
-
-          final shopOwners = snapshot.data!.docs;
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16.0),
-            itemCount: shopOwners.length,
-            itemBuilder: (context, index) {
-              final shopOwnerDoc = shopOwners[index];
-              final shopId = shopOwnerDoc.id;  // This is the dynamic document ID
-              final shopName = shopOwnerDoc['name'];
-              final storeName = shopOwnerDoc['store'];
-
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8.0),
-                elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                child: ListTile(
-                  leading: const Icon(Icons.store, color: Colors.deepPurpleAccent),
-                  title: Text(shopName),
-                  subtitle: Text('Store: $storeName'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 18),
-                  onTap: () {
-                    // Navigate to the chat screen with the selected shop's information
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ShopOwnerChatPage(
-                          shopOwner: {
-                            'name': shopName,
-                            'store': storeName,
-                            'shop_id': shopId,  // Passing the shop document ID (dynamic)
-                          },
+            return ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: messages.length,
+              itemBuilder: (context, index) {
+                final message = messages[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: ListTile(
+                    leading: message['reply'].isEmpty
+                        ? Icon(
+                            Icons.report_problem,
+                            color: Colors.redAccent,
+                          )
+                        : Icon(
+                            Icons.check,
+                            color: Colors.green,
+                          ),
+                    title: Text(
+                      message['content'],
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Status: ${message['status']}'),
+                        const SizedBox(height: 5),
+                        Text(
+                          'Filed on: ${message['timestamp']?.toDate().toString() ?? 'No timestamp available'}',
+                          style: const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
-          );
+                        if (message['reply'].isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              'Reply: ${message['reply']}',
+                              style: const TextStyle(
+                                  fontSize: 14,
+                                  fontStyle: FontStyle.italic,
+                                  color: Colors.green),
+                            ),
+                          ),
+                        // Display Shop ID
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            'Shop ID: ${message['shopId']}',
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.blue),
+                          ),
+                        ),
+                      ],
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MessageDetailsPage(
+                            message: message,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            );
+          }
         },
       ),
     );
   }
 }
 
-class ShopOwnerChatPage extends StatefulWidget {
-  final Map<String, String> shopOwner;
+class MessageDetailsPage extends StatefulWidget {
+  final Map<String, dynamic> message;
 
-  const ShopOwnerChatPage({required this.shopOwner, super.key});
+  const MessageDetailsPage({required this.message, super.key});
 
   @override
-  State<ShopOwnerChatPage> createState() => _ShopOwnerChatPageState();
+  _MessageDetailsPageState createState() => _MessageDetailsPageState();
 }
 
-class _ShopOwnerChatPageState extends State<ShopOwnerChatPage> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final TextEditingController _messageController = TextEditingController();
-  late CollectionReference _chatCollection;
+class _MessageDetailsPageState extends State<MessageDetailsPage> {
+  final TextEditingController _replyController = TextEditingController();
+  bool isReplied = false;
 
   @override
   void initState() {
     super.initState();
-    // Initialize Firestore chat collection based on the selected shop's document ID
-    _chatCollection = _firestore.collection('converse').doc(widget.shopOwner['shop_id']).collection('messages');
+    // Check if the message already has a reply
+    isReplied = widget.message['reply'].isNotEmpty;
   }
 
-  // Function to send a message
-  Future<void> _sendMessage() async {
-    if (_messageController.text.trim().isNotEmpty) {
-      String messageText = _messageController.text.trim();
-      String sender = 'Admin';  // Always from admin
+  // Submit the reply and update the message status to 'Resolved'
+  Future<void> _submitReply() async {
+    if (_replyController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a reply before submitting')),
+      );
+      return;
+    }
 
-      // Send message to Firestore
-      await _chatCollection.add({
-        'sender': sender,
-        'message': messageText,
-        'timestamp': FieldValue.serverTimestamp(),
+    try {
+      // Get the document reference for the current message
+      final messageRef = FirebaseFirestore.instance
+          .collection('messages')
+          .doc(widget.message['messageId']);
+
+      // Update the document with the reply and set the status to 'Resolved'
+      await messageRef.update({
+        'reply': _replyController.text,
+        'responseTimestamp': FieldValue.serverTimestamp(),
+        'status': 'Resolved', // Changing the status to 'Resolved'
       });
 
-      // Clear the input field
-      _messageController.clear();
+      setState(() {
+        isReplied = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reply submitted successfully')),
+      );
+
+      // Optionally, clear the text field after submission
+      _replyController.clear();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error submitting reply')),
+      );
+    }
+  }
+
+  // Delete the message from Firestore
+  Future<void> _deleteMessage() async {
+    try {
+      final messageRef = FirebaseFirestore.instance
+          .collection('messages')
+          .doc(widget.message['messageId']);
+
+      // Delete the message document
+      await messageRef.delete();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Message deleted successfully')),
+      );
+
+      // Navigate back to the previous page
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error deleting message')),
+      );
     }
   }
 
@@ -117,94 +206,103 @@ class _ShopOwnerChatPageState extends State<ShopOwnerChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.shopOwner['name']} - Chat'),
+        title: const Text('Message Details'),
         backgroundColor: Colors.deepPurpleAccent,
       ),
-      body: Column(
-        children: [
-          // Chat display area
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _chatCollection.orderBy('timestamp', descending: true).snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text('No messages yet.'));
-                }
-
-                final messages = snapshot.data!.docs;
-                return ListView.builder(
-                  reverse: true,
-                  padding: const EdgeInsets.all(16.0),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message = messages[index];
-                    final isAdmin = message['sender'] == 'Admin';
-                    return Align(
-                      alignment: isAdmin ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 5.0),
-                        padding: const EdgeInsets.all(12.0),
-                        decoration: BoxDecoration(
-                          color: isAdmin ? Colors.deepPurpleAccent : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: isAdmin ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              message['sender']!,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: isAdmin ? Colors.white : Colors.black,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              message['message']!,
-                              style: TextStyle(
-                                color: isAdmin ? Colors.white : Colors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Message Details',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
-          ),
-          // Message input area
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: InputDecoration(
-                      hintText: 'Type your message...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            const SizedBox(height: 20),
+            Text(
+              'Content: ${widget.message['content']}',
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Status: ${widget.message['status']}',
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Reply:',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            if (widget.message['reply'].isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  widget.message['reply']!,
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.green),
+                ),
+              )
+            else
+              const Text('No reply yet.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey)),
+            const SizedBox(height: 20),
+            Text(
+              'Filed on: ${widget.message['timestamp']?.toDate().toString() ?? 'No timestamp available'}',
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Shop ID: ${widget.message['shopId']}',
+              style: const TextStyle(fontSize: 16, color: Colors.blue),
+            ),
+            const SizedBox(height: 20),
+            if (!isReplied)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Submit Reply:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  TextField(
+                    controller: _replyController,
+                    maxLines: 5,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter your reply here...',
+                      border: OutlineInputBorder(),
                     ),
                   ),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: _submitReply,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurpleAccent,
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                      ),
+                      child: const Text('Submit Reply'),
+                    ),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 20),
+            // Delete button
+            Center(
+              child: ElevatedButton(
+                onPressed: _deleteMessage,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                 ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: _sendMessage,
-                  icon: const Icon(Icons.send),
-                  color: Colors.deepPurpleAccent,
-                ),
-              ],
+                child: const Text('Delete Message'),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -28,24 +28,47 @@ class _EnquiryPageState extends State<EnquiryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50], // Light background for a fresh look
       appBar: AppBar(
         title: Text('Enquiry Form'),
+        backgroundColor: Colors.blueAccent, // AppBar color
+        elevation: 4, // Subtle shadow for the AppBar
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
+            // Input Field for Message
             TextField(
               controller: _messageController,
               decoration: InputDecoration(
                 labelText: 'Your Enquiry',
-                border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: Colors.blueAccent),
+                hintText: 'Enter your question or enquiry here...',
+                hintStyle: TextStyle(color: Colors.blueAccent.withOpacity(0.5)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blueAccent),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               maxLines: 5,
+              style: TextStyle(color: Colors.black),
             ),
             SizedBox(height: 20),
+            // Submit Button
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent, // Button color
+                padding: EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12), // Rounded corners
+                ),
+                shadowColor: Colors.blueAccent.withOpacity(0.4), // Button shadow
+              ),
               onPressed: () async {
                 String content = _messageController.text.trim();
 
@@ -76,13 +99,25 @@ class _EnquiryPageState extends State<EnquiryPage> {
                   );
                 }
               },
-              child: Text('Submit Enquiry'),
+              child: Text(
+                'Submit',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             SizedBox(height: 30),
+            // Submitted Enquiries Section
             Text(
               'Submitted Enquiries:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueAccent,
+              ),
             ),
+            SizedBox(height: 10),
             // Display enquiries in a ListView
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
@@ -113,9 +148,20 @@ class _EnquiryPageState extends State<EnquiryPage> {
                       final reply = enquiry['reply'];
 
                       return Card(
+                        elevation: 4, // Card shadow
                         margin: EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         child: ListTile(
-                          title: Text(content),
+                          contentPadding: EdgeInsets.all(16),
+                          title: Text(
+                            content,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -123,9 +169,14 @@ class _EnquiryPageState extends State<EnquiryPage> {
                                 'Timestamp: ${timestamp != null ? timestamp.toString() : 'N/A'}',
                                 style: TextStyle(fontSize: 12, color: Colors.grey),
                               ),
+                              SizedBox(height: 5),
                               Text(
                                 'Status: $status',
-                                style: TextStyle(fontSize: 12, color: Colors.grey),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: status == 'pending' ? Colors.orange : Colors.green,
+                                ),
                               ),
                               if (reply.isNotEmpty) ...[
                                 SizedBox(height: 5),

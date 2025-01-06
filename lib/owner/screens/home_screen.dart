@@ -1,12 +1,11 @@
+import 'package:flutter/material.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:erationshop/owner/screens/owner_enquiry.dart';
 import 'package:erationshop/owner/screens/owner_notification.dart';
 import 'package:erationshop/owner/screens/owner_outlet.dart';
-import 'package:erationshop/owner/screens/owner_profile.dart';
 import 'package:erationshop/owner/screens/owner_purchase.dart';
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:erationshop/owner/screens/owner_profile.dart';
 
 class OwnerHomeScreen extends StatefulWidget {
   const OwnerHomeScreen({super.key});
@@ -79,7 +78,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
         context,
         MaterialPageRoute(
           builder: (context) =>
-              EnquiryPage(shop_id: shop_id), // Pass the shopId to Enquiry
+              EnquiryPage(shopId: shop_id), // Correctly pass the shopId to EnquiryPage
         ),
       );
     }
@@ -133,7 +132,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
                     SizedBox(width: 10),
                     Text(
                       'OWNER HOME',
-                      style: GoogleFonts.merriweather(
+                      style: TextStyle(
                         color: Colors.black87,
                         fontWeight: FontWeight.bold,
                         fontSize: 26.0, // Increased font size
@@ -237,7 +236,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
                   SizedBox(height: 20),
                   Text(
                     card['title'],
-                    style: GoogleFonts.roboto(
+                    style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -249,7 +248,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
                     child: Text(
                       card['description'],
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.roboto(
+                      style: TextStyle(
                         fontSize: 16,
                         color: Colors.white.withOpacity(0.9),
                       ),

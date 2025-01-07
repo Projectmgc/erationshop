@@ -11,6 +11,9 @@ class _StockPageState extends State<StockPage> {
   late Future<List<Map<String, dynamic>>> _shops;
   late Future<List<Map<String, dynamic>>> _products;
 
+  // Map to store TextEditingControllers for each product's stock allocation
+  Map<String, Map<String, TextEditingController>> controllers = {};
+
   @override
   void initState() {
     super.initState();
@@ -44,68 +47,67 @@ class _StockPageState extends State<StockPage> {
   }
 
   // Fetch stock details from the 'Stock_Details' collection for a specific shop
- // Fetch stock details from the 'Stock_Details' collection for a specific shop
-Future<Map<String, dynamic>> fetchStockDetails(String shopId) async {
-  DocumentSnapshot docSnapshot = await _firestore.collection('Stock_Details').doc(shopId).get();
-  
-  if (!docSnapshot.exists) {
-    // If the document doesn't exist, initialize it
-    await initializeStock(shopId, await fetchProducts());
-    // Re-fetch the stock details after initializing it
-    docSnapshot = await _firestore.collection('Stock_Details').doc(shopId).get();
-  }
-
-  return docSnapshot.exists ? docSnapshot.data() as Map<String, dynamic> : {};
-}
-
- // Initialize stock details when a new shop is added (if not already initialized)
-Future<void> initializeStock(String shopId, List<Map<String, dynamic>> products) async {
-  DocumentReference stockDoc = _firestore.collection('Stock_Details').doc(shopId);
-  // Only initialize if stock document doesn't exist
-  DocumentSnapshot stockSnapshot = await stockDoc.get();
-  if (!stockSnapshot.exists) {
-    Map<String, dynamic> stockData = {};
-    for (int i = 0; i < products.length; i++) {
-      stockData['product_${i + 1}'] = {
-        'stockAllotted': 0,
-        'currentStock': 0,
-      };
+  Future<Map<String, dynamic>> fetchStockDetails(String shopId) async {
+    DocumentSnapshot docSnapshot = await _firestore.collection('Stock_Details').doc(shopId).get();
+    if (!docSnapshot.exists) {
+      await initializeStock(shopId, await fetchProducts());
+      await Future.delayed(const Duration(milliseconds: 500));
+      docSnapshot = await _firestore.collection('Stock_Details').doc(shopId).get();
     }
-    await stockDoc.set({
-      'shopId': shopId,
-      'products': stockData,
-    });
+    return docSnapshot.exists ? docSnapshot.data() as Map<String, dynamic> : {};
   }
-}
 
-  // Update stock details
-// Update stock details
-// Update stock details
-Future<void> updateStock(String shopId, String productKey, int stockAllocated) async {
-  // Get the document reference
-  DocumentReference stockDoc = _firestore.collection('Stock_Details').doc(shopId);
-
-  // Fetch the current stock data
-  DocumentSnapshot stockSnapshot = await stockDoc.get();
-  
-  if (stockSnapshot.exists) {
-    // Get the current values of stockAllotted and currentStock
-    Map<String, dynamic> stockData = stockSnapshot.data() as Map<String, dynamic>;
-    int currentStock = stockData['products'][productKey]['currentStock'] ?? 0;
-
-    // Calculate the new values
-    int newCurrentStock = currentStock + stockAllocated;
-    int newStockAllotted = stockData['products'][productKey]['stockAllotted'] + stockAllocated;
-
-    // Update both stockAllotted and currentStock
-    await stockDoc.update({
-      'products.$productKey.stockAllotted': newStockAllotted,
-      'products.$productKey.currentStock': newCurrentStock,
-    });
+  // Initialize stock details when a new shop is added (if not already initialized)
+  Future<void> initializeStock(String shopId, List<Map<String, dynamic>> products) async {
+    DocumentReference stockDoc = _firestore.collection('Stock_Details').doc(shopId);
+    DocumentSnapshot stockSnapshot = await stockDoc.get();
+    if (!stockSnapshot.exists) {
+      Map<String, dynamic> stockData = {};
+      for (int i = 0; i < products.length; i++) {
+        stockData['product_${i + 1}'] = {
+          'stockAllotted': 0,
+          'currentStock': 0,
+        };
+      }
+      await stockDoc.set({
+        'shopId': shopId,
+        'products': stockData,
+      });
+    }
   }
-}
 
+  // Update stock details (to be triggered by button)
+  Future<void> updateStock(String shopId, String productKey) async {
+    try {
+      int? stockAllocated = int.tryParse(controllers[shopId]?[productKey]?.text ?? '');
+      if (stockAllocated == null) return;
 
+      DocumentReference stockDoc = _firestore.collection('Stock_Details').doc(shopId);
+      await _firestore.runTransaction((transaction) async {
+        DocumentSnapshot freshSnapshot = await transaction.get(stockDoc);
+        if (freshSnapshot.exists) {
+          Map<String, dynamic> stockData = freshSnapshot.data() as Map<String, dynamic>;
+          int currentStock = stockData['products'][productKey]['currentStock'] ?? 0;
+          if (currentStock + stockAllocated >= 0) {
+            transaction.update(stockDoc, {
+              'products.$productKey.stockAllotted': FieldValue.increment(stockAllocated),
+              'products.$productKey.currentStock': currentStock + stockAllocated,
+            });
+          } else {
+            throw Exception('Stock cannot be negative');
+          }
+        }
+      });
+
+      // Refresh the UI after successful update
+      setState(() {}); // Triggers a rebuild to fetch the latest data
+    } catch (error) {
+      print("Error updating stock: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating stock: $error')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -141,16 +143,15 @@ Future<void> updateStock(String shopId, String productKey, int stockAllocated) a
                       title: Text(shop['store_name']),
                       subtitle: Text('Error loading stock details'),
                     );
-                  } else if (!stockSnapshot.hasData) {
-                    // Initialize stock if not available
-                    initializeStock(shop['id'], []);
-                    return ListTile(
-                      title: Text(shop['store_name']),
-                      subtitle: Text('Initializing stock...'),
-                    );
                   }
 
                   Map<String, dynamic> stockData = stockSnapshot.data!;
+
+                  // Initialize controllers for each product when they are loaded
+                  if (controllers[shop['id']] == null) {
+                    controllers[shop['id']] = {};
+                  }
+
                   return Card(
                     margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                     child: Padding(
@@ -182,6 +183,11 @@ Future<void> updateStock(String shopId, String productKey, int stockAllocated) a
                                   String productKey = 'product_${products.indexOf(product) + 1}';
                                   int currentStock = stockData['products']?[productKey]?['currentStock'] ?? 0;
 
+                                  // Initialize the TextEditingController only once
+                                  if (controllers[shop['id']]?[productKey] == null) {
+                                    controllers[shop['id']]?[productKey] = TextEditingController();
+                                  }
+
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 5.0),
                                     child: Row(
@@ -204,19 +210,20 @@ Future<void> updateStock(String shopId, String productKey, int stockAllocated) a
                                             Container(
                                               width: 100,
                                               child: TextField(
+                                                controller: controllers[shop['id']]?[productKey],
                                                 keyboardType: TextInputType.number,
                                                 decoration: InputDecoration(labelText: 'Allotted Stock'),
-                                                onChanged: (value) {
-                                                  int? stockAllocated = int.tryParse(value);
-                                                  if (stockAllocated != null) {
-                                                    updateStock(shop['id'], productKey, stockAllocated);
-                                                  }
-                                                },
                                               ),
                                             ),
                                             Text(
                                               'Current Stock: $currentStock',
                                               style: TextStyle(fontWeight: FontWeight.bold),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                updateStock(shop['id'], productKey);
+                                              },
+                                              child: Text('Save'),
                                             ),
                                           ],
                                         ),

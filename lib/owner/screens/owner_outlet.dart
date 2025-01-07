@@ -1,13 +1,230 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class OutletPage extends StatelessWidget {
-  const OutletPage({super.key});
+class OwnerOutletPage extends StatefulWidget {
+  final String shopId;
+
+  const OwnerOutletPage({Key? key, required this.shopId}) : super(key: key);
+
+  @override
+  State<OwnerOutletPage> createState() => _OwnerOutletPageState();
+}
+
+class _OwnerOutletPageState extends State<OwnerOutletPage> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<Map<String, dynamic>>? _stockDetailsFuture;
+  Future<List<Map<String, dynamic>>>? _productsFuture;
+
+  final Map<String, TextEditingController> _controllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _stockDetailsFuture = fetchStockDetails(widget.shopId);
+    _productsFuture = fetchProducts();
+  }
+
+  // Fetch Stock Details from Stock_Details collection using shopId
+  Future<Map<String, dynamic>> fetchStockDetails(String shopId) async {
+    try {
+      DocumentSnapshot docSnapshot =
+          await _firestore.collection('Stock_Details').doc(shopId).get();
+      if (!docSnapshot.exists) {
+        return {}; // Return empty map if no stock details found
+      }
+      return docSnapshot.data() as Map<String, dynamic>;
+    } catch (e) {
+      print('Error fetching stock details: $e');
+      return {};
+    }
+  }
+
+  // Fetch product details from Product_Category collection
+  Future<List<Map<String, dynamic>>> fetchProducts() async {
+    try {
+      QuerySnapshot querySnapshot =
+          await _firestore.collection('Product_Category').get();
+      return querySnapshot.docs.map((doc) {
+        return {
+          'id': doc.id,
+          'name': doc['name'],
+          'description': doc['description'],
+          'image': doc['image'],
+        };
+      }).toList();
+    } catch (e) {
+      print('Error fetching products: $e');
+      return [];
+    }
+  }
+
+  // Update stock quantity
+  Future<void> updateStock(int index) async {
+    if (widget.shopId == null) return;
+
+    try {
+      String productKey = 'product_${index + 1}';
+      int? stockToSubtract = int.tryParse(_controllers[productKey]?.text ?? '');
+      if (stockToSubtract == null || stockToSubtract <= 0) return;
+
+      DocumentReference stockDoc =
+          _firestore.collection('Stock_Details').doc(widget.shopId);
+
+      await _firestore.runTransaction((transaction) async {
+        DocumentSnapshot freshSnapshot = await transaction.get(stockDoc);
+        if (freshSnapshot.exists) {
+          Map<String, dynamic> stockData = freshSnapshot.data() as Map<String, dynamic>;
+
+          int currentStock = stockData['products'][productKey]?['currentStock'] ?? 0;
+
+          if (currentStock >= stockToSubtract) {
+            transaction.update(stockDoc, {
+              'products.$productKey.currentStock': currentStock - stockToSubtract,
+            });
+          } else {
+            // Show error message if not enough stock
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Not enough stock available.')),
+            );
+            throw Exception('Not enough stock available.');
+          }
+        }
+      });
+
+      setState(() {
+        _stockDetailsFuture = fetchStockDetails(widget.shopId); // Refresh stock details
+      });
+
+      _controllers[productKey]?.clear(); // Clear the input field
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Stock Updated Successfully')),
+      );
+    } catch (e) {
+      print("Error updating stock: $e");
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating stock: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Outlet")),
-      body: Center(child: Text("Outlet Page")),
+      appBar: AppBar(
+        title: const Text('Outlet Stock Management'),
+        centerTitle: true,
+      ),
+      body: widget.shopId == null
+          ? const Center(child: Text('No shop ID found'))
+          : FutureBuilder<Map<String, dynamic>>(
+              future: _stockDetailsFuture,
+              builder: (context, stockSnapshot) {
+                if (stockSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (stockSnapshot.hasError || !stockSnapshot.hasData || stockSnapshot.data!.isEmpty) {
+                  return const Center(child: Text('No stock data available.'));
+                }
+
+                Map<String, dynamic> stockData = stockSnapshot.data!;
+
+                return FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _productsFuture,
+                  builder: (context, productSnapshot) {
+                    if (productSnapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (productSnapshot.hasError || !productSnapshot.hasData || productSnapshot.data!.isEmpty) {
+                      return const Center(child: Text('No products available.'));
+                    }
+
+                    List<Map<String, dynamic>> products = productSnapshot.data!;
+
+                    return ListView.builder(
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        Map<String, dynamic> product = products[index];
+                        String productKey = 'product_${index + 1}'; // Correct key generation
+                        String productName = product['name'];
+                        String productImage = product['image'];
+                        String productDescription = product['description'];
+
+                        // Fetch current stock from stockData
+                        int currentStock = stockData['products'][productKey]?['currentStock'] ?? 0;
+
+                        // Initialize controllers for stock updates
+                        if (_controllers[productKey] == null) {
+                          _controllers[productKey] = TextEditingController();
+                        }
+
+                        return Card(
+                          margin: const EdgeInsets.all(10),
+                          elevation: 5,
+                          child: Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundImage: NetworkImage(productImage),
+                                  radius: 30,
+                                ),
+                                const SizedBox(width: 15),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        productName,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Text(
+                                        'Description: $productDescription',
+                                        style: TextStyle(color: Colors.grey[700]),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Text(
+                                        'Current Stock: $currentStock',
+                                        style: TextStyle(color: Colors.grey[700]),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Column(
+                                  children: [
+                                    SizedBox(
+                                      width: 100,
+                                      child: TextField(
+                                        controller: _controllers[productKey],
+                                        keyboardType: TextInputType.number,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Subtract',
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        updateStock(index); // Pass the index to updateStock
+                                      },
+                                      child: const Text('Save'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
     );
   }
 }

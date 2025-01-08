@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 String? card_no;
 String? shopId;
+String? shopOwnerId ;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -17,6 +18,9 @@ Future<void> main() async {
   card_no = prefs.getString('card_no');
 
   shopId = prefs.getString('shop_id');
+
+  shopOwnerId = prefs.getString('shop_owner_doc_id');
+
 
   runApp(MaterialApp(debugShowCheckedModeBanner: false, home: IntroPage()));
 }

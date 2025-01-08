@@ -42,6 +42,7 @@ class _StockPageState extends State<StockPage> {
               'id': doc.id,
               'name': doc['name'],
               'image': doc['image'],
+              'documentLink': doc.reference, // Store the actual DocumentReference here
             })
         .toList();
   }
@@ -64,9 +65,11 @@ class _StockPageState extends State<StockPage> {
     if (!stockSnapshot.exists) {
       Map<String, dynamic> stockData = {};
       for (int i = 0; i < products.length; i++) {
-        stockData['product_${i + 1}'] = {
+        String productKey = 'product_${i + 1}';
+        stockData[productKey] = {
           'stockAllotted': 0,
           'currentStock': 0,
+          'documentLink': products[i]['documentLink'], // Store the Firestore DocumentReference here
         };
       }
       await stockDoc.set({
@@ -179,6 +182,7 @@ class _StockPageState extends State<StockPage> {
                                   String productId = product['id'];
                                   String productName = product['name'];
                                   String productImage = product['image'];
+                                  var productDocumentLink = product['documentLink']; // Firestore DocumentReference
 
                                   String productKey = 'product_${products.indexOf(product) + 1}';
                                   int currentStock = stockData['products']?[productKey]?['currentStock'] ?? 0;
@@ -202,6 +206,8 @@ class _StockPageState extends State<StockPage> {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(productName, style: TextStyle(fontWeight: FontWeight.bold)),
+                                              // Optionally display the document link for reference
+                                             
                                             ],
                                           ),
                                         ),

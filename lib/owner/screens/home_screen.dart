@@ -1,3 +1,4 @@
+import 'package:erationshop/main.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -61,8 +62,10 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       shopId = prefs.getString('shop_id');
-    });
+      shopOwnerId=prefs.getString('shop_owner_doc_id');
+          });
   }
+
 
   void _onCardTapped(BuildContext context, Widget? page, String title) {
   if (page != null) {
@@ -78,7 +81,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => OwnerOutletPage(shopId: shopId!),
+          builder: (context) => OwnerOutletPage(shopId: shopOwnerId!),
         ),
       );
     } else if (title == 'Enquiry') {

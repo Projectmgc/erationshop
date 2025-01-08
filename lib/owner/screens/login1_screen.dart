@@ -20,6 +20,7 @@ class _Login1_ScreenState extends State<Login1_Screen> {
   bool passwordVisible = true;
   bool loading = false;
 
+  // Function to handle login
   void login() async {
     setState(() {
       loading = true; // Set loading to true while performing login
@@ -55,14 +56,15 @@ class _Login1_ScreenState extends State<Login1_Screen> {
           loading = false;
         });
 
-        // Store the shop_id in SharedPreferences
+        // Store the shop_id and shop owner's docId in SharedPreferences
         SharedPreferences prefs = await SharedPreferences.getInstance();
         prefs.setString('shop_id', shopid_controller.text);
+        prefs.setString('shop_owner_doc_id', shopData.id); // Save Firestore doc ID
 
         // Proceed to the next screen or main app page after successful login
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => OwnerHomeScreen()), // You can replace this with your dashboard or main page
+          MaterialPageRoute(builder: (context) => OwnerHomeScreen()),
         );
       } else {
         setState(() {
@@ -120,7 +122,7 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                 ),
                 SizedBox(height: 55),
                 Text(
-                  'OWNER LOGIN ',
+                  'OWNER LOGIN',
                   style: GoogleFonts.merriweather(
                     color: const Color.fromARGB(255, 81, 50, 12),
                     fontWeight: FontWeight.bold,
@@ -135,6 +137,7 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                   ),
                 ),
                 SizedBox(height: 45),
+                // Email Input Field
                 TextFormField(
                   controller: email_controller,
                   keyboardType: TextInputType.emailAddress,
@@ -161,6 +164,7 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                   },
                 ),
                 SizedBox(height: 20),
+                // Shop ID Input Field
                 TextFormField(
                   controller: shopid_controller,
                   keyboardType: TextInputType.number,
@@ -187,6 +191,7 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                   },
                 ),
                 SizedBox(height: 20),
+                // Password Input Field
                 TextFormField(
                   controller: password_controller,
                   obscureText: passwordVisible,
@@ -223,6 +228,7 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                   },
                 ),
                 SizedBox(height: 40),
+                // Login Button
                 loading
                     ? CircularProgressIndicator()
                     : ElevatedButton(

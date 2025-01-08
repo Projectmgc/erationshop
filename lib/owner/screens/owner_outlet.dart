@@ -28,28 +28,31 @@ class _OwnerOutletPageState extends State<OwnerOutletPage> {
   // Fetch Stock Details from Stock_Details collection using shopId
   Future<Map<String, dynamic>> fetchStockDetails(String shopId) async {
     try {
-      DocumentSnapshot docSnapshot =
-          await _firestore.collection('Stock_Details').doc(shopId).get();
+      print("Fetching stock details for shopId: $shopId");
+
+      DocumentSnapshot docSnapshot = await _firestore.collection('Stock_Details').doc(shopId).get();
+
       if (!docSnapshot.exists) {
+        print("No stock details found for shopId: $shopId");
         return {}; // Return empty map if no stock details found
       }
+
+      print("Stock details found: ${docSnapshot.data()}");
       return docSnapshot.data() as Map<String, dynamic>;
     } catch (e) {
       print('Error fetching stock details: $e');
-      return {};
+      return {}; // Return empty map in case of error
     }
   }
 
   // Fetch product details from Product_Category collection
   Future<List<Map<String, dynamic>>> fetchProducts() async {
     try {
-      QuerySnapshot querySnapshot =
-          await _firestore.collection('Product_Category').get();
+      QuerySnapshot querySnapshot = await _firestore.collection('Product_Category').get();
       return querySnapshot.docs.map((doc) {
         return {
           'id': doc.id,
           'name': doc['name'],
-          'description': doc['description'],
           'image': doc['image'],
         };
       }).toList();
@@ -68,26 +71,30 @@ class _OwnerOutletPageState extends State<OwnerOutletPage> {
       int? stockToSubtract = int.tryParse(_controllers[productKey]?.text ?? '');
       if (stockToSubtract == null || stockToSubtract <= 0) return;
 
-      DocumentReference stockDoc =
-          _firestore.collection('Stock_Details').doc(widget.shopId);
+      DocumentReference stockDoc = _firestore.collection('Stock_Details').doc(widget.shopId);
 
       await _firestore.runTransaction((transaction) async {
         DocumentSnapshot freshSnapshot = await transaction.get(stockDoc);
         if (freshSnapshot.exists) {
           Map<String, dynamic> stockData = freshSnapshot.data() as Map<String, dynamic>;
 
-          int currentStock = stockData['products'][productKey]?['currentStock'] ?? 0;
+          // Check if 'products' field exists
+          if (stockData['products'] != null) {
+            int currentStock = stockData['products'][productKey]?['currentStock'] ?? 0;
 
-          if (currentStock >= stockToSubtract) {
-            transaction.update(stockDoc, {
-              'products.$productKey.currentStock': currentStock - stockToSubtract,
-            });
+            if (currentStock >= stockToSubtract) {
+              transaction.update(stockDoc, {
+                'products.$productKey.currentStock': currentStock - stockToSubtract,
+              });
+            } else {
+              // Show error message if not enough stock
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Not enough stock available.')),
+              );
+              throw Exception('Not enough stock available.');
+            }
           } else {
-            // Show error message if not enough stock
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Not enough stock available.')),
-            );
-            throw Exception('Not enough stock available.');
+            print("No products data found.");
           }
         }
       });
@@ -102,7 +109,6 @@ class _OwnerOutletPageState extends State<OwnerOutletPage> {
       );
     } catch (e) {
       print("Error updating stock: $e");
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error updating stock: $e')),
       );
@@ -123,11 +129,17 @@ class _OwnerOutletPageState extends State<OwnerOutletPage> {
               builder: (context, stockSnapshot) {
                 if (stockSnapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
-                } else if (stockSnapshot.hasError || !stockSnapshot.hasData || stockSnapshot.data!.isEmpty) {
+                } else if (stockSnapshot.hasError) {
+                  print('Error fetching stock data: ${stockSnapshot.error}');
+                  return const Center(child: Text('Error fetching stock data.'));
+                } else if (!stockSnapshot.hasData || stockSnapshot.data!.isEmpty) {
+                  print('No stock data found for shopId.');
                   return const Center(child: Text('No stock data available.'));
                 }
 
                 Map<String, dynamic> stockData = stockSnapshot.data!;
+
+                print('Stock data: $stockData'); // Add logging to check the data structure
 
                 return FutureBuilder<List<Map<String, dynamic>>>(
                   future: _productsFuture,
@@ -147,7 +159,6 @@ class _OwnerOutletPageState extends State<OwnerOutletPage> {
                         String productKey = 'product_${index + 1}'; // Correct key generation
                         String productName = product['name'];
                         String productImage = product['image'];
-                        String productDescription = product['description'];
 
                         // Fetch current stock from stockData
                         int currentStock = stockData['products'][productKey]?['currentStock'] ?? 0;
@@ -180,11 +191,7 @@ class _OwnerOutletPageState extends State<OwnerOutletPage> {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      const SizedBox(height: 5),
-                                      Text(
-                                        'Description: $productDescription',
-                                        style: TextStyle(color: Colors.grey[700]),
-                                      ),
+                                     
                                       const SizedBox(height: 5),
                                       Text(
                                         'Current Stock: $currentStock',

@@ -115,140 +115,159 @@ class _StockPageState extends State<StockPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Admin Stock Management')),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _shops,
-        builder: (context, shopSnapshot) {
-          if (shopSnapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (shopSnapshot.hasError) {
-            return Center(child: Text('Error loading shops'));
-          } else if (!shopSnapshot.hasData || shopSnapshot.data!.isEmpty) {
-            return Center(child: Text('No shops available'));
-          }
+      appBar: AppBar(title: Text('Admin Stock Management'),
+      backgroundColor: Color.fromARGB(255, 245, 184, 93)
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color.fromARGB(255, 237, 236, 234), // Color 1
+              Color.fromARGB(255, 217, 216, 213), // Color 2
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _shops,
+          builder: (context, shopSnapshot) {
+            if (shopSnapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else if (shopSnapshot.hasError) {
+              return Center(child: Text('Error loading shops'));
+            } else if (!shopSnapshot.hasData || shopSnapshot.data!.isEmpty) {
+              return Center(child: Text('No shops available'));
+            }
 
-          List<Map<String, dynamic>> shops = shopSnapshot.data!;
+            List<Map<String, dynamic>> shops = shopSnapshot.data!;
 
-          return ListView.builder(
-            itemCount: shops.length,
-            itemBuilder: (context, shopIndex) {
-              Map<String, dynamic> shop = shops[shopIndex];
-              return FutureBuilder<Map<String, dynamic>>(
-                future: fetchStockDetails(shop['id']),
-                builder: (context, stockSnapshot) {
-                  if (stockSnapshot.connectionState == ConnectionState.waiting) {
-                    return ListTile(
-                      title: Text(shop['store_name']),
-                      subtitle: Text('Loading stock details...'),
-                    );
-                  } else if (stockSnapshot.hasError) {
-                    return ListTile(
-                      title: Text(shop['store_name']),
-                      subtitle: Text('Error loading stock details'),
-                    );
-                  }
+            return ListView.builder(
+              itemCount: shops.length,
+              itemBuilder: (context, shopIndex) {
+                Map<String, dynamic> shop = shops[shopIndex];
+                return FutureBuilder<Map<String, dynamic>>(
+                  future: fetchStockDetails(shop['id']),
+                  builder: (context, stockSnapshot) {
+                    if (stockSnapshot.connectionState == ConnectionState.waiting) {
+                      return ListTile(
+                        title: Text(shop['store_name']),
+                        subtitle: Text('Loading stock details...'),
+                      );
+                    } else if (stockSnapshot.hasError) {
+                      return ListTile(
+                        title: Text(shop['store_name']),
+                        subtitle: Text('Error loading stock details'),
+                      );
+                    }
 
-                  Map<String, dynamic> stockData = stockSnapshot.data!;
+                    Map<String, dynamic> stockData = stockSnapshot.data!;
 
-                  // Initialize controllers for each product when they are loaded
-                  if (controllers[shop['id']] == null) {
-                    controllers[shop['id']] = {};
-                  }
+                    // Initialize controllers for each product when they are loaded
+                    if (controllers[shop['id']] == null) {
+                      controllers[shop['id']] = {};
+                    }
 
-                  return Card(
-                    margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(shop['store_name'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          SizedBox(height: 10),
-                          FutureBuilder<List<Map<String, dynamic>>>(
-                            future: _products,
-                            builder: (context, productSnapshot) {
-                              if (productSnapshot.connectionState == ConnectionState.waiting) {
-                                return Center(child: CircularProgressIndicator());
-                              } else if (productSnapshot.hasError) {
-                                return Center(child: Text('Error loading products'));
-                              } else if (!productSnapshot.hasData || productSnapshot.data!.isEmpty) {
-                                return Center(child: Text('No products available'));
-                              }
-
-                              List<Map<String, dynamic>> products = productSnapshot.data!;
-
-                              return Column(
-                                children: products.map((product) {
-                                  String productId = product['id'];
-                                  String productName = product['name'];
-                                  String productImage = product['image'];
-                                  var productDocumentLink = product['documentLink']; // Firestore DocumentReference
-
-                                  String productKey = 'product_${products.indexOf(product) + 1}';
-                                  int currentStock = stockData['products']?[productKey]?['currentStock'] ?? 0;
-
-                                  // Initialize the TextEditingController only once
-                                  if (controllers[shop['id']]?[productKey] == null) {
-                                    controllers[shop['id']]?[productKey] = TextEditingController();
+                    return Card(
+                      margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      color: Color.fromARGB(255, 245, 184, 93),  // Set a single background color here
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(shop['store_name'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              SizedBox(height: 10),
+                              FutureBuilder<List<Map<String, dynamic>>>(
+                                future: _products,
+                                builder: (context, productSnapshot) {
+                                  if (productSnapshot.connectionState == ConnectionState.waiting) {
+                                    return Center(child: CircularProgressIndicator());
+                                  } else if (productSnapshot.hasError) {
+                                    return Center(child: Text('Error loading products'));
+                                  } else if (!productSnapshot.hasData || productSnapshot.data!.isEmpty) {
+                                    return Center(child: Text('No products available'));
                                   }
 
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 5.0),
-                                    child: Row(
-                                      children: [
-                                        CircleAvatar(
-                                          backgroundImage: NetworkImage(productImage),
-                                          radius: 25,
-                                        ),
-                                        SizedBox(width: 10),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(productName, style: TextStyle(fontWeight: FontWeight.bold)),
-                                              // Optionally display the document link for reference
-                                             
-                                            ],
-                                          ),
-                                        ),
-                                        Column(
+                                  List<Map<String, dynamic>> products = productSnapshot.data!;
+
+                                  return Column(
+                                    children: products.map((product) {
+                                      String productId = product['id'];
+                                      String productName = product['name'];
+                                      String productImage = product['image'];
+                                      var productDocumentLink = product['documentLink']; // Firestore DocumentReference
+
+                                      String productKey = 'product_${products.indexOf(product) + 1}';
+                                      int currentStock = stockData['products']?[productKey]?['currentStock'] ?? 0;
+
+                                      // Initialize the TextEditingController only once
+                                      if (controllers[shop['id']]?[productKey] == null) {
+                                        controllers[shop['id']]?[productKey] = TextEditingController();
+                                      }
+
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 5.0),
+                                        child: Row(
                                           children: [
-                                            Container(
-                                              width: 100,
-                                              child: TextField(
-                                                controller: controllers[shop['id']]?[productKey],
-                                                keyboardType: TextInputType.number,
-                                                decoration: InputDecoration(labelText: 'Allotted Stock'),
+                                            CircleAvatar(
+                                              backgroundImage: NetworkImage(productImage),
+                                              radius: 25,
+                                            ),
+                                            SizedBox(width: 10),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(productName, style: TextStyle(fontWeight: FontWeight.bold)),
+                                                ],
                                               ),
                                             ),
-                                            Text(
-                                              'Current Stock: $currentStock',
-                                              style: TextStyle(fontWeight: FontWeight.bold),
-                                            ),
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                updateStock(shop['id'], productKey);
-                                              },
-                                              child: Text('Save'),
+                                            Column(
+                                              children: [
+                                                Container(
+                                                  width: 100,
+                                                  child: TextField(
+                                                    controller: controllers[shop['id']]?[productKey],
+                                                    keyboardType: TextInputType.number,
+                                                    decoration: InputDecoration(labelText: 'Allotted Stock'),
+                                                  ),
+                                                ),
+                                                Text(
+                                                  'Current Stock: $currentStock',
+                                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                                ),
+                                                ElevatedButton(
+                                                  onPressed: () {
+                                                    updateStock(shop['id'], productKey);
+                                                  },
+                                                  child: Text('Save'),
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
-                                      ],
-                                    ),
+                                      );
+                                    }).toList(),
                                   );
-                                }).toList(),
-                              );
-                            },
+                                },
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
+                    );
+                  },
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

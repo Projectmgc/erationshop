@@ -60,110 +60,125 @@ class _AdminNotificationPageState extends State<AdminNotificationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Post Notification')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Input field for notification title
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'Notification Title',
-                border: OutlineInputBorder(),
+      appBar: AppBar(title: const Text('Post Notification')
+      ,
+      backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+      ),
+      body: Container(
+        // Applying a gradient to the entire page background
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+                  const Color.fromARGB(255, 245, 184, 93),
+                  const Color.fromARGB(255, 233, 211, 88),],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Input field for notification title
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Notification Title',
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            // Input field for notification content
-            TextField(
-              controller: contentController,
-              decoration: const InputDecoration(
-                labelText: 'Notification Content',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 16),
+              // Input field for notification content
+              TextField(
+                controller: contentController,
+                decoration: const InputDecoration(
+                  labelText: 'Notification Content',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 4, // Allow multiple lines for content
               ),
-              maxLines: 4, // Allow multiple lines for content
-            ),
-            const SizedBox(height: 16),
-            // Button to post the notification
-            ElevatedButton(
-              onPressed: addNotification,
-              child: const Text('Post Notification'),
-            ),
-            const SizedBox(height: 32),
-            // Display list of posted notifications
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: _firestore
-                    .collection('Notifications')
-                    .orderBy('timestamp', descending: true)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+              const SizedBox(height: 16),
+              // Button to post the notification
+              ElevatedButton(
+                onPressed: addNotification,
+                child: const Text('Post Notification'),
+              ),
+              const SizedBox(height: 32),
+              // Display list of posted notifications
+              Expanded(
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: _firestore
+                      .collection('Notifications')
+                      .orderBy('timestamp', descending: true)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                  if (snapshot.hasError) {
-                    return const Center(child: Text('Error loading notifications.'));
-                  }
+                    if (snapshot.hasError) {
+                      return const Center(child: Text('Error loading notifications.'));
+                    }
 
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(child: Text('No notifications yet.'));
-                  }
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return const Center(child: Text('No notifications yet.'));
+                    }
 
-                  final notifications = snapshot.data!.docs;
+                    final notifications = snapshot.data!.docs;
 
-                  return ListView.builder(
-                    itemCount: notifications.length,
-                    itemBuilder: (context, index) {
-                      final notification = notifications[index];
-                      final notificationId = notification.id; // Get the notification ID
-                      final title = notification['title'] ?? 'No Title';
-                      final content = notification['content'] ?? 'No Content';
+                    return ListView.builder(
+                      itemCount: notifications.length,
+                      itemBuilder: (context, index) {
+                        final notification = notifications[index];
+                        final notificationId = notification.id; // Get the notification ID
+                        final title = notification['title'] ?? 'No Title';
+                        final content = notification['content'] ?? 'No Content';
 
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: ListTile(
-                          title: Text(title),
-                          subtitle: Text(content),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () {
-                              // Confirm before deleting
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: const Text('Delete Notification'),
-                                    content: const Text('Are you sure you want to delete this notification?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                        child: const Text('Cancel'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () async {
-                                          await deleteNotification(notificationId);
-                                          Navigator.pop(context); // Close the dialog
-                                        },
-                                        child: const Text('Delete'),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
+                        return Card(
+                          margin: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: ListTile(
+                            title: Text(title),
+                            subtitle: Text(content),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                // Confirm before deleting
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: const Text('Delete Notification'),
+                                      content: const Text('Are you sure you want to delete this notification?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          child: const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () async {
+                                            await deleteNotification(notificationId);
+                                            Navigator.pop(context); // Close the dialog
+                                          },
+                                          child: const Text('Delete'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  );
-                },
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

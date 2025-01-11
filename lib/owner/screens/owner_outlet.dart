@@ -121,116 +121,129 @@ class _OwnerOutletPageState extends State<OwnerOutletPage> {
       appBar: AppBar(
         title: const Text('Outlet Stock Management'),
         centerTitle: true,
+        backgroundColor: Color.fromARGB(255, 245, 184, 93),
       ),
       body: widget.shopId == null
           ? const Center(child: Text('No shop ID found'))
-          : FutureBuilder<Map<String, dynamic>>(
-              future: _stockDetailsFuture,
-              builder: (context, stockSnapshot) {
-                if (stockSnapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (stockSnapshot.hasError) {
-                  print('Error fetching stock data: ${stockSnapshot.error}');
-                  return const Center(child: Text('Error fetching stock data.'));
-                } else if (!stockSnapshot.hasData || stockSnapshot.data!.isEmpty) {
-                  print('No stock data found for shopId.');
-                  return const Center(child: Text('No stock data available.'));
-                }
+          : Container(
+              // Gradient Background
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color.fromARGB(255, 245, 184, 93),
+                    Color.fromARGB(255, 233, 211, 88),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: FutureBuilder<Map<String, dynamic>>(
+                future: _stockDetailsFuture,
+                builder: (context, stockSnapshot) {
+                  if (stockSnapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (stockSnapshot.hasError) {
+                    print('Error fetching stock data: ${stockSnapshot.error}');
+                    return const Center(child: Text('Error fetching stock data.'));
+                  } else if (!stockSnapshot.hasData || stockSnapshot.data!.isEmpty) {
+                    print('No stock data found for shopId.');
+                    return const Center(child: Text('No stock data available.'));
+                  }
 
-                Map<String, dynamic> stockData = stockSnapshot.data!;
+                  Map<String, dynamic> stockData = stockSnapshot.data!;
 
-                print('Stock data: $stockData'); // Add logging to check the data structure
+                  print('Stock data: $stockData'); // Add logging to check the data structure
 
-                return FutureBuilder<List<Map<String, dynamic>>>(
-                  future: _productsFuture,
-                  builder: (context, productSnapshot) {
-                    if (productSnapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (productSnapshot.hasError || !productSnapshot.hasData || productSnapshot.data!.isEmpty) {
-                      return const Center(child: Text('No products available.'));
-                    }
+                  return FutureBuilder<List<Map<String, dynamic>>>(
+                    future: _productsFuture,
+                    builder: (context, productSnapshot) {
+                      if (productSnapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (productSnapshot.hasError || !productSnapshot.hasData || productSnapshot.data!.isEmpty) {
+                        return const Center(child: Text('No products available.'));
+                      }
 
-                    List<Map<String, dynamic>> products = productSnapshot.data!;
+                      List<Map<String, dynamic>> products = productSnapshot.data!;
 
-                    return ListView.builder(
-                      itemCount: products.length,
-                      itemBuilder: (context, index) {
-                        Map<String, dynamic> product = products[index];
-                        String productKey = 'product_${index + 1}'; // Correct key generation
-                        String productName = product['name'];
-                        String productImage = product['image'];
+                      return ListView.builder(
+                        itemCount: products.length,
+                        itemBuilder: (context, index) {
+                          Map<String, dynamic> product = products[index];
+                          String productKey = 'product_${index + 1}'; // Correct key generation
+                          String productName = product['name'];
+                          String productImage = product['image'];
 
-                        // Fetch current stock from stockData
-                        int currentStock = stockData['products'][productKey]?['currentStock'] ?? 0;
+                          // Fetch current stock from stockData
+                          int currentStock = stockData['products'][productKey]?['currentStock'] ?? 0;
 
-                        // Initialize controllers for stock updates
-                        if (_controllers[productKey] == null) {
-                          _controllers[productKey] = TextEditingController();
-                        }
+                          // Initialize controllers for stock updates
+                          if (_controllers[productKey] == null) {
+                            _controllers[productKey] = TextEditingController();
+                          }
 
-                        return Card(
-                          margin: const EdgeInsets.all(10),
-                          elevation: 5,
-                          child: Padding(
-                            padding: const EdgeInsets.all(10.0),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundImage: NetworkImage(productImage),
-                                  radius: 30,
-                                ),
-                                const SizedBox(width: 15),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                          return Card(
+                            margin: const EdgeInsets.all(10),
+                            elevation: 5,
+                            child: Padding(
+                              padding: const EdgeInsets.all(10.0),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundImage: NetworkImage(productImage),
+                                    radius: 30,
+                                  ),
+                                  const SizedBox(width: 15),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          productName,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        Text(
+                                          'Current Stock: $currentStock',
+                                          style: TextStyle(color: Colors.grey[700]),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Column(
                                     children: [
-                                      Text(
-                                        productName,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
+                                      SizedBox(
+                                        width: 100,
+                                        child: TextField(
+                                          controller: _controllers[productKey],
+                                          keyboardType: TextInputType.number,
+                                          decoration: const InputDecoration(
+                                            labelText: 'Subtract',
+                                            border: OutlineInputBorder(),
+                                          ),
                                         ),
                                       ),
-                                     
                                       const SizedBox(height: 5),
-                                      Text(
-                                        'Current Stock: $currentStock',
-                                        style: TextStyle(color: Colors.grey[700]),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          updateStock(index); // Pass the index to updateStock
+                                        },
+                                        child: const Text('Save'),
                                       ),
                                     ],
                                   ),
-                                ),
-                                Column(
-                                  children: [
-                                    SizedBox(
-                                      width: 100,
-                                      child: TextField(
-                                        controller: _controllers[productKey],
-                                        keyboardType: TextInputType.number,
-                                        decoration: const InputDecoration(
-                                          labelText: 'Subtract',
-                                          border: OutlineInputBorder(),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 5),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        updateStock(index); // Pass the index to updateStock
-                                      },
-                                      child: const Text('Save'),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                );
-              },
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
     );
   }

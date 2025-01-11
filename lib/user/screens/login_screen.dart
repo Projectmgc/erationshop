@@ -40,7 +40,6 @@ class _Login_ScreenState extends State<Login_Screen> {
           .where('email', isEqualTo: email)
           .limit(1)
           .get();
-      print(userSnapshot.docs.length);
 
       if (userSnapshot.docs.isNotEmpty) {
         var userDoc = userSnapshot.docs.first;
@@ -64,7 +63,6 @@ class _Login_ScreenState extends State<Login_Screen> {
         );
       }
     } catch (e) {
-      print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred: $e')),
       );
@@ -119,7 +117,7 @@ class _Login_ScreenState extends State<Login_Screen> {
                       children: [
                         ClipOval(
                           child: Image.asset(
-                            'asset/logo.jpg',
+                            'asset/logo.jpg', // Replace with your logo
                             width: 120,
                             height: 120,
                             fit: BoxFit.contain,
@@ -128,8 +126,10 @@ class _Login_ScreenState extends State<Login_Screen> {
                       ],
                     ),
                     SizedBox(height: 55),
+                    // Center the LOGIN header
                     Text(
                       'LOGIN',
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.merriweather(
                         color: const Color.fromARGB(255, 81, 50, 12),
                         fontWeight: FontWeight.bold,
@@ -239,27 +239,30 @@ class _Login_ScreenState extends State<Login_Screen> {
                       ),
                     ),
                     SizedBox(height: 40),
-                    // Loading or login button
-                    loading
-                        ? Center(
-                            child: Lottie.asset(
-                              'asset/loading.json', // Path to your animation file
-                              width: 150,
-                              height: 150,
-                            ),
-                          )
-                        : ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: WidgetStatePropertyAll(const Color.fromARGB(255, 225, 157, 68)),
-                              shadowColor: WidgetStatePropertyAll(const Color.fromARGB(255, 62, 55, 5)),
-                              elevation: WidgetStatePropertyAll(10.0),
-                            ),
-                            onPressed: login, // Call the login method here
-                            child: Text(
-                              'LOGIN',
-                              style: TextStyle(color: const Color.fromARGB(255, 8, 6, 21), fontWeight: FontWeight.bold),
-                            ),
-                          ),
+                    // Show Lottie animation while loading
+                    if (loading)
+                      Center(
+                        child: Lottie.asset(
+                          'asset/loading.json', // Path to your animation file
+                          width: 150,
+                          height: 150,
+                        ),
+                      )
+                    else
+                      // Reduced size for the login button
+                      ElevatedButton(
+                        style: ButtonStyle(
+                          backgroundColor: WidgetStateProperty.all(const Color.fromARGB(255, 225, 157, 68)),
+                          shadowColor: WidgetStateProperty.all(const Color.fromARGB(255, 62, 55, 5)),
+                          elevation: WidgetStateProperty.all(10.0),
+                          minimumSize: WidgetStateProperty.all(Size(180, 45)), // Reduced size
+                        ),
+                        onPressed: login, // Call the login method here
+                        child: Text(
+                          'LOGIN',
+                          style: TextStyle(color: const Color.fromARGB(255, 8, 6, 21), fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     SizedBox(height: 10),
                     // Sign Up Button
                     Row(
@@ -284,14 +287,14 @@ class _Login_ScreenState extends State<Login_Screen> {
             ),
           ),
           
-          // Loading animation overlay
+          // Lottie animation centered with full opacity
           if (loading)
             Positioned.fill(
               child: Container(
                 color: Colors.black.withOpacity(0.3), // Dim the background
                 child: Center(
                   child: Lottie.asset(
-                    'asset/loading.json', // Loading animation JSON
+                    'asset/loading.json', // Path to your animation file
                     width: 150,
                     height: 150,
                   ),

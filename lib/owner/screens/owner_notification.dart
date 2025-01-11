@@ -9,44 +9,58 @@ class OwnerNotification extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Notifications"),
+        backgroundColor: const Color.fromARGB(255, 245, 184, 93),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _firestore
-            .collection('Notifications')
-            .orderBy('timestamp', descending: true)  // Order by timestamp descending
-            .snapshots(),
-        builder: (context, snapshot) {
-          // Loading state
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
+      body: Container(
+        // Gradient background
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+                  const Color.fromARGB(255, 245, 184, 93),
+                  const Color.fromARGB(255, 233, 211, 88)// Gradient color 2 (yellowish)
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: StreamBuilder<QuerySnapshot>(
+          stream: _firestore
+              .collection('Notifications')
+              .orderBy('timestamp', descending: true)  // Order by timestamp descending
+              .snapshots(),
+          builder: (context, snapshot) {
+            // Loading state
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
 
-          // Error state
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+            // Error state
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
 
-          // No data state
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text('No Notifications'));
-          }
+            // No data state
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return Center(child: Text('No Notifications'));
+            }
 
-          // Getting the list of notifications
-          var notifications = snapshot.data!.docs;
+            // Getting the list of notifications
+            var notifications = snapshot.data!.docs;
 
-          return ListView.builder(
-            padding: EdgeInsets.all(16.0),
-            itemCount: notifications.length,
-            itemBuilder: (context, index) {
-              var notification = notifications[index];
-              return NotificationCard(
-                title: notification['title'],
-                content: notification['content'],
-                timestamp: notification['timestamp'],
-              );
-            },
-          );
-        },
+            return ListView.builder(
+              padding: EdgeInsets.all(16.0),
+              itemCount: notifications.length,
+              itemBuilder: (context, index) {
+                var notification = notifications[index];
+                return NotificationCard(
+                  title: notification['title'],
+                  content: notification['content'],
+                  timestamp: notification['timestamp'],
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

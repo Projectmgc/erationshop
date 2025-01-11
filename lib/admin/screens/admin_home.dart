@@ -4,7 +4,6 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'admin_product.dart'; // Import your AdminProductPage
 import 'admin_profile.dart';
 import 'admin_stoke.dart';
-import 'admin_sales.dart';
 import 'admin_complaint.dart';
 import 'admin_card.dart';
 import 'admin_notification.dart';
@@ -26,16 +25,15 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'title': 'Stock',
       'icon': Icons.inventory,
       'color': Colors.lightGreenAccent,
-      'description': 'Keep track of available inventory and supplies.',
+      'description': 'Keep track of Ration Shops Stocks and add to it',
       'image': 'asset/stock.jpg',
       'page': StockPage(), // Navigation target
     },
-   
     {
-      'title': 'Complaints',
+      'title': 'User Enquiry',
       'icon': Icons.report_problem,
       'color': Colors.pinkAccent.shade100,
-      'description': 'Address and resolve customer complaints.',
+      'description': 'Address and resolve User complaints.',
       'image': 'asset/enquiry.jpg',
       'page': ComplaintsPage(), // Navigation target
     },
@@ -43,15 +41,15 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'title': 'Card',
       'icon': Icons.credit_card,
       'color': Colors.purpleAccent.shade100,
-      'description': 'Manage credit or debit card-related operations.',
+      'description': 'Manage Ration card-related operations.',
       'image': 'asset/card.jpg',
       'page': AddCardPage(), // Navigation target
     },
     {
-      'title': 'Converse',
+      'title': 'Shop Enquiry',
       'icon': Icons.chat,
       'color': Colors.tealAccent,
-      'description': 'Communicate with your team or customers.',
+      'description': 'Communicate with Shop Owners.',
       'image': 'asset/stock.jpg',
       'page': ConversePage(), // Navigation target
     },
@@ -63,16 +61,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'image': 'asset/notification.jpg',
       'page': AdminNotificationPage(), // Navigation target
     },
-    // New Card for AdminShopPage
     {
-      'title': 'Shops',
+      'title': 'Add Shops',
       'icon': Icons.shop,
       'color': Colors.blueAccent,
-      'description': 'Manage and view shop details.',
+      'description': 'Add new Shop and Shop owner details.',
       'image': 'asset/outlet.jpg',
       'page': AdminShopPage(), // Navigation target for AdminShopPage
     },
-    // New Card for AdminProductPage (Add Product to Stock)
     {
       'title': 'Add Product',
       'icon': Icons.add_box,
@@ -81,20 +77,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'image': 'asset/outlet.jpg',
       'page': AdminProduct(), // Navigation target for AdminProductPage
     },
-    // New Card for AdminRequestPage (Approve Member Requests)
-    // {
-    //   'title': 'Member Requests',
-    //   'icon': Icons.check_circle,
-    //   'color': Colors.blueGrey,
-    //   'description': 'Approve or reject member addition requests.',
-    //   'image': 'asset/outlet.jpg', // Add your own image path
-    //   'page': AdminCardDetailPage(), // Navigation target for AdminRequestPage
-    // },
   ];
 
   // Function to handle infinite scrolling
   void _onPageChanged(int index) {
-    // Loop back to the first card when the last card is reached
     if (index == _cards.length - 1) {
       _pageController.jumpToPage(0); // Reset to first page
     } else if (index == 0) {
@@ -105,7 +91,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Add a listener to handle page changes
     _pageController.addListener(() {
       final page = _pageController.page?.toInt();
       if (page != null) {
@@ -133,7 +118,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Background gradient
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -151,7 +135,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             children: [
               // Header Section
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.only(top: 40, left: 16.0, right: 16.0), // Adjust padding to move it lower
                 child: Row(
                   children: [
                     ClipOval(
@@ -164,7 +148,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     ),
                     SizedBox(width: 10),
                     Text(
-                      'E-RATION ADMIN"S',
+                      'E-RATION ADMIN\'S',
                       style: GoogleFonts.merriweather(
                         color: Colors.black87,
                         fontWeight: FontWeight.bold,
@@ -184,11 +168,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 ),
               ),
               SizedBox(height: 30),
-              // Cards Section with PageView.builder
               Expanded(
                 child: Column(
                   children: [
-                    // PageView Section
                     Expanded(
                       child: PageView.builder(
                         controller: _pageController,
@@ -199,17 +181,16 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                         },
                       ),
                     ),
-                    // Dot indicator (SmoothPageIndicator)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 20.0),
                       child: SmoothPageIndicator(
-                        controller: _pageController, // Controller to sync with PageView
-                        count: _cards.length, // Number of dots
+                        controller: _pageController, 
+                        count: _cards.length, 
                         effect: ExpandingDotsEffect(
                           dotWidth: 10,
                           dotHeight: 10,
-                          activeDotColor: Colors.deepPurpleAccent, // Active dot color
-                          dotColor: Colors.white.withOpacity(0.5), // Inactive dot color
+                          activeDotColor: Colors.deepPurpleAccent,
+                          dotColor: Colors.white.withOpacity(0.5),
                         ),
                       ),
                     ),

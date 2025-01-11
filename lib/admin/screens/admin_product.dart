@@ -69,75 +69,75 @@ class _AdminProductState extends State<AdminProduct> {
   }
 
   // Function to add a product
- Future<void> _addProduct() async {
-  if (!_formKey.currentState!.validate()) return; // Validate the form
+  Future<void> _addProduct() async {
+    if (!_formKey.currentState!.validate()) return; // Validate the form
 
-  try {
-    String name = _nameController.text;
-    String image = _imageController.text.isEmpty ? "na" : _imageController.text;
-    String description = "na"; // Optional description field
-    double price = double.tryParse(_priceController.text) ?? 0.0;
-    int quantity = int.tryParse(_quantityController.text) ?? 0;
+    try {
+      String name = _nameController.text;
+      String image = _imageController.text.isEmpty ? "na" : _imageController.text;
+      String description = "na"; // Optional description field
+      double price = double.tryParse(_priceController.text) ?? 0.0;
+      int quantity = int.tryParse(_quantityController.text) ?? 0;
 
-    // Step 1: Add the product to the 'Product_Category' collection
-    var productRef = await _firestore.collection('Product_Category').add({
-      'name': name,
-      'description': description,
-      'image': image,
-    });
-
-    // Step 2: Update the category's product array
-    await _addProductToCategory(productRef.id, price, quantity);
-
-    // Step 3: Clear the form fields
-    _nameController.clear();
-    _priceController.clear();
-    _quantityController.clear();
-    _imageController.clear();
-
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product added successfully')));
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-  }
-}
-
-  // Function to add the product to the selected category
- Future<void> _addProductToCategory(String productId, double price, int quantity) async {
-  try {
-    // Query the category document using the 'category_name' field
-    var categoryQuerySnapshot = await _firestore
-        .collection('Category')
-        .where('category_name', isEqualTo: _selectedCategory) // Filter by category_name
-        .get();
-
-    if (categoryQuerySnapshot.docs.isNotEmpty) {
-      // If the category exists, get the first matching document
-      var categoryDoc = categoryQuerySnapshot.docs.first;
-      
-      // Add the product to the 'product' array in the category document
-      await _firestore.collection('Category').doc(categoryDoc.id).update({
-        'product': FieldValue.arrayUnion([
-          {
-            'product_id': productId, // Use the product document ID
-            'price': price.toString(), // Store price as a string
-            'quantity': quantity.toString(), // Store quantity as a string
-          }
-        ]),
+      // Step 1: Add the product to the 'Product_Category' collection
+      var productRef = await _firestore.collection('Product_Category').add({
+        'name': name,
+        'description': description,
+        'image': image,
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Product added to the selected category'))
-      );
-    } else {
-      // Handle the case where no category is found with that name
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Category not found'))
-      );
+      // Step 2: Update the category's product array
+      await _addProductToCategory(productRef.id, price, quantity);
+
+      // Step 3: Clear the form fields
+      _nameController.clear();
+      _priceController.clear();
+      _quantityController.clear();
+      _imageController.clear();
+
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product added successfully')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
   }
-}
+
+  // Function to add the product to the selected category
+  Future<void> _addProductToCategory(String productId, double price, int quantity) async {
+    try {
+      // Query the category document using the 'category_name' field
+      var categoryQuerySnapshot = await _firestore
+          .collection('Category')
+          .where('category_name', isEqualTo: _selectedCategory) // Filter by category_name
+          .get();
+
+      if (categoryQuerySnapshot.docs.isNotEmpty) {
+        // If the category exists, get the first matching document
+        var categoryDoc = categoryQuerySnapshot.docs.first;
+        
+        // Add the product to the 'product' array in the category document
+        await _firestore.collection('Category').doc(categoryDoc.id).update({
+          'product': FieldValue.arrayUnion([
+            {
+              'product_id': productId, // Use the product document ID
+              'price': price.toString(), // Store price as a string
+              'quantity': quantity.toString(), // Store quantity as a string
+            }
+          ]),
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Product added to the selected category'))
+        );
+      } else {
+        // Handle the case where no category is found with that name
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Category not found'))
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -306,44 +306,44 @@ class _AdminProductState extends State<AdminProduct> {
                       },
                     ),
                     const SizedBox(height: 12),
-                   StreamBuilder<QuerySnapshot>(
-  stream: _categoryStream, // Stream that fetches the categories from Firestore
-  builder: (context, snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (snapshot.hasError) {
-      return Center(child: Text('Error: ${snapshot.error}'));
-    }
+                    StreamBuilder<QuerySnapshot>(
+                      stream: _categoryStream, // Stream that fetches the categories from Firestore
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        if (snapshot.hasError) {
+                          return Center(child: Text('Error: ${snapshot.error}'));
+                        }
 
-    // Get the categories
-    final categories = snapshot.data!.docs;
+                        // Get the categories
+                        final categories = snapshot.data!.docs;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Select Category'),
-        DropdownButtonFormField<String>(
-          value: _selectedCategory,
-          items: categories.map((categoryDoc) {
-            return DropdownMenuItem<String>(
-              value: categoryDoc['category_name'], // Using category_name as the value
-              child: Text(categoryDoc['category_name']), // Display the category name
-            );
-          }).toList(),
-          onChanged: (newValue) {
-            setState(() {
-              _selectedCategory = newValue!;
-            });
-          },
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-          ),
-        ),
-      ],
-    );
-  },
-),
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Select Category'),
+                            DropdownButtonFormField<String>(
+                              value: _selectedCategory,
+                              items: categories.map((categoryDoc) {
+                                return DropdownMenuItem<String>(
+                                  value: categoryDoc['category_name'], // Using category_name as the value
+                                  child: Text(categoryDoc['category_name']), // Display the category name
+                                );
+                              }).toList(),
+                              onChanged: (newValue) {
+                                setState(() {
+                                  _selectedCategory = newValue!;
+                                });
+                              },
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
 
                     const SizedBox(height: 20),
                     ElevatedButton(
@@ -413,7 +413,7 @@ class _AdminProductState extends State<AdminProduct> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Text('Price: \$${price.toStringAsFixed(2)}'), // Format price as a currency
+                        Text('Price: \₹${price.toStringAsFixed(2)}'), // Format price as a currency
                         Text('Quantity: $quantity'),
                       ],
                     ),

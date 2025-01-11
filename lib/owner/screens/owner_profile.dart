@@ -13,6 +13,8 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   String shopId = '';
   Map<String, dynamic>? ownerData;
+  TextEditingController _newPasswordController = TextEditingController();
+  bool _isPasswordChanging = false;
 
   @override
   void initState() {
@@ -44,9 +46,52 @@ class _ProfilePageState extends State<ProfilePage> {
         setState(() {
           ownerData = querySnapshot.docs.first.data();
         });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('No owner found with the provided shop ID.')));
       }
     } catch (e) {
       print('Error fetching owner data: $e');
+    }
+  }
+
+  // Method to update password in Firestore
+  void _updatePassword(String newPassword) async {
+    if (newPassword.isNotEmpty) {
+      try {
+        // Check if the document exists before updating
+        final docSnapshot = await FirebaseFirestore.instance
+            .collection('Shop Owner')
+            .where('shop_id', isEqualTo: shopId)
+            .get();
+
+        if (docSnapshot.docs.isNotEmpty) {
+          final docRef = docSnapshot.docs.first.reference;
+
+          // Update the password field
+          await docRef.update({'password': newPassword});
+
+          // Clear the text field and hide the form
+          _newPasswordController.clear();
+          setState(() {
+            _isPasswordChanging = false;
+          });
+
+          // Show a success message
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Password updated successfully!')));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Shop ID does not exist in Firestore.')));
+        }
+      } catch (e) {
+        print('Error updating password: $e');
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Failed to update password')));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Password cannot be empty')));
     }
   }
 
@@ -55,62 +100,82 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Profile', style: GoogleFonts.merriweather(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.deepPurpleAccent,
+        backgroundColor: const Color.fromARGB(255, 245, 184, 93),
       ),
       body: ownerData == null
           ? Center(child: CircularProgressIndicator())
-          : Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color.fromARGB(255, 245, 184, 93),
-                    const Color.fromARGB(255, 233, 211, 88),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+          : SingleChildScrollView( // This allows the screen to be scrollable to avoid overflow
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color.fromARGB(255, 245, 184, 93),
+                      const Color.fromARGB(255, 233, 211, 88),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
                 ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Profile Icon in the center
-                    Center(
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.deepPurpleAccent,
-                        child: Icon(
-                          Icons.person,
-                          size: 60,
-                          color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Profile picture from assets
+                      Center(
+                        child: ClipOval(
+                          child: Image.asset(
+                            'asset/profilepic.jpg', // Replace with your image path
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 20),
+                      SizedBox(height: 20),
 
-                    // Displaying profile data in a box format
-                    _buildInfoBox('Name', ownerData!['name']),
-                    _buildInfoBox('Email', ownerData!['email']),
-                    _buildInfoBox('Phone', ownerData!['phone']),
-                    _buildInfoBox('Shop', ownerData!['store_name']),
-                    _buildInfoBox('Address', ownerData!['address']),
-                  ],
+                      // Displaying profile data in a box format
+                      _buildInfoBox('Name', ownerData!['name']),
+                      _buildInfoBox('Email', ownerData!['email']),
+                      _buildInfoBox('Phone', ownerData!['phone']),
+                      _buildInfoBox('Shop', ownerData!['store_name']),
+                      _buildInfoBox('Address', ownerData!['address']),
+
+                      // Add Change Password Button
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordChanging = true;
+                          });
+                        },
+                        child: Text('Change Password'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+                        ),
+                      ),
+
+                      // If _isPasswordChanging is true, show the password change form
+                      if (_isPasswordChanging) ...[
+                        SizedBox(height: 20),
+                        _buildPasswordChangeForm(),
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ),
     );
   }
 
-  // Method to build a single info box for profile data
+  // Method to build a standard box for displaying information
   Widget _buildInfoBox(String title, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Container(
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.deepPurpleAccent.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
               color: Colors.black26,
@@ -127,7 +192,6 @@ class _ProfilePageState extends State<ProfilePage> {
               style: GoogleFonts.roboto(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.deepPurpleAccent,
               ),
             ),
             SizedBox(width: 10),
@@ -137,13 +201,49 @@ class _ProfilePageState extends State<ProfilePage> {
                 style: GoogleFonts.roboto(
                   fontSize: 14,
                   color: Colors.black87,
-                 // Ensures long text doesn't overflow
                 ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  // Method to build the password change form
+  Widget _buildPasswordChangeForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'New Password:',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 8),
+        TextField(
+          controller: _newPasswordController,
+          obscureText: true, // Hide the password input
+          decoration: InputDecoration(
+            hintText: 'Enter new password',
+            hintStyle: TextStyle(color: Colors.grey),
+            filled: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            fillColor: const Color.fromARGB(255, 225, 157, 68),
+          ),
+        ),
+        SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: () {
+            _updatePassword(_newPasswordController.text);
+          },
+          child: Text('Submit'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+          ),
+        ),
+      ],
     );
   }
 }

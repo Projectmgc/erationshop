@@ -28,13 +28,23 @@ class _EnquiryPageState extends State<EnquiryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50], // Light background for a fresh look
       appBar: AppBar(
         title: Text('Enquiry Form'),
-        backgroundColor: Colors.blueAccent, // AppBar color
+        backgroundColor: Color.fromARGB(255, 245, 184, 93), // AppBar color
         elevation: 4, // Subtle shadow for the AppBar
       ),
-      body: Padding(
+      body: Container(
+        // Gradient background
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color.fromARGB(255, 245, 184, 93), // Gradient color 1
+              Color.fromARGB(255, 233, 211, 88), // Gradient color 2
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,7 +72,7 @@ class _EnquiryPageState extends State<EnquiryPage> {
             // Submit Button
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent, // Button color
+                backgroundColor: Color.fromARGB(255, 204, 140, 44), // Button color
                 padding: EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12), // Rounded corners

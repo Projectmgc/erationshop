@@ -31,93 +31,105 @@ class ComplaintsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('User Complaints'),
-        backgroundColor: Colors.deepPurpleAccent,
+        backgroundColor: const Color.fromARGB(255, 245, 184, 93),
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _fetchComplaints(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return const Center(child: Text('Error fetching complaints'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No complaints available'));
-          } else {
-            final complaints = snapshot.data!;
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+                  const Color.fromARGB(255, 245, 184, 93),
+                  const Color.fromARGB(255, 233, 211, 88),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _fetchComplaints(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return const Center(child: Text('Error fetching complaints'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(child: Text('No complaints available'));
+            } else {
+              final complaints = snapshot.data!;
 
-            return ListView.builder(
-              padding: const EdgeInsets.all(16.0),
-              itemCount: complaints.length,
-              itemBuilder: (context, index) {
-                final complaint = complaints[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 8.0),
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: ListTile(
-                    leading: complaint['response'] == null
-                        ? Icon(
-                            Icons.report_problem,
-                            color: Colors.redAccent,
-                          )
-                        : Icon(
-                            Icons.check,
-                            color: Colors.green,
-                          ),
-                    title: Text(
-                      complaint['subject'],
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+              return ListView.builder(
+                padding: const EdgeInsets.all(16.0),
+                itemCount: complaints.length,
+                itemBuilder: (context, index) {
+                  final complaint = complaints[index];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Status: ${complaint['status']}'),
-                        const SizedBox(height: 5),
-                        Text(
-                          'Filed on: ${complaint['timestamp']?.toDate().toString() ?? 'No timestamp available'}',
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                        if (complaint['response'] != null)
+                    child: ListTile(
+                      leading: complaint['response'] == null
+                          ? Icon(
+                              Icons.report_problem,
+                              color: Colors.redAccent,
+                            )
+                          : Icon(
+                              Icons.check,
+                              color: Colors.green,
+                            ),
+                      title: Text(
+                        complaint['subject'],
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Status: ${complaint['status']}'),
+                          const SizedBox(height: 5),
+                          Text(
+                            'Filed on: ${complaint['timestamp']?.toDate().toString() ?? 'No timestamp available'}',
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          if (complaint['response'] != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Text(
+                                'Response: ${complaint['response']}',
+                                style: const TextStyle(
+                                    fontSize: 14,
+                                    fontStyle: FontStyle.italic,
+                                    color: Colors.green),
+                              ),
+                            ),
+                          // Display Card Number
                           Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
-                              'Response: ${complaint['response']}',
+                              'Card No: ${complaint['cardNo']}',
                               style: const TextStyle(
-                                  fontSize: 14,
-                                  fontStyle: FontStyle.italic,
-                                  color: Colors.green),
+                                  fontSize: 14, color: Colors.blue),
                             ),
                           ),
-                        // Display Card Number
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            'Card No: ${complaint['cardNo']}',
-                            style: const TextStyle(
-                                fontSize: 14, color: Colors.blue),
+                        ],
+                      ),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ComplaintDetailsPage(
+                              complaint: complaint,
+                            ),
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 18),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ComplaintDetailsPage(
-                            complaint: complaint,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            );
-          }
-        },
+                  );
+                },
+              );
+            }
+          },
+        ),
       ),
     );
   }
@@ -204,111 +216,123 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Complaint Details'),
-        backgroundColor: Colors.deepPurpleAccent,
+        backgroundColor: const Color.fromARGB(255, 245, 184, 93),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Complaint Details',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Subject: ${widget.complaint['subject']}',
-              style: const TextStyle(fontSize: 18),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Status: ${widget.complaint['status']}',
-              style: const TextStyle(fontSize: 18),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Description:',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              widget.complaint['description'] ?? 'No description provided',
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Filed on: ${widget.complaint['timestamp']?.toDate().toString() ?? 'No timestamp available'}',
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Card Number: ${widget.complaint['cardNo']}',
-              style: const TextStyle(fontSize: 16, color: Colors.blue),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Response:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            if (widget.complaint['response'] != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(
-                  widget.complaint['response']!,
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontStyle: FontStyle.italic,
-                      color: Colors.green),
-                ),
-              )
-            else
-              const Text('No response yet.',
-                  style: TextStyle(fontSize: 16, color: Colors.grey)),
-            const SizedBox(height: 20),
-            if (!isResponded)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Submit Response:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+                  const Color.fromARGB(255, 245, 184, 93),
+                  const Color.fromARGB(255, 233, 211, 88),// End color
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Complaint Details',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Subject: ${widget.complaint['subject']}',
+                style: const TextStyle(fontSize: 18),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Status: ${widget.complaint['status']}',
+                style: const TextStyle(fontSize: 18),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Description:',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                widget.complaint['description'] ?? 'No description provided',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Filed on: ${widget.complaint['timestamp']?.toDate().toString() ?? 'No timestamp available'}',
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Card Number: ${widget.complaint['cardNo']}',
+                style: const TextStyle(fontSize: 16, color: Colors.blue),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Response:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              if (widget.complaint['response'] != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    widget.complaint['response']!,
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.green),
                   ),
-                  TextField(
-                    controller: _responseController,
-                    maxLines: 5,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter your response here...',
-                      border: OutlineInputBorder(),
+                )
+              else
+                const Text('No response yet.',
+                    style: TextStyle(fontSize: 16, color: Colors.grey)),
+              const SizedBox(height: 20),
+              if (!isResponded)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Submit Response:',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: _submitResponse,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurpleAccent,
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    TextField(
+                      controller: _responseController,
+                      maxLines: 5,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter your response here...',
+                        border: OutlineInputBorder(),
                       ),
-                      child: const Text('Submit Response'),
                     ),
-                  ),
-                ],
-              ),
-            const SizedBox(height: 20),
-            // Delete button
-            Center(
-              child: ElevatedButton(
-                onPressed: _deleteComplaint,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    const SizedBox(height: 20),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _submitResponse,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurpleAccent,
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                        ),
+                        child: const Text('Submit Response'),
+                      ),
+                    ),
+                  ],
                 ),
-                child: const Text('Delete Complaint'),
+              const SizedBox(height: 20),
+              // Delete button
+              Center(
+                child: ElevatedButton(
+                  onPressed: _deleteComplaint,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  ),
+                  child: const Text('Delete Complaint'),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

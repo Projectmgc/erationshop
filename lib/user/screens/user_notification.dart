@@ -9,35 +9,47 @@ class NotificationsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("Notifications"),
+        backgroundColor: Color.fromARGB(255, 245, 184, 93),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _firestore
-            .collection('Notifications')
-            .orderBy('timestamp', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+            Color.fromARGB(255, 245, 184, 93),
+            Color.fromARGB(255, 233, 211, 88),],
+          ),
+        ),
+        child: StreamBuilder<QuerySnapshot>(
+          stream: _firestore
+              .collection('Notifications')
+              .orderBy('timestamp', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text('No Notifications'));
-          }
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return Center(child: Text('No Notifications'));
+            }
 
-          var notifications = snapshot.data!.docs;
+            var notifications = snapshot.data!.docs;
 
-          return ListView.builder(
-            itemCount: notifications.length,
-            itemBuilder: (context, index) {
-              var notification = notifications[index];
-              return NotificationCard(
-                title: notification['title'],
-                content: notification['content'],
-                timestamp: notification['timestamp'],
-              );
-            },
-          );
-        },
+            return ListView.builder(
+              itemCount: notifications.length,
+              itemBuilder: (context, index) {
+                var notification = notifications[index];
+                return NotificationCard(
+                  title: notification['title'],
+                  content: notification['content'],
+                  timestamp: notification['timestamp'],
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

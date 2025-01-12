@@ -57,18 +57,13 @@ class _UserEnquiryState extends State<UserEnquiry> {
       // Process the documents
       setState(() {
         _enquiries = querySnapshot.docs.map((doc) {
-          var data = doc.data()
-              as Map<String, dynamic>; // Firestore document data as dynamic
+          var data = doc.data() as Map<String, dynamic>; // Firestore document data as dynamic
 
           return {
-            'subject': data['subject']?.toString() ??
-                'No Subject', // Explicit conversion to string
-            'description': data['description']?.toString() ??
-                'No Description', // Explicit conversion to string
-            'status': data['status']?.toString() ??
-                'No Status', // Explicit conversion to string
-            'response': data['response']?.toString() ??
-                'No Response', // Explicit conversion to string
+            'subject': data['subject']?.toString() ?? 'No Subject', // Explicit conversion to string
+            'description': data['description']?.toString() ?? 'No Description', // Explicit conversion to string
+            'status': data['status']?.toString() ?? 'No Status', // Explicit conversion to string
+            'response': data['response']?.toString() ?? 'No Response', // Explicit conversion to string
           };
         }).toList();
         _isLoading = false;
@@ -79,8 +74,7 @@ class _UserEnquiryState extends State<UserEnquiry> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Error fetching enquiries. Please try again later.')),
+        SnackBar(content: Text('Error fetching enquiries. Please try again later.')),
       );
     }
   }
@@ -111,9 +105,7 @@ class _UserEnquiryState extends State<UserEnquiry> {
       } catch (e) {
         print('Error submitting enquiry: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content:
-                  Text('Error submitting enquiry. Please try again later.')),
+          SnackBar(content: Text('Error submitting enquiry. Please try again later.')),
         );
       }
     } else {
@@ -130,19 +122,31 @@ class _UserEnquiryState extends State<UserEnquiry> {
         title: Text('User Enquiry'),
         backgroundColor: Color.fromARGB(255, 245, 184, 93),
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator()) // Show loading indicator
-          : SingleChildScrollView(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  _buildEnquiryForm(),
-                  SizedBox(height: 20),
-                  _buildEnquiryList(),
-                ],
+      body: Container(
+        height: double.infinity, // Ensure the container takes up full screen height
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+            Color.fromARGB(255, 245, 184, 93),
+            Color.fromARGB(255, 233, 211, 88),],
+          ),
+        ),
+        child: _isLoading
+            ? Center(child: CircularProgressIndicator()) // Show loading indicator
+            : SingleChildScrollView(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    _buildEnquiryForm(),
+                    SizedBox(height: 20),
+                    _buildEnquiryList(),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 

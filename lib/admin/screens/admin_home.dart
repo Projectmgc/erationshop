@@ -1,3 +1,4 @@
+import 'package:erationshop/admin/screens/cardcategories.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -52,6 +53,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'description': 'Communicate with Shop Owners.',
       'image': 'asset/stock.jpg',
       'page': ConversePage(), // Navigation target
+    },
+    {
+      'title': 'Card Categories',
+      'icon': Icons.credit_card,
+      'color': const Color.fromARGB(255, 53, 64, 61),
+      'description': 'View and manage Categories of Cards.',
+      'image': 'asset/card.jpg',
+      'page': CategoryPage(), // Navigation target
     },
     {
       'title': 'Notifications',

@@ -1,13 +1,13 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:erationshop/user/screens/user_card.dart';
 import 'package:erationshop/user/screens/user_enquiry.dart';
 import 'package:erationshop/user/screens/user_notification.dart';
 import 'package:erationshop/user/screens/user_outlet.dart';
 import 'package:erationshop/user/screens/user_profile.dart';
 import 'package:erationshop/user/screens/user_purchase.dart';
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class UhomeScreen extends StatefulWidget {
   const UhomeScreen({super.key});
@@ -17,7 +17,7 @@ class UhomeScreen extends StatefulWidget {
 }
 
 class _UhomeScreenState extends State<UhomeScreen> {
-  final PageController _pageController = PageController();
+  final PageController _pageController = PageController(initialPage: 0);
   final List<Map<String, dynamic>> _cards = [
     {
       'title': 'Purchase',
@@ -61,43 +61,32 @@ class _UhomeScreenState extends State<UhomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch the user_id from the user profile or authentication service
     _fetchUserId();
 
-    // Listen for page changes to enable looping (optional)
     _pageController.addListener(() {
-      if (_pageController.position.pixels >=
-              _pageController.position.maxScrollExtent ||
-          _pageController.position.pixels <=
-              _pageController.position.minScrollExtent) {
-        // After reaching the last or first card, jump to the opposite end
-        if (_pageController.page == _cards.length - 1) {
-          _pageController.jumpToPage(0);
-        } else if (_pageController.page == 0) {
-          _pageController.jumpToPage(_cards.length - 1);
-        }
+      // Detect the first or last page and jump to the opposite end
+      if (_pageController.position.pixels <= 0) {
+        _pageController.jumpToPage(_cards.length - 1); // Jump to last card
+      } else if (_pageController.position.pixels >=
+          _pageController.position.maxScrollExtent) {
+        _pageController.jumpToPage(0); // Jump to first card
       }
     });
   }
 
   Future<void> _fetchUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    _userId = prefs.getString(
-        'card_no')!; // Assuming 'card_no' is stored in SharedPreferences
+    _userId = prefs.getString('card_no')!; // Assuming 'card_no' is stored in SharedPreferences
   }
-
-  // Fetch the user_id associated with the current user
 
   // Handle the card tap event and navigate accordingly
   void _onCardTapped(BuildContext context, Widget? page) {
     if (page != null) {
-      // Navigate to the associated page directly
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => page),
       );
     } else {
-      // Handle the 'Enquiry' card tap by passing the userId
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -190,8 +179,7 @@ class _UhomeScreenState extends State<UhomeScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 20.0),
                 child: SmoothPageIndicator(
-                  controller:
-                      _pageController, // Controller to sync with PageView
+                  controller: _pageController, // Controller to sync with PageView
                   count: _cards.length, // Number of dots
                   effect: ExpandingDotsEffect(
                     dotWidth: 10,

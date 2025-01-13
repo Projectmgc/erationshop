@@ -1,261 +1,257 @@
-import 'package:erationshop/user/screens/reset_password.dart';
+import 'dart:math';
+import 'package:erationshop/user/screens/login_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server.dart';
 
-class Forgot_Password extends StatefulWidget {
-  const Forgot_Password({super.key});
-
+class ForgotPasswordPage extends StatefulWidget {
   @override
-  State<Forgot_Password> createState() => _Forgot_PasswordState();
+  _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
 }
 
-class _Forgot_PasswordState extends State<Forgot_Password> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _phoneController = TextEditingController();
-  final List<TextEditingController> _otpControllers = List.generate(4, (index) => TextEditingController());
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+  final TextEditingController _cardNoController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _verificationCodeController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
-  bool _isOtpSent = false;
-  bool _isOtpVerified = false;
-  String _otp = ''; // This will simulate the OTP
+  bool isVerificationStep = false;
+  String verificationCode = "";
+  bool isPasswordChanged = false;
 
-  // Simulate sending OTP
-  void gotoreset()
-  {
-    Navigator.push(context, MaterialPageRoute(builder: (context){
-      return Reset_Password();
-    }));
-  }
-  void _sendOtp() {
-    setState(() {
-      _isOtpSent = true;
-      _otp = '1234'; // Hardcoded OTP for demo purposes
-    });
-  }
+  // Step 1: Submit Card Number and Email
+  Future<void> submitCardAndEmail() async {
+    final cardNo = _cardNoController.text.trim();
+    final email = _emailController.text.trim();
 
-  // Simulate OTP verification
-  void _verifyOtp() {
-    String enteredOtp = _otpControllers.map((controller) => controller.text).join();
-    if (enteredOtp == _otp) {
+    bool isValidUser = await checkUserExists(cardNo, email);
+
+    if (isValidUser) {
+      verificationCode = generateVerificationCode();
+      await sendVerificationEmail(email, verificationCode);
+
       setState(() {
-        _isOtpVerified = true;
+        isVerificationStep = true;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("OTP Verified Successfully")),
-      );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Invalid OTP")),
-      );
+      showErrorDialog('No matching user found for the provided card number and email.');
     }
+  }
+
+  // Step 2: Check if the User Exists in Firebase
+  Future<bool> checkUserExists(String cardNo, String email) async {
+    var snapshot = await FirebaseFirestore.instance
+        .collection('User')
+        .where('card_no', isEqualTo: cardNo)
+        .where('email', isEqualTo: email)
+        .get();
+
+    return snapshot.docs.isNotEmpty;
+  }
+
+  // Step 3: Generate Verification Code
+  String generateVerificationCode() {
+    final random = Random();
+    final code = (random.nextInt(900000) + 100000).toString(); // 6-digit code
+    return code;
+  }
+
+  // Step 4: Send Verification Email using SendGrid SMTP
+  Future<void> sendVerificationEmail(String email, String code) async {
+    final smtpServer = SmtpServer(
+      'smtp.sendgrid.net', // SendGrid SMTP server
+      username: 'apikey',  // Use "apikey" as the username
+      password: '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',  // Your SendGrid API key here
+      port: 587,           // TLS connection (587 recommended)
+      ssl: false,          // False because we use TLS, not SSL
+    );
+
+    final message = Message()
+      ..from = Address('erationprojectmgc@gmail.com', 'E-RATION')  // Sender's email
+      ..recipients.add(email)  // Recipient's email
+      ..subject = 'Your Password Reset Code'
+      ..text = 'Your verification code is: $code';
+
+    try {
+      final sendReport = await send(message, smtpServer);
+      print('Message sent: ${sendReport.toString()}');
+    } on MailerException catch (e) {
+      print('Message not sent. ${e.toString()}');
+    }
+  }
+
+  // Step 5: Handle Verification Code and Password Change
+  Future<void> verifyCodeAndChangePassword() async {
+    if (_verificationCodeController.text == verificationCode) {
+      if (_newPasswordController.text == _confirmPasswordController.text) {
+        await updatePassword(_emailController.text, _newPasswordController.text);
+        setState(() {
+          isPasswordChanged = true;
+        });
+        Navigator.push(context, MaterialPageRoute(builder: (context){
+          return Login_Screen();
+        }));
+      } else {
+        showErrorDialog('Passwords do not match.');
+      }
+    } else {
+      showErrorDialog('Invalid verification code.');
+    }
+  }
+
+  // Step 6: Update the User Password in Firebase
+  Future<void> updatePassword(String email, String newPassword) async {
+    var userDoc = await FirebaseFirestore.instance
+        .collection('User')
+        .where('email', isEqualTo: email)
+        .get();
+
+    if (userDoc.docs.isNotEmpty) {
+      var user = userDoc.docs.first;
+      await FirebaseFirestore.instance
+          .collection('User')
+          .doc(user.id)
+          .update({'password': newPassword});
+    }
+  }
+
+  // Step 7: Show Error Dialog
+  void showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: Text('Forgot Password'),
+      backgroundColor: Color.fromARGB(255, 245, 184, 93),),
       body: Container(
         decoration: BoxDecoration(
-          
-              gradient: LinearGradient(
-                colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-        
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+            Color.fromARGB(255, 245, 184, 93),
+            Color.fromARGB(255, 233, 211, 88),],
+          ),
+        ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                SizedBox(height: 80),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ClipOval(
-                      child: Image.asset(
-                        'asset/logo.jpg', // Your logo image
-                        width: 120,
-                        height: 120,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 55),
-                Text(
-                  'Forgot Password',
-                  style: GoogleFonts.merriweather(
-                    color: const Color.fromARGB(255, 81, 50, 12),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 28.0,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 3.0,
-                        color: const Color.fromARGB(255, 160, 155, 155),
-                        offset: Offset(-3.0, 3.0),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 30),
-
-                // Phone Number Input Section
-                Column(
+          padding: const EdgeInsets.all(16.0),
+          child: isVerificationStep
+              ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Enter your phone number',
-                      style: GoogleFonts.merriweather(
-                        color: const Color.fromARGB(255, 12, 12, 12),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18.0,
-                      ),
+                      'Verification Code',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 3, 3, 3)),
                     ),
                     SizedBox(height: 10),
-                    TextFormField(
-                      controller: _phoneController,
-                                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-
+                    TextField(
+                      controller: _verificationCodeController,
                       decoration: InputDecoration(
+                        labelText: 'Enter Verification Code',
+                        labelStyle: TextStyle(color: const Color.fromARGB(255, 5, 5, 5)),
+                        border: OutlineInputBorder(),
                         filled: true,
-                        fillColor: const Color.fromARGB(255, 225, 157, 68),
-                    hoverColor: const Color.fromARGB(255, 2, 9, 49),
-                    prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
-                    prefixIcon: Icon(Icons.phone),
-                    
-                        
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(width: 2,color: const Color.fromARGB(255, 81, 50, 12)),
-                      borderRadius: BorderRadius.circular(10)
-                        ),
-                        hintText: 'Enter your phone number',
+                        fillColor: Colors.grey[100],
                       ),
-                      keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value == null || value.isEmpty||value.length!=10) {
-                          return 'Please enter valid phone number';
-                        }
-                        return null;
-                      },
+                      keyboardType: TextInputType.number,
+                    ),
+                    SizedBox(height: 16),
+                    TextField(
+                      controller: _newPasswordController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: 'Enter New Password',
+                        labelStyle: TextStyle(color: const Color.fromARGB(255, 1, 1, 1)),
+                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.grey[100],
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    TextField(
+                      controller: _confirmPasswordController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: 'Confirm New Password',
+                        labelStyle: TextStyle(color: const Color.fromARGB(255, 3, 3, 3)),
+                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.grey[100],
+                      ),
                     ),
                     SizedBox(height: 20),
                     ElevatedButton(
-                      
-                      style: ButtonStyle(
-                        backgroundColor: WidgetStatePropertyAll(const Color.fromARGB(121, 209, 148, 101)),
-                        shadowColor: WidgetStatePropertyAll(Color.fromARGB(159, 57, 31, 5)),
-                                            elevation: WidgetStatePropertyAll(10.0),
-
-
+                      onPressed: verifyCodeAndChangePassword,
+                      child: Text('   Change Password   '),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color.fromARGB(255, 250, 250, 250),
+                        padding: EdgeInsets.symmetric(vertical: 15),
+                        textStyle: TextStyle(fontSize: 18),
                       ),
-                      onPressed: () {
-                        if (_formKey.currentState?.validate() ?? false) {
-                          // Trigger OTP send logic
-                          _sendOtp();
-                        }
-                      },
-                      child: Text('Send OTP',style: TextStyle(color: const Color.fromARGB(228, 6, 6, 6),fontWeight: FontWeight.bold,fontSize: 18),),
+                    ),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Forgot Password?',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+                    ),
+                    SizedBox(height: 20),
+                    TextField(
+                      controller: _cardNoController,
+                      decoration: InputDecoration(
+                        labelText: 'Card Number',
+                        labelStyle: TextStyle(color: const Color.fromARGB(255, 10, 10, 10)),
+                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.grey[100],
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                    SizedBox(height: 16),
+                    TextField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        labelStyle: TextStyle(color: const Color.fromARGB(255, 27, 26, 26)),
+                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.grey[100],
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: submitCardAndEmail,
+                      child: Text('    Submit    '),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 236, 238, 213),
+                        padding: EdgeInsets.symmetric(vertical: 15),
+                        textStyle: TextStyle(fontSize: 16),
+                      ),
                     ),
                   ],
                 ),
-
-                // OTP Input Section (appears after sending OTP)
-                if (_isOtpSent && !_isOtpVerified)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Enter the OTP sent to your phone',
-                        style: GoogleFonts.merriweather(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18.0,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: List.generate(4, (index) {
-                          return SizedBox(
-                            width: 50,
-                            child: TextFormField(
-                              controller: _otpControllers[index],
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: const Color.fromARGB(255, 225, 157, 68),
-                                border: OutlineInputBorder(),
-                                hintText: '•',
-                              ),
-                              keyboardType: TextInputType.number,
-                              textAlign: TextAlign.center,
-                              maxLength: 1,
-                              onChanged: (value) {
-                                if (value.isNotEmpty && index < 3) {
-                                  FocusScope.of(context).nextFocus(); // Move to next field
-                                }
-                              },
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Enter OTP';
-                                }
-                                return null;
-                              },
-                            ),
-                          );
-                        }),
-                      ),
-                      SizedBox(height: 20),
-                      ElevatedButton(
-                         style: ButtonStyle(
-                        backgroundColor: WidgetStatePropertyAll(const Color.fromARGB(121, 209, 148, 101)),
-                        shadowColor: WidgetStatePropertyAll(Color.fromARGB(159, 57, 31, 5)),
-                                            elevation: WidgetStatePropertyAll(10.0),
-
-
-                      ),
-                        onPressed: _verifyOtp,
-                        child: Text('Verify OTP',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18,color: const Color.fromARGB(228, 6, 6, 6)),),
-                      ),
-                    ],
-                  ),
-
-                // Success message after OTP is verified
-                if (_isOtpVerified)
-                  Column(
-                    children: [
-                      Text(
-                        'Your OTP has been verified. You can now reset your password.',
-                        style: TextStyle(
-                          color: const Color.fromARGB(255, 2, 78, 4),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      ElevatedButton(
-                         style: ButtonStyle(
-                        backgroundColor: WidgetStatePropertyAll(const Color.fromARGB(121, 209, 148, 101)),
-                        shadowColor: WidgetStatePropertyAll(Color.fromARGB(159, 57, 31, 5)),
-                                            elevation: WidgetStatePropertyAll(10.0),
-
-
-                      ),
-                        onPressed: () {
-                           gotoreset(); // Navigate to Reset Password Page
-                          // Navigator.push(context, MaterialPageRoute(builder: (context) => ResetPasswordPage()));
-                        },
-                        child: Text('Go to Reset Password',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18, color: const Color.fromARGB(228, 6, 6, 6)),),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-          ),
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:erationshop/user/screens/forgot_password.dart';
 import 'package:erationshop/user/screens/signup_screen.dart';
 import 'package:erationshop/user/screens/uhome_screen.dart';
 import 'package:flutter/material.dart';
@@ -74,6 +75,10 @@ class _Login_ScreenState extends State<Login_Screen> {
   }
 
   void forgotpassword() {
+
+    Navigator.push(context, MaterialPageRoute(builder: (context){
+      return ForgotPasswordPage();
+    }));
     // Navigate to Forgot Password Screen
   }
 

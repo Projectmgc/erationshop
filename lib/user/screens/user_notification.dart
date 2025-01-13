@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 class NotificationsPage extends StatelessWidget {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

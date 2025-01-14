@@ -129,12 +129,12 @@ class _AdminShopPageState extends State<AdminShopPage> {
     });
   }
 
-  // Function to handle geocoding
+  // Function to handle geocoding (search address and get latitude and longitude)
   Future<void> _getLatLongFromAddress() async {
     try {
       // Perform geocoding to get the latitude and longitude from the address
       if (_addressController.text.isNotEmpty) {
-        List<Location> locations = await locationFromAddress('Kannur');
+        List<Location> locations = await locationFromAddress(_addressController.text);
         if (locations.isNotEmpty) {
           setState(() {
             _latitude = locations.first.latitude;
@@ -168,129 +168,134 @@ class _AdminShopPageState extends State<AdminShopPage> {
         backgroundColor: const Color.fromARGB(255, 245, 184, 93),
       ),
       body: Container(
+        width: double.infinity, // Ensure it fills the width
+        height: double.infinity, // Ensure it takes up full height
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),],
+              const Color.fromARGB(255, 245, 184, 93),
+              const Color.fromARGB(255, 233, 211, 88),
+            ],
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(labelText: 'Shop Owner Name'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the shop owner name';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: _storeNameController,
-                      decoration: const InputDecoration(labelText: 'Store Name'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the store name';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: _addressController,
-                      decoration: const InputDecoration(labelText: 'Address'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the address';
-                        }
-                        return null;
-                      },
-                    ),
-                    // Button to trigger geocoding
-                    ElevatedButton(
-                      onPressed: _getLatLongFromAddress,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 206, 130, 17),
+        child: SingleChildScrollView( // This makes the body scrollable
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(labelText: 'Shop Owner Name'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter the shop owner name';
+                          }
+                          return null;
+                        },
                       ),
-                      child: const Text('Get Latitude & Longitude'),
-                    ),
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(labelText: 'Email'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the email';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: _phoneController,
-                      decoration: const InputDecoration(labelText: 'Phone Number'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the phone number';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: _shopIdController,
-                      decoration: const InputDecoration(labelText: 'Shop ID'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the shop ID';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: !_isPasswordVisible, // Toggle visibility
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _isPasswordVisible
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _isPasswordVisible = !_isPasswordVisible; // Toggle password visibility
-                            });
-                          },
+                      TextFormField(
+                        controller: _storeNameController,
+                        decoration: const InputDecoration(labelText: 'Store Name'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter the store name';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: _addressController,
+                        decoration: const InputDecoration(labelText: 'Address'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter the address';
+                          }
+                          return null;
+                        },
+                      ),
+                      // Button to trigger geocoding
+                      ElevatedButton(
+                        onPressed: _getLatLongFromAddress,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 206, 130, 17),
                         ),
+                        child: const Text('Get Latitude & Longitude'),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the password';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _isEditing ? _updateShop : _addShop,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 206, 130, 17),
-                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(labelText: 'Email'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter the email';
+                          }
+                          return null;
+                        },
                       ),
-                      child: Text(_isEditing ? 'Update Shop' : 'Add Shop'),
-                    ),
-                  ],
+                      TextFormField(
+                        controller: _phoneController,
+                        decoration: const InputDecoration(labelText: 'Phone Number'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter the phone number';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: _shopIdController,
+                        decoration: const InputDecoration(labelText: 'Shop ID'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter the shop ID';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: !_isPasswordVisible, // Toggle visibility
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isPasswordVisible
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isPasswordVisible = !_isPasswordVisible; // Toggle password visibility
+                              });
+                            },
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter the password';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _isEditing ? _updateShop : _addShop,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 206, 130, 17),
+                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                        ),
+                        child: Text(_isEditing ? 'Update Shop' : 'Add Shop'),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

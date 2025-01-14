@@ -71,7 +71,7 @@ class _Admin_LoginState extends State<Admin_Login> {
 
   void forgotpassword() {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
-      return Admin_Forgot();
+      return AdminForgotPasswordPage();
     }));
   }
 

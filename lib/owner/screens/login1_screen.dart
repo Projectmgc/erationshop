@@ -1,3 +1,4 @@
+import 'package:erationshop/owner/screens/forgot1_passwrd.dart';
 import 'package:erationshop/owner/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -236,7 +237,9 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                     // Forgot Password Button (Optional)
                     TextButton(
                       onPressed: () {
-                        // Add forgot password functionality
+                        Navigator.push(context, MaterialPageRoute(builder: (context){
+                          return Forgot1_Password();
+                        }));
                       },
                       child: Text(
                         'Forgot password?',

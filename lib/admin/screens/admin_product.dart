@@ -143,52 +143,66 @@ class _AdminProductState extends State<AdminProduct> {
   }
 
   // Remove product from Firestore
-  Future<void> _removeProduct(String productId, String imageUrl) async {
-    try {
-      // Delete the product from Product_Category collection
-      await _firestore.collection('Product_Category').doc(productId).delete();
+Future<void> _removeProduct(String productId, String imageUrl) async {
+  try {
+    // Delete the product from the Product_Category collection
+    await _firestore.collection('Product_Category').doc(productId).delete();
 
-      // Remove the product from the selected category
-      await _removeProductFromCategory(productId);
+    // Remove the product from the selected category's product array
+    await _removeProductFromCategory(productId);
 
-      // Optionally delete the image from Cloudinary
-      if (imageUrl.isNotEmpty && imageUrl != "na") {
-        final cloudinaryDeleteUrl = Uri.parse("https://api.cloudinary.com/v1_1/$cloudName/image/destroy");
-        final request = http.MultipartRequest('POST', cloudinaryDeleteUrl)
-          ..fields['public_id'] = Uri.parse(imageUrl).pathSegments.last;
+    // Optionally delete the image from Cloudinary (if necessary)
+    if (imageUrl.isNotEmpty && imageUrl != "na") {
+      final cloudinaryDeleteUrl = Uri.parse("https://api.cloudinary.com/v1_1/$cloudName/image/destroy");
+      final request = http.MultipartRequest('POST', cloudinaryDeleteUrl)
+        ..fields['public_id'] = Uri.parse(imageUrl).pathSegments.last;
 
-        final response = await request.send();
+      final response = await request.send();
 
-        if (response.statusCode != 200) {
-          throw Exception("Error deleting image from Cloudinary: ${response.statusCode}");
-        }
+      if (response.statusCode != 200) {
+        throw Exception("Error deleting image from Cloudinary: ${response.statusCode}");
       }
-
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product removed successfully')));
-    } catch (e) {
-      
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Product removed successfully')));
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
   }
+}
+
 
   // Remove product from the selected category
-  Future<void> _removeProductFromCategory(String productId) async {
-    try {
-      var categoryQuerySnapshot = await _firestore
-          .collection('Category')
-          .where('category_name', isEqualTo: _selectedCategory)
-          .get();
+ Future<void> _removeProductFromCategory(String productId) async {
+  try {
+    // Fetch all Category documents
+    var categoryQuerySnapshot = await _firestore.collection('Category').get();
 
-      if (categoryQuerySnapshot.docs.isNotEmpty) {
-        var categoryDoc = categoryQuerySnapshot.docs.first;
+    // Iterate through each category document
+    for (var categoryDoc in categoryQuerySnapshot.docs) {
+      // Check if the product_id exists in the 'product' array
+      var products = categoryDoc['product'] as List<dynamic>;
+      
+      // Find the product that needs to be removed based on product_id
+      var productToRemove = products.firstWhere(
+        (product) => product['product_id'] == productId,
+        orElse: () => null, // If no product matches, return null
+      );
 
+      if (productToRemove != null) {
+        // If the product is found, remove it from the 'product' array
         await _firestore.collection('Category').doc(categoryDoc.id).update({
-          'product': FieldValue.arrayRemove([{'product_id': productId}]),
+          'product': FieldValue.arrayRemove([productToRemove]),
         });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Product removed from the selected category')),
+        );
       }
-    } catch (e) {
-      throw Exception("Error removing product from category: $e");
     }
+  } catch (e) {
+    throw Exception("Error removing product from category: $e");
   }
+}
 
   @override
   Widget build(BuildContext context) {

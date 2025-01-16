@@ -20,7 +20,7 @@ class _AddCardPageState extends State<AddCardPage> {
 
   // List to hold card data
   List<Map<String, dynamic>> _cardDetailsList = [];
-  
+
   bool _isLoading = true; // Flag for loading state
 
   // Fetch all cards from Firebase Firestore
@@ -64,7 +64,15 @@ class _AddCardPageState extends State<AddCardPage> {
   Future<void> _addCard() async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
-        String categoryId = _getCategoryIdFromCategoryName(_categoryController.text); 
+        String categoryId = _getCategoryIdFromCategoryName(_categoryController.text);
+
+        // Capture the current date and subtract 31 days
+        DateTime now = DateTime.now();
+        DateTime lastPurchaseDateTime = now.subtract(Duration(days: 31));
+
+        // Convert DateTime to Timestamp
+        Timestamp lastPurchaseDate = Timestamp.fromDate(lastPurchaseDateTime);
+
         await FirebaseFirestore.instance.collection('Card').add({
           'owner_name': _ownerNameController.text,
           'card_no': _cardNoController.text,
@@ -73,6 +81,7 @@ class _AddCardPageState extends State<AddCardPage> {
           'mobile_no': _mobileNoController.text,
           'member_list': List.generate(membersCount, (index) => _memberNameControllers[index].text),
           'category_id': categoryId,
+          'last_purchase_date': lastPurchaseDate, // Add the last purchase date as Timestamp
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -115,8 +124,8 @@ class _AddCardPageState extends State<AddCardPage> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),
+              const Color.fromARGB(255, 245, 184, 93),
+              const Color.fromARGB(255, 233, 211, 88),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,

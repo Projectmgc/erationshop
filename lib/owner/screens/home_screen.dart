@@ -1,4 +1,5 @@
 import 'package:erationshop/main.dart';
+import 'package:erationshop/owner/screens/owner_purchase.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -26,7 +27,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       'color': Colors.lightGreenAccent,
       'description': 'Keep track of available inventory and supplies.',
       'image': 'asset/purchase.jpg',
-      'page': Signup_Screen(),
+      'page': OwnerPurchase(),
     },
     {
       'title': 'Outlet',

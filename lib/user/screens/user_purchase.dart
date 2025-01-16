@@ -16,6 +16,7 @@ class _UserPurchaseState extends State<UserPurchase> {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   late Razorpay _razorpay;
   bool _isEligibleForPurchase = false;
+  List<Map<dynamic, dynamic>> _purchasedItems = [];
 
   @override
   void initState() {
@@ -33,9 +34,40 @@ class _UserPurchaseState extends State<UserPurchase> {
     _razorpay.clear();
   }
 
-  Future<String?> _getCardNo() async {
+  Future<void> _fetchPurchasedItems() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('card_no');
+    final cardId = prefs.getString('card_no');
+
+    if (cardId != null) {
+      try {
+        QuerySnapshot querySnapshot = await firestore
+            .collection('Orders')
+            .where('user_id', isEqualTo: cardId)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          setState(() {
+            _purchasedItems = querySnapshot.docs.map((doc) {
+              return {
+                'items': doc['items'],
+                'total_amount': doc['total_amount'],
+                'status': doc['status'],
+                'payment_id': doc['payment_id'],
+                'timestamp': doc['timestamp'],
+              };
+            }).toList();
+          });
+        }
+      } catch (e) {
+        print("Error fetching purchased items: $e");
+      }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _fetchPurchasedItems();
   }
 
   Future<void> _fetchCardsFromFirestore() async {
@@ -48,7 +80,7 @@ class _UserPurchaseState extends State<UserPurchase> {
     print(cardId);
 
     if (cardId != null) {
-      await _checkEligibilityForPurchase(cardId); // Check eligibility early
+      await _checkEligibilityForPurchase(cardId);
     }
 
     try {
@@ -116,15 +148,19 @@ class _UserPurchaseState extends State<UserPurchase> {
 
             final productData = productDoc.data();
             if (productData != null) {
+              double productPrice = double.parse(productInfo['price']);
+              double productQuantity = double.parse(productInfo['quantity']);
+              double totalProductPrice = productPrice * productQuantity *
+                  double.parse(querySnapshot.docs.first['members_count'].toString());
+
               _products.add({
                 'id': productInfo['product_id'],
-                'price': productInfo['price'],
+                'price': productPrice,
                 'isOrdered': isOrdered,
-                'total': double.parse(productInfo['price']) *
-                    double.parse(querySnapshot.docs.first['members_count']),
+                'total': totalProductPrice,
                 'image': productData['image'],
-                'quantity': double.parse(productInfo['quantity']) *
-                    double.parse(querySnapshot.docs.first['members_count']),
+                'quantity': productQuantity *
+                    double.parse(querySnapshot.docs.first['members_count'].toString()),
                 'name': productData['name'],
                 'description': productData['description'],
               });
@@ -163,15 +199,15 @@ class _UserPurchaseState extends State<UserPurchase> {
         return;
       }
 
-      QuerySnapshot userQuerySnapshot = await firestore
-          .collection('User')
+      QuerySnapshot cardQuerySnapshot = await firestore
+          .collection('Card')
           .where('card_no', isEqualTo: cardId)
           .limit(1)
           .get();
 
-      if (userQuerySnapshot.docs.isNotEmpty) {
-        DocumentSnapshot userDoc = userQuerySnapshot.docs.first;
-        Timestamp? lastPurchaseTimestamp = userDoc['last_purchase_date'];
+      if (cardQuerySnapshot.docs.isNotEmpty) {
+        DocumentSnapshot cardDoc = cardQuerySnapshot.docs.first;
+        Timestamp? lastPurchaseTimestamp = cardDoc['last_purchase_date'];
         DateTime lastPurchaseDate = lastPurchaseTimestamp?.toDate() ?? DateTime.now().subtract(const Duration(days: 31));
         DateTime currentDate = DateTime.now();
         bool isEligible = currentDate.month != lastPurchaseDate.month || currentDate.year != lastPurchaseDate.year;
@@ -184,7 +220,7 @@ class _UserPurchaseState extends State<UserPurchase> {
           _isEligibleForPurchase = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User not found.')),
+          const SnackBar(content: Text('Card not found.')),
         );
       }
     } catch (e) {
@@ -192,7 +228,7 @@ class _UserPurchaseState extends State<UserPurchase> {
         _isEligibleForPurchase = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error checking eligibility: $e')),
+        SnackBar(content: Text('Error checking eligibility: $e')) ,
       );
     }
   }
@@ -202,7 +238,7 @@ class _UserPurchaseState extends State<UserPurchase> {
     final cardId = prefs.getString('card_no');
 
     if (cardId != null) {
-      await _checkEligibilityForPurchase(cardId); // Ensuring eligibility is checked properly
+      await _checkEligibilityForPurchase(cardId);
 
       if (!_isEligibleForPurchase) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -236,7 +272,7 @@ class _UserPurchaseState extends State<UserPurchase> {
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding to cart: $e')),
+          SnackBar(content: Text('Error adding to cart: $e')) ,
         );
       }
     }
@@ -256,7 +292,7 @@ class _UserPurchaseState extends State<UserPurchase> {
       final cardNo = prefs.getString('card_no');
 
       if (cardNo != null) {
-        double totalAmount = _calculateTotalPrice() * 100; // Convert to paise
+        double totalAmount = _calculateTotalPrice() * 100;
         var options = {
           'key': 'rzp_test_QLvdqmBfoYL2Eu',
           'amount': totalAmount.toString(),
@@ -295,22 +331,22 @@ class _UserPurchaseState extends State<UserPurchase> {
           'timestamp': FieldValue.serverTimestamp(),
         });
 
-        QuerySnapshot userQuerySnapshot = await firestore
-            .collection('User')
+        QuerySnapshot cardQuerySnapshot = await firestore
+            .collection('Card')
             .where('card_no', isEqualTo: cardNo)
             .limit(1)
             .get();
 
-        if (userQuerySnapshot.docs.isNotEmpty) {
-          DocumentSnapshot userDoc = userQuerySnapshot.docs.first;
-          await firestore.collection('User').doc(userDoc.id).update({
+        if (cardQuerySnapshot.docs.isNotEmpty) {
+          DocumentSnapshot cardDoc = cardQuerySnapshot.docs.first;
+          await firestore.collection('Card').doc(cardDoc.id).update({
             'last_purchase_date': FieldValue.serverTimestamp(),
           });
         }
 
         _removeAllFromCart();
 
-        await _fetchCardsFromFirestore(); 
+        await _fetchCardsFromFirestore();
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Payment Successful!')),
@@ -337,6 +373,12 @@ class _UserPurchaseState extends State<UserPurchase> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('External Wallet: ${response.walletName}')),
     );
+  }
+
+  void _removeFromCart(Map<dynamic, dynamic> product) {
+    setState(() {
+      _cart.removeWhere((item) => item['id'] == product['id']);
+    });
   }
 
   void _removeAllFromCart() async {
@@ -369,8 +411,9 @@ class _UserPurchaseState extends State<UserPurchase> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-            Color.fromARGB(255, 245, 184, 93),
-            Color.fromARGB(255, 233, 211, 88),],
+              Color.fromARGB(255, 245, 184, 93),
+              Color.fromARGB(255, 233, 211, 88),
+            ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -406,7 +449,6 @@ class _UserPurchaseState extends State<UserPurchase> {
                                   final isAddedToCart = _cart.any(
                                       (item) => item['id'] == product['id']);
                                   return ProductCard(
-                                    key: UniqueKey(),
                                     product: product,
                                     isAddedToCart: isAddedToCart,
                                     onAddToCart: () => _addToCart(product),
@@ -438,23 +480,63 @@ class _UserPurchaseState extends State<UserPurchase> {
                         ElevatedButton(
                           onPressed: _placeOrder,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange, 
+                            backgroundColor: Colors.orange,
                           ),
                           child: Text('Place Order', style: TextStyle(fontSize: 18)),
                         ),
                       ],
                     ),
                   ),
+                  _purchasedItems.isNotEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Purchased Items',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                itemCount: _purchasedItems.length,
+                                itemBuilder: (context, index) {
+                                  final purchasedItem = _purchasedItems[index];
+                                  return Card(
+                                    margin: EdgeInsets.symmetric(vertical: 8),
+                                    child: ListTile(
+                                      title: Text('Order ID: ${purchasedItem['payment_id']}'),
+                                      subtitle: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Status: ${purchasedItem['status']}'),
+                                          Text('Total Amount: ₹${purchasedItem['total_amount']}'),
+                                          Text('Date of Purchase: ${purchasedItem['timestamp'].toDate()}'),
+                                          Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: (purchasedItem['items'] as List).map<Widget>((item) {
+                                              return Text('Item: ${item['name']}  Quantity: ${item['quantity']}');
+                                            }).toList(),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        )
+                      : Container(),
                 ],
               ),
       ),
     );
-  }
-
-  void _removeFromCart(Map<dynamic, dynamic> product) {
-    setState(() {
-      _cart.removeWhere((item) => item['id'] == product['id']);
-    });
   }
 }
 
@@ -464,26 +546,22 @@ class ProductCard extends StatelessWidget {
   final VoidCallback onAddToCart;
   final VoidCallback onRemoveFromCart;
 
-  const ProductCard({
-    Key? key,
+  ProductCard({
     required this.product,
     required this.isAddedToCart,
     required this.onAddToCart,
     required this.onRemoveFromCart,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.all(8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
+      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       elevation: 5,
       child: ListTile(
-        leading: Image.network(product['image']),
-        title: Text(product['name'], style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        subtitle: Text('₹${product['price']}'),
+        leading: Image.network(product['image'], width: 50, height: 50),
+        title: Text(product['name']),
+        subtitle: Text('₹${product['price']} x ${product['quantity']}'),
         trailing: isAddedToCart
             ? IconButton(
                 icon: Icon(Icons.remove_shopping_cart),

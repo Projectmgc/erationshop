@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:erationshop/intro/screens/firstscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -100,7 +101,6 @@ class UserProfile extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                           
                                 SizedBox(height: 20),
 
                                 // Email
@@ -112,16 +112,42 @@ class UserProfile extends StatelessWidget {
                                     "Card Number:", cardNumber),
                                 SizedBox(height: 20),
 
-                                // Mobile Number
-                              
-
                                 // Owner Name
                                 _buildProfileTextField(
                                     "Card Owner:", ownerName),
                                 SizedBox(height: 20),
 
                                 // Category
+                                // Add category or any other data you need
                                 
+                                // Logout Button
+                                Center(
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      // Clear SharedPreferences
+                                      SharedPreferences prefs =
+                                          await SharedPreferences.getInstance();
+                                      prefs.remove('card_no');
+                                      prefs.remove('shop_id');
+                                      prefs.remove('shop_owner_doc_id');
+                                      prefs.remove('email');
+
+                                      // Navigate to IntroScreen
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => IntroPage()),
+                                      );
+                                    },
+                                    child: Text("Logout"),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red, // Set color
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 32, vertical: 16),
+                                      textStyle: TextStyle(fontSize: 18),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -172,7 +198,6 @@ class UserProfile extends StatelessWidget {
   // Helper function to get the card_no from SharedPreferences
   Future<String?> _getCardNo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(
-        'card_no'); // Assuming 'card_no' is stored in SharedPreferences
+    return prefs.getString('card_no'); // Assuming 'card_no' is stored in SharedPreferences
   }
 }

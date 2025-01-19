@@ -1,3 +1,4 @@
+import 'package:erationshop/intro/screens/firstscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -95,84 +96,100 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // Method to handle logout
+  Future<void> _logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('shop_id');  // Remove the stored shop_id
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => IntroPage()),  // Navigate to IntroPage
+    );
+  }
+
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text('Profile', style: GoogleFonts.merriweather(fontWeight: FontWeight.bold)),
-      backgroundColor: const Color.fromARGB(255, 245, 184, 93),
-    ),
-    body: ownerData == null
-        ? Center(child: CircularProgressIndicator())
-        : Container( // Container holding the gradient background
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Profile', style: GoogleFonts.merriweather(fontWeight: FontWeight.bold)),
+        backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.exit_to_app),
+            onPressed: _logout,  // Call the logout method when pressed
+          ),
+        ],
+      ),
+      body: ownerData == null
+          ? Center(child: CircularProgressIndicator())
+          : Container( // Container holding the gradient background
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color.fromARGB(255, 245, 184, 93),
+                    const Color.fromARGB(255, 233, 211, 88),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
               ),
-            ),
-            child: Column( // Column wrapping the content
-              children: [
-                Expanded( // Ensures the content takes up all available space
-                  child: SingleChildScrollView( // Allows scrolling when content overflows
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Profile picture from assets
-                          Center(
-                            child: ClipOval(
-                              child: Image.asset(
-                                'asset/profilepic.jpg', // Replace with your image path
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
+              child: Column( // Column wrapping the content
+                children: [
+                  Expanded( // Ensures the content takes up all available space
+                    child: SingleChildScrollView( // Allows scrolling when content overflows
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Profile picture from assets
+                            Center(
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'asset/profilepic.jpg', // Replace with your image path
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ),
-                          ),
-                          SizedBox(height: 20),
-
-                          // Displaying profile data in a box format
-                          _buildInfoBox('Name', ownerData!['name']),
-                          _buildInfoBox('Email', ownerData!['email']),
-                          _buildInfoBox('Phone', ownerData!['phone']),
-                          _buildInfoBox('Shop', ownerData!['store_name']),
-                          _buildInfoBox('Address', ownerData!['address']),
-
-                          // Add Change Password Button
-                          SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                _isPasswordChanging = true;
-                              });
-                            },
-                            child: Text('Change Password'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color.fromARGB(255, 245, 184, 93),
-                            ),
-                          ),
-
-                          // If _isPasswordChanging is true, show the password change form
-                          if (_isPasswordChanging) ...[
                             SizedBox(height: 20),
-                            _buildPasswordChangeForm(),
+
+                            // Displaying profile data in a box format
+                            _buildInfoBox('Name', ownerData!['name']),
+                            _buildInfoBox('Email', ownerData!['email']),
+                            _buildInfoBox('Phone', ownerData!['phone']),
+                            _buildInfoBox('Shop', ownerData!['store_name']),
+                            _buildInfoBox('Address', ownerData!['address']),
+
+                            // Add Change Password Button
+                            SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isPasswordChanging = true;
+                                });
+                              },
+                              child: Text('Change Password'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+                              ),
+                            ),
+
+                            // If _isPasswordChanging is true, show the password change form
+                            if (_isPasswordChanging) ...[
+                              SizedBox(height: 20),
+                              _buildPasswordChangeForm(),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-  );
-}
+    );
+  }
 
   // Method to build a standard box for displaying information
   Widget _buildInfoBox(String title, String value) {

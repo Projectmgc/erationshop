@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:erationshop/intro/screens/firstscreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -103,6 +104,17 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // Logout function to clear SharedPreferences and navigate to IntroPage
+  Future<void> _logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('email');  // Remove the stored email and other data
+    // You can also remove other data such as 'card_no', 'shop_id' if applicable
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => IntroPage()),  // Navigate to IntroPage
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // If still loading email from prefs, show a loading indicator
@@ -141,13 +153,18 @@ class _ProfilePageState extends State<ProfilePage> {
         title: Text("Admin Profile", style: GoogleFonts.merriweather(fontWeight: FontWeight.bold)),
         backgroundColor: Color.fromARGB(255, 245, 184, 93),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.exit_to_app),
+            onPressed: _logout,  // Call the logout method when pressed
+          ),
+        ],
       ),
       body: Container(
         height: double.infinity, // Ensure the gradient fills the entire screen
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [ Color.fromARGB(255, 245, 184, 93),
-            Color.fromARGB(255, 233, 211, 88)],
+            colors: [ Color.fromARGB(255, 245, 184, 93), Color.fromARGB(255, 233, 211, 88)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -265,7 +282,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
         SizedBox(height: 10),
-        if (isPasswordChanging) ...[
+        if (isPasswordChanging) ...[  
           TextField(
             controller: _passwordController,
             obscureText: true,

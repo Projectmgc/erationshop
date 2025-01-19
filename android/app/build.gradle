@@ -42,3 +42,7 @@ android {
 flutter {
     source = "../.."
 }
+dependencies {
+    implementation("com.airbnb.android:lottie:6.1.0") // Use the latest version
+    // ... other dependencies
+}

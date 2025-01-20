@@ -29,8 +29,9 @@ class _EnquiryPageState extends State<EnquiryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Enquiry Form'),
-        backgroundColor: Color.fromARGB(255, 245, 184, 93), // AppBar color
+        title: Text('Enquiry Form',style: TextStyle(color: Colors.white,)),
+        backgroundColor: Color.fromARGB(255, 0, 0, 0),
+        iconTheme: IconThemeData(color: Colors.white), // AppBar color
         elevation: 4, // Subtle shadow for the AppBar
       ),
       body: Container(
@@ -38,8 +39,8 @@ class _EnquiryPageState extends State<EnquiryPage> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color.fromARGB(255, 245, 184, 93), // Gradient color 1
-              Color.fromARGB(255, 233, 211, 88), // Gradient color 2
+              Color.fromARGB(255, 251, 251, 251), // Gradient color 1
+              Color.fromARGB(255, 255, 255, 255), // Gradient color 2
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -54,9 +55,9 @@ class _EnquiryPageState extends State<EnquiryPage> {
               controller: _messageController,
               decoration: InputDecoration(
                 labelText: 'Your Enquiry',
-                labelStyle: TextStyle(color: Colors.blueAccent),
+                labelStyle: TextStyle(color: const Color.fromARGB(255, 6, 6, 6)),
                 hintText: 'Enter your question or enquiry here...',
-                hintStyle: TextStyle(color: Colors.blueAccent.withOpacity(0.5)),
+                hintStyle: TextStyle(color: const Color.fromARGB(255, 4, 4, 4).withOpacity(0.5)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -72,7 +73,7 @@ class _EnquiryPageState extends State<EnquiryPage> {
             // Submit Button
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromARGB(255, 204, 140, 44), // Button color
+                backgroundColor: Color.fromARGB(255, 187, 185, 183), // Button color
                 padding: EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12), // Rounded corners
@@ -124,7 +125,7 @@ class _EnquiryPageState extends State<EnquiryPage> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.blueAccent,
+                color: const Color.fromARGB(255, 9, 9, 9),
               ),
             ),
             SizedBox(height: 10),
@@ -176,7 +177,7 @@ class _EnquiryPageState extends State<EnquiryPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Timestamp: ${timestamp != null ? timestamp.toString() : 'N/A'}',
+                                'Time: ${timestamp != null ? timestamp.toString() : 'N/A'}',
                                 style: TextStyle(fontSize: 12, color: Colors.grey),
                               ),
                               SizedBox(height: 5),

@@ -10,6 +10,7 @@ import 'admin_card.dart';
 import 'admin_notification.dart';
 import 'admin_shop.dart';
 import 'admin.converse.dart';
+import 'package:flutter/services.dart'; // Import to use SystemNavigator.pop()
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -25,7 +26,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     {
       'title': 'Stock',
       'icon': Icons.inventory,
-      'color': Colors.lightGreenAccent,
+      'color': const Color.fromARGB(255, 0, 0, 0),
       'description': 'Keep track of Ration Shops Stocks and add to it',
       'image': 'asset/stock.jpg',
       'page': StockPage(), // Navigation target
@@ -33,7 +34,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     {
       'title': 'User Enquiry',
       'icon': Icons.report_problem,
-      'color': Colors.pinkAccent.shade100,
+      'color': const Color.fromARGB(255, 0, 0, 0),
       'description': 'Address and resolve User complaints.',
       'image': 'asset/enquiry.jpg',
       'page': ComplaintsPage(), // Navigation target
@@ -41,7 +42,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     {
       'title': 'Card',
       'icon': Icons.credit_card,
-      'color': Colors.purpleAccent.shade100,
+      'color': const Color.fromARGB(255, 0, 0, 0),
       'description': 'Manage Ration card-related operations.',
       'image': 'asset/card.jpg',
       'page': AddCardPage(), // Navigation target
@@ -49,7 +50,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     {
       'title': 'Shop Enquiry',
       'icon': Icons.chat,
-      'color': Colors.tealAccent,
+      'color': const Color.fromARGB(255, 0, 0, 0),
       'description': 'Communicate with Shop Owners.',
       'image': 'asset/stock.jpg',
       'page': ConversePage(), // Navigation target
@@ -57,7 +58,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     {
       'title': 'Card Categories',
       'icon': Icons.credit_card,
-      'color': const Color.fromARGB(255, 53, 64, 61),
+      'color': const Color.fromARGB(255, 0, 0, 0),
       'description': 'View and manage Categories of Cards.',
       'image': 'asset/card.jpg',
       'page': CategoryPage(), // Navigation target
@@ -65,7 +66,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     {
       'title': 'Notifications',
       'icon': Icons.notifications,
-      'color': Colors.orangeAccent,
+      'color': const Color.fromARGB(255, 0, 0, 0),
       'description': 'View and manage important notifications.',
       'image': 'asset/notification.jpg',
       'page': AdminNotificationPage(), // Navigation target
@@ -73,7 +74,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     {
       'title': 'Add Shops',
       'icon': Icons.shop,
-      'color': Colors.blueAccent,
+      'color': const Color.fromARGB(255, 0, 0, 0),
       'description': 'Add new Shop and Shop owner details.',
       'image': 'asset/outlet.jpg',
       'page': AdminShopPage(), // Navigation target for AdminShopPage
@@ -81,7 +82,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     {
       'title': 'Add Product',
       'icon': Icons.add_box,
-      'color': Colors.deepOrangeAccent,
+      'color': const Color.fromARGB(255, 0, 0, 0),
       'description': 'Add new products to the stock.',
       'image': 'asset/outlet.jpg',
       'page': AdminProduct(), // Navigation target for AdminProductPage
@@ -122,93 +123,114 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
+  // Handle the back button press
+  Future<bool> _onWillPop() async {
+    // Close the app when the back button is pressed
+    SystemNavigator.pop();
+    return false; // Prevent the default back navigation behavior
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+    return WillPopScope(
+      onWillPop: _onWillPop, // Custom back button behavior
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.black, // Set background color to black
+          automaticallyImplyLeading: false, // Remove default back button
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.center, // Center the title
             children: [
-              // Header Section
+              // Logo on the leftmost corner
               Padding(
-                padding: const EdgeInsets.only(top: 40, left: 16.0, right: 16.0), // Adjust padding to move it lower
-                child: Row(
-                  children: [
-                    ClipOval(
-                      child: Image.asset(
-                        'asset/logo.jpg',
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Text(
-                      'E-RATION ADMIN\'S',
-                      style: GoogleFonts.merriweather(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22.0,
-                      ),
-                    ),
-                    Spacer(),
-                    IconButton(
-                      icon: CircleAvatar(
-                        radius: 20,
-                        backgroundColor: Colors.white,
-                        child: Icon(Icons.person, color: Colors.deepPurpleAccent),
-                      ),
-                      onPressed: _goToProfile, // Navigate to Profile screen
-                    ),
-                  ],
+                padding: const EdgeInsets.only(left: 8.0), // Padding to move logo slightly from left
+                child: ClipOval(
+                  child: Image.asset(
+                    'asset/logo.jpg', // Path to your logo asset
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
-              SizedBox(height: 30),
+              // Title in the center
               Expanded(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: PageView.builder(
-                        controller: _pageController,
-                        itemCount: null, // Infinite pages
-                        itemBuilder: (context, index) {
-                          final card = _cards[index % _cards.length];
-                          return _buildPageCard(card);
-                        },
-                      ),
+                child: Center(
+                  child: Text(
+                    'E-RATION ADMIN\'S', // Centered title
+                    style: GoogleFonts.merriweather(
+                      color: Colors.white, // Set text color to white
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22.0,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 20.0),
-                      child: SmoothPageIndicator(
-                        controller: _pageController, 
-                        count: _cards.length, 
-                        effect: ExpandingDotsEffect(
-                          dotWidth: 10,
-                          dotHeight: 10,
-                          activeDotColor: Colors.deepPurpleAccent,
-                          dotColor: Colors.white.withOpacity(0.5),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
           ),
-        ],
+          actions: [
+            // Profile icon at the rightmost corner
+            IconButton(
+              icon: CircleAvatar(
+                radius: 20,
+                backgroundColor: Colors.white,
+                child: Icon(Icons.person, color: Color.fromARGB(255, 0, 0, 0)),
+              ),
+              onPressed: _goToProfile, // Navigate to Profile screen
+            ),
+          ],
+        ),
+        body: Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color.fromARGB(255, 255, 255, 255),
+                    const Color.fromARGB(255, 255, 255, 255),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(height: 30), // Give some space after app bar
+                Expanded(
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: PageView.builder(
+                          controller: _pageController,
+                          itemCount: null, // Infinite pages
+                          itemBuilder: (context, index) {
+                            final card = _cards[index % _cards.length];
+                            return _buildPageCard(card);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 20.0),
+                        child: SmoothPageIndicator(
+                          controller: _pageController,
+                          count: _cards.length,
+                          effect: ExpandingDotsEffect(
+                            dotWidth: 10,
+                            dotHeight: 10,
+                            activeDotColor: const Color.fromARGB(255, 0, 0, 0),
+                            dotColor: Colors.white.withOpacity(0.5),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

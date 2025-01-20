@@ -208,8 +208,10 @@ Future<void> _removeProduct(String productId, String imageUrl) async {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin - Manage Products'),
-        flexibleSpace: const BackgroundGradient(),
+        title: const Text('Admin - Manage Products',style: TextStyle(color: Colors.white),),
+            backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+        iconTheme: const IconThemeData(color: Colors.white),
+
       ),
       body: Container(
         padding: const EdgeInsets.all(16.0),
@@ -379,22 +381,3 @@ Future<void> _removeProduct(String productId, String imageUrl) async {
   }
 }
 
-class BackgroundGradient extends StatelessWidget {
-  const BackgroundGradient({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color.fromARGB(255, 245, 184, 93),
-            Color.fromARGB(255, 233, 211, 88),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-    );
-  }
-}

@@ -60,9 +60,10 @@ class _AdminNotificationPageState extends State<AdminNotificationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Post Notification')
+      appBar: AppBar(title: const Text('Post Notification',style: TextStyle(color: Colors.white),)
       ,
-      backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+      backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+      iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         // Applying a gradient to the entire page background
@@ -71,8 +72,8 @@ class _AdminNotificationPageState extends State<AdminNotificationPage> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),],
+                  const Color.fromARGB(255, 253, 253, 253),
+                  const Color.fromARGB(255, 255, 255, 255),],
           ),
         ),
         child: Padding(
@@ -102,7 +103,7 @@ class _AdminNotificationPageState extends State<AdminNotificationPage> {
               // Button to post the notification
               ElevatedButton(
                 onPressed: addNotification,
-                child: const Text('Post Notification'),
+                child: const Text('Post Notification',style: TextStyle(color: Colors.black),),
               ),
               const SizedBox(height: 32),
               // Display list of posted notifications

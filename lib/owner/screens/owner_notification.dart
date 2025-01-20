@@ -8,16 +8,17 @@ class OwnerNotification extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Notifications"),
-        backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+        title: const Text("Notifications",style: TextStyle(color: Colors.white),),
+        backgroundColor: const Color.fromARGB(255, 2, 2, 2),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         // Gradient background
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88)// Gradient color 2 (yellowish)
+                  const Color.fromARGB(255, 255, 255, 255),
+                  const Color.fromARGB(255, 255, 255, 255)// Gradient color 2 (yellowish)
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -105,10 +106,10 @@ class NotificationCard extends StatelessWidget {
             Text(content),
             SizedBox(height: 8),
             Text(
-              "Sent on: $formattedDate",
+              "Time: $formattedDate",
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey,
+                color: const Color.fromARGB(255, 102, 101, 101),
               ),
             ),
           ],

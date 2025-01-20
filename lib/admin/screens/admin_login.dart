@@ -85,8 +85,8 @@ class _Admin_LoginState extends State<Admin_Login> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),
+                  const Color.fromARGB(255, 255, 255, 255),
+                  const Color.fromARGB(255, 255, 255, 255),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -123,7 +123,7 @@ class _Admin_LoginState extends State<Admin_Login> {
                       child: Text(
                         'ADMIN LOGIN',
                         style: GoogleFonts.merriweather(
-                          color: const Color.fromARGB(255, 81, 50, 12),
+                          color: const Color.fromARGB(255, 0, 0, 0),
                           fontWeight: FontWeight.bold,
                           fontSize: 28.0,
                           shadows: [
@@ -143,12 +143,12 @@ class _Admin_LoginState extends State<Admin_Login> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: const Color.fromARGB(255, 225, 157, 68),
+                        fillColor:const Color.fromARGB(255, 202, 196, 182),
                         prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                         hintText: 'Enter Email Id',
                         prefixIcon: Icon(Icons.email),
                         border: OutlineInputBorder(
-                          borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 81, 50, 12)),
+                          borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 0, 0, 0)),
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
@@ -168,11 +168,11 @@ class _Admin_LoginState extends State<Admin_Login> {
                       obscureText: passwordVisible,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: const Color.fromARGB(255, 225, 157, 68),
+                        fillColor:const Color.fromARGB(255, 202, 196, 182),
                         hintText: 'Enter Password',
                         prefixIcon: Icon(Icons.lock),
                         border: OutlineInputBorder(
-                          borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 81, 50, 12)),
+                          borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 0, 0, 0)),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         suffixIcon: IconButton(
@@ -211,7 +211,7 @@ class _Admin_LoginState extends State<Admin_Login> {
                         width: 250, // Reduced width
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255, 225, 157, 68)),
+                            backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255, 202, 196, 182)),
                             shadowColor: MaterialStateProperty.all(const Color.fromARGB(255, 62, 55, 5)),
                             elevation: MaterialStateProperty.all(10.0),
                           ),

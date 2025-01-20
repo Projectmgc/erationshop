@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
 import 'package:erationshop/admin/screens/admin_login.dart';
 import 'package:erationshop/owner/screens/login1_screen.dart';
@@ -11,7 +12,6 @@ class IntroPage extends StatefulWidget {
 }
 
 class _IntroPageState extends State<IntroPage> {
-
   @override
   void initState() {
     super.initState();
@@ -20,78 +20,75 @@ class _IntroPageState extends State<IntroPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // Gradient background from white to light brown
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.white, Color.fromARGB(220, 218, 125, 19)], // White to light brown gradient
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribute space between children
-          children: [
-            // Centered content
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Circular cropped Lottie Animation
-                    Container(
-                      height: 150, // Lottie size
-                      width: 150, // Lottie size
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle, // Circular shape
-                        border: Border.all(
-                          color: const Color.fromARGB(255, 227, 190, 68),
-                          width: 5,
-                        ),
-                      ),
-                      child: ClipOval(
-                        child: Lottie.asset(
-                          'asset/logo.json', // Add the path to your Lottie file
-                          fit: BoxFit.cover, // Ensures Lottie fits in the circular shape
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    // 'E-RATION' Text
-                    Text(
-                      'E-RATION',
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: const Color.fromARGB(255, 84, 61, 2),
-                      ),
-                    ),
-                    SizedBox(height: 50),
-                  ],
-                ),
-              ),
+    return WillPopScope(
+      onWillPop: _onWillPop,  // Handles back button press
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.white, Color.fromARGB(220, 255, 255, 255)], // White to light brown gradient
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            
-            // "Login as" button at the bottom of the screen
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  _showLoginPopup();
-                },
-                child: Text('Login as'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromARGB(255, 212, 149, 101), // Brownish color for the button
-                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  textStyle: TextStyle(fontSize: 18, color: const Color.fromARGB(255, 67, 46, 4)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12), // Rounded corners
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: 150, // Lottie size
+                        width: 150, // Lottie size
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle, // Circular shape
+                          border: Border.all(
+                            color: const Color.fromARGB(255, 7, 7, 7),
+                            width: 5,
+                          ),
+                        ),
+                        child: ClipOval(
+                          child: Lottie.asset(
+                            'asset/logo.json', 
+                            fit: BoxFit.cover, // Ensures Lottie fits in the circular shape
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      Text(
+                        'E-RATION',
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: const Color.fromARGB(255, 0, 0, 0),
+                        ),
+                      ),
+                      SizedBox(height: 50),
+                    ],
                   ),
                 ),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    _showLoginPopup();
+                  },
+                  child: Text('Login as', style: TextStyle(color: Colors.black)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromARGB(255, 183, 178, 173),
+                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    textStyle: TextStyle(fontSize: 18, color: const Color.fromARGB(255, 21, 21, 21)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -103,11 +100,8 @@ class _IntroPageState extends State<IntroPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Color.fromARGB(255, 228, 165, 92), // Light brown color for the popup box
-          title: Text(
-            'Select User Type',
-            style: TextStyle(color: const Color.fromARGB(255, 93, 66, 7)), // White title text color
-          ),
+          backgroundColor: Color.fromARGB(255, 255, 255, 254),
+          title: Text('Select User Type'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -130,31 +124,35 @@ class _IntroPageState extends State<IntroPage> {
       },
       child: Text(userType),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Color.fromARGB(255, 241, 220, 204), // Button color inside the dialog
+        backgroundColor: Color.fromARGB(255, 213, 205, 200),
         padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-        textStyle: TextStyle(fontSize: 18, color: Colors.white), // White text color for options
+        textStyle: TextStyle(fontSize: 18, color: Colors.white),
       ),
     );
   }
 
-  // Function to navigate to the Admin page
   void _navigateToAdmin() {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
       return Admin_Login();
     }));
   }
 
-  // Function to navigate to the Owner page
   void _navigateToOwner() {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
       return Login1_Screen();
     }));
   }
 
-  // Function to navigate to the Customer page
   void _navigateToCustomer() {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
       return Login_Screen();
     }));
+  }
+
+  // Function to handle back button press and close the app
+  Future<bool> _onWillPop() async {
+    // Close the app when back button is pressed
+    SystemNavigator.pop();  // Close the app
+    return Future.value(false);  // Return false so that the default back button behavior doesn't occur
   }
 }

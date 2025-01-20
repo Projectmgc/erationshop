@@ -1,4 +1,3 @@
-import 'package:erationshop/user/screens/otp_screen.dart';
 import 'package:erationshop/user/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -143,8 +142,8 @@ class _Signup_ScreenState extends State<Signup_Screen> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                const Color.fromARGB(255, 245, 184, 93),
-                const Color.fromARGB(255, 233, 211, 88),
+                const Color.fromARGB(255, 252, 252, 252),
+                const Color.fromARGB(255, 255, 255, 255),
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -174,7 +173,7 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                   Text(
                     'SIGN UP',
                     style: GoogleFonts.merriweather(
-                      color: const Color.fromARGB(255, 81, 50, 12),
+                      color: const Color.fromARGB(255, 14, 14, 14),
                       fontWeight: FontWeight.bold,
                       fontSize: 28.0,
                       shadows: [
@@ -193,11 +192,12 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                       border: OutlineInputBorder(
                           borderSide: BorderSide(
                               width: 2,
-                              color: const Color.fromARGB(255, 81, 50, 12)),
+                              color: const Color.fromARGB(255, 11, 11, 11)),
                           borderRadius: BorderRadius.circular(10)),
                       hintText: "Enter card owner's name",
+                    
                       filled: true,
-                      fillColor: const Color.fromARGB(255, 225, 157, 68),
+                      fillColor:const Color.fromARGB(255, 202, 196, 182),
                       prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                       prefixIcon: Icon(Icons.person),
                     ),
@@ -215,14 +215,14 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: const Color.fromARGB(255, 225, 157, 68),
+                      fillColor: const Color.fromARGB(255, 202, 196, 182),
                       prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                       hintText: 'Enter Card No',
                       prefixIcon: Icon(Icons.book),
                       border: OutlineInputBorder(
                           borderSide: BorderSide(
                               width: 2,
-                              color: const Color.fromARGB(255, 81, 50, 12)),
+                              color: const Color.fromARGB(255, 10, 10, 10)),
                           borderRadius: BorderRadius.circular(10)),
                     ),
                     validator: (value) {
@@ -243,13 +243,13 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                       border: OutlineInputBorder(
                         borderSide: BorderSide(
                           width: 2,
-                          color: const Color.fromARGB(255, 81, 50, 12),
+                          color: const Color.fromARGB(255, 14, 13, 13),
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       hintText: "Enter your email address",
                       filled: true,
-                      fillColor: const Color.fromARGB(255, 225, 157, 68),
+                      fillColor: const Color.fromARGB(255, 202, 196, 182),
                       prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                       prefixIcon: Icon(Icons.email),
                     ),
@@ -273,13 +273,13 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                       prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                       suffixIconColor: const Color.fromARGB(198, 14, 1, 62),
                       filled: true,
-                      fillColor: const Color.fromARGB(255, 225, 157, 68),
+                      fillColor: const Color.fromARGB(255, 202, 196, 182),
                       hintText: 'Create Password',
                       prefixIcon: Icon(Icons.lock),
                       border: OutlineInputBorder(
                           borderSide: BorderSide(
                               width: 2,
-                              color: const Color.fromARGB(255, 81, 50, 12)),
+                              color: const Color.fromARGB(255, 7, 7, 7)),
                           borderRadius: BorderRadius.circular(10)),
                       suffixIcon: IconButton(
                         onPressed: () {
@@ -309,7 +309,7 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                       : ElevatedButton(
                           style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(
-                                const Color.fromARGB(255, 225, 157, 68)),
+                                const Color.fromARGB(255, 202, 196, 182)),
                             shadowColor: MaterialStateProperty.all(
                                 const Color.fromARGB(255, 62, 55, 5)),
                             elevation: MaterialStateProperty.all(10.0),
@@ -344,7 +344,7 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
                               fontFamily: 'merriweather',
-                              color: const Color.fromARGB(255, 10, 1, 61)),
+                              color: const Color.fromARGB(255, 46, 21, 185)),
                         ),
                       ),
                     ],

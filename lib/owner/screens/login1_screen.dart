@@ -98,8 +98,8 @@ class _Login1_ScreenState extends State<Login1_Screen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),
+                  const Color.fromARGB(255, 255, 255, 255),
+                  const Color.fromARGB(255, 254, 254, 253),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -135,7 +135,7 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                       child: Text(
                         'OWNER LOGIN',
                         style: GoogleFonts.merriweather(
-                          color: const Color.fromARGB(255, 81, 50, 12),
+                          color: const Color.fromARGB(255, 4, 4, 4),
                           fontWeight: FontWeight.bold,
                           fontSize: 28.0,
                           shadows: [
@@ -155,12 +155,12 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: const Color.fromARGB(255, 225, 157, 68),
+                        fillColor: const Color.fromARGB(255, 202, 196, 182),
                         prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                         hintText: 'Enter Email Id',
                         prefixIcon: Icon(Icons.email),
                         border: OutlineInputBorder(
-                          borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 81, 50, 12)),
+                          borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 7, 7, 7)),
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
@@ -181,12 +181,12 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: const Color.fromARGB(255, 225, 157, 68),
+                        fillColor: const Color.fromARGB(255, 202, 196, 182),
                         prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
                         hintText: 'Enter Store Id',
                         prefixIcon: Icon(Icons.store),
                         border: OutlineInputBorder(
-                          borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 81, 50, 12)),
+                          borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 15, 14, 14)),
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
@@ -206,11 +206,11 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                       obscureText: passwordVisible,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: const Color.fromARGB(255, 225, 157, 68),
+                        fillColor: const Color.fromARGB(255, 202, 196, 182),
                         hintText: 'Enter Password',
                         prefixIcon: Icon(Icons.lock),
                         border: OutlineInputBorder(
-                          borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 81, 50, 12)),
+                          borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 0, 0, 0)),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         suffixIcon: IconButton(
@@ -257,7 +257,7 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                         width: 250, // Reduced width
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all(const Color.fromARGB(255, 225, 157, 68)),
+                            backgroundColor: WidgetStateProperty.all(const Color.fromARGB(255, 202, 196, 182)),
                             shadowColor: WidgetStateProperty.all(const Color.fromARGB(255, 62, 55, 5)),
                             elevation: WidgetStateProperty.all(10.0),
                           ),

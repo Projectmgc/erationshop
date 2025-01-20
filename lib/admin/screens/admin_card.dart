@@ -117,15 +117,16 @@ class _AddCardPageState extends State<AddCardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Card'),
-        backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+        title: const Text('Add Card',style: TextStyle(color: Colors.white),),
+        backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              const Color.fromARGB(255, 245, 184, 93),
-              const Color.fromARGB(255, 233, 211, 88),
+              const Color.fromARGB(255, 255, 255, 255),
+              const Color.fromARGB(255, 255, 255, 255),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -186,10 +187,10 @@ class _AddCardPageState extends State<AddCardPage> {
                   padding: const EdgeInsets.all(16.0),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12.0),
-                    color: Colors.grey[100],
+                    color: const Color.fromARGB(255, 201, 199, 199),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black26,
+                        color: const Color.fromARGB(66, 0, 0, 0),
                         blurRadius: 6.0,
                         offset: Offset(0, 2),
                       ),
@@ -305,7 +306,7 @@ class _AddCardPageState extends State<AddCardPage> {
                         const SizedBox(height: 20),
                         ElevatedButton(
                           onPressed: _addCard,
-                          child: const Text('Add Card'),
+                          child: const Text('   Add Card   ',style: TextStyle(color: Colors.black),),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 15.0),
                           ),

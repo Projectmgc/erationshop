@@ -115,14 +115,15 @@ class _StockPageState extends State<StockPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Admin Stock Management'),
-      backgroundColor: Color.fromARGB(255, 245, 184, 93)
+      appBar: AppBar(title: Text('Admin Stock Management',style: TextStyle(color: const Color.fromARGB(255, 255, 255, 255)),),
+      backgroundColor: Color.fromARGB(255, 0, 0, 0),
+      iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color.fromARGB(255, 237, 236, 234), // Color 1
+              Color.fromARGB(255, 255, 255, 255), // Color 1
               Color.fromARGB(255, 217, 216, 213), // Color 2
             ],
             begin: Alignment.topLeft,
@@ -173,7 +174,7 @@ class _StockPageState extends State<StockPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      color: Color.fromARGB(255, 245, 184, 93),  // Set a single background color here
+                      color: Color.fromARGB(255, 195, 195, 195),  // Set a single background color here
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: Container(
@@ -246,7 +247,7 @@ class _StockPageState extends State<StockPage> {
                                                   onPressed: () {
                                                     updateStock(shop['id'], productKey);
                                                   },
-                                                  child: Text('Save'),
+                                                  child: Text('Save',style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),),
                                                 ),
                                               ],
                                             ),

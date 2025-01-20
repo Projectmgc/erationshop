@@ -139,16 +139,18 @@ class _Forgot1_PasswordState extends State<Forgot1_Password> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Forgot Password'),
-        backgroundColor: Color.fromARGB(255, 245, 184, 93),),
+      appBar: AppBar(title: Text('Forgot Password',style: TextStyle(color: Colors.white),),
+        backgroundColor: Color.fromARGB(255, 0, 0, 0),
+        iconTheme: IconThemeData(color: Colors.white),
+        ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color.fromARGB(255, 245, 184, 93),
-              Color.fromARGB(255, 233, 211, 88),
+              Color.fromARGB(255, 251, 251, 251),
+              Color.fromARGB(255, 255, 255, 255),
             ],
           ),
         ),
@@ -244,7 +246,7 @@ class _Forgot1_PasswordState extends State<Forgot1_Password> {
                     SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: submitShopIdAndEmail,
-                      child: Text('    Submit    '),
+                      child: Text('    Submit    ',style: TextStyle(color: Colors.black),),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color.fromARGB(255, 236, 238, 213),
                         padding: EdgeInsets.symmetric(vertical: 15),

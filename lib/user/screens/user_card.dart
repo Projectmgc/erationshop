@@ -61,8 +61,9 @@ class _UserCardState extends State<UserCard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ration Card Details'),
-        flexibleSpace: const BackgroundGradient(),
+        title: const Text('Ration Card Details',style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.black,
+         iconTheme: IconThemeData(color: Colors.white),
       ),
       // Apply the background gradient to the entire body to cover the full screen
       body: Container(
@@ -71,8 +72,8 @@ class _UserCardState extends State<UserCard> {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color.fromARGB(255, 245, 184, 93),
-              Color.fromARGB(255, 233, 211, 88),
+              Color.fromARGB(255, 255, 255, 255),
+              Color.fromARGB(255, 255, 255, 255),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -103,7 +104,7 @@ class _UserCardState extends State<UserCard> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(15.0),
               gradient: const LinearGradient(
-                colors: [Colors.white, Colors.orangeAccent],
+                colors: [Colors.white, Color.fromARGB(255, 151, 163, 214)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),

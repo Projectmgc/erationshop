@@ -10,8 +10,9 @@ class NotificationsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Notifications"),
-        backgroundColor: Color.fromARGB(255, 245, 184, 93),
+        title: Text("Notifications",style: TextStyle(color: Colors.white),),
+        backgroundColor: Color.fromARGB(255, 4, 4, 4),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -19,8 +20,8 @@ class NotificationsPage extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-            Color.fromARGB(255, 245, 184, 93),
-            Color.fromARGB(255, 233, 211, 88),],
+            Color.fromARGB(255, 255, 255, 255),
+            Color.fromARGB(255, 255, 255, 255),],
           ),
         ),
         child: StreamBuilder<QuerySnapshot>(
@@ -92,10 +93,10 @@ class NotificationCard extends StatelessWidget {
             Text(content),
             SizedBox(height: 8),
             Text(
-              "Sent on: $formattedDate",
+              "Time: $formattedDate",
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey,
+                color: const Color.fromARGB(255, 77, 75, 75),
               ),
             ),
           ],

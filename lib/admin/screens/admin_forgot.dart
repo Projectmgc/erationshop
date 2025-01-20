@@ -157,16 +157,18 @@ class _AdminForgotPasswordPageState extends State<AdminForgotPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Admin Forgot Password'),
-      backgroundColor:Color.fromARGB(255, 245, 184, 93) ),
+      appBar: AppBar(title: Text('Forgot Password ?',style: TextStyle(color: Colors.white),),
+      backgroundColor:Color.fromARGB(255, 0, 0, 0) ,
+      iconTheme: IconThemeData(color: Colors.white),
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color.fromARGB(255, 245, 184, 93),
-              Color.fromARGB(255, 233, 211, 88),
+              Color.fromARGB(255, 255, 255, 255),
+              Color.fromARGB(255, 255, 255, 255),
             ],
           ),
         ),
@@ -219,7 +221,7 @@ class _AdminForgotPasswordPageState extends State<AdminForgotPasswordPage> {
                     SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: verifyCodeAndChangePassword,
-                      child: Text('   Change Password   '),
+                      child: Text('   Change Password   ',style: TextStyle(color: Colors.black),),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color.fromARGB(255, 250, 250, 250),
                         padding: EdgeInsets.symmetric(vertical: 15),
@@ -232,7 +234,7 @@ class _AdminForgotPasswordPageState extends State<AdminForgotPasswordPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Forgot Password?',
+                      'Enter Following Details',
                       style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
                     ),
                     SizedBox(height: 20),
@@ -250,7 +252,7 @@ class _AdminForgotPasswordPageState extends State<AdminForgotPasswordPage> {
                     SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: submitEmail,
-                      child: Text('    Submit    '),
+                      child: Text('    Submit    ',style: TextStyle(color: Colors.black),),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color.fromARGB(255, 236, 238, 213),
                         padding: EdgeInsets.symmetric(vertical: 15),

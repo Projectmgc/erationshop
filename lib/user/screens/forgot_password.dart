@@ -139,120 +139,116 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Forgot Password'),
-      backgroundColor: Color.fromARGB(255, 245, 184, 93),),
+      appBar: AppBar(
+        title: Text(
+          'Forgot Password ?',
+          style: TextStyle(color: Colors.white), // Change text color to white
+        ),
+        backgroundColor: Colors.black, // Set AppBar background color to black
+        iconTheme: IconThemeData(color: Colors.white), // Set back icon color to white
+      ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-            Color.fromARGB(255, 245, 184, 93),
-            Color.fromARGB(255, 233, 211, 88),],
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: isVerificationStep
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Verification Code',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 3, 3, 3)),
+        color: Colors.white, // Set the background color of the page to white
+        padding: const EdgeInsets.all(16.0),
+        child: isVerificationStep
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Verification Code',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 3, 3, 3)),
+                  ),
+                  SizedBox(height: 10),
+                  TextField(
+                    controller: _verificationCodeController,
+                    decoration: InputDecoration(
+                      labelText: 'Enter Verification Code',
+                      labelStyle: TextStyle(color: const Color.fromARGB(255, 5, 5, 5)),
+                      border: OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Colors.grey[100],
                     ),
-                    SizedBox(height: 10),
-                    TextField(
-                      controller: _verificationCodeController,
-                      decoration: InputDecoration(
-                        labelText: 'Enter Verification Code',
-                        labelStyle: TextStyle(color: const Color.fromARGB(255, 5, 5, 5)),
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                      ),
-                      keyboardType: TextInputType.number,
+                    keyboardType: TextInputType.number,
+                  ),
+                  SizedBox(height: 16),
+                  TextField(
+                    controller: _newPasswordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Enter New Password',
+                      labelStyle: TextStyle(color: const Color.fromARGB(255, 1, 1, 1)),
+                      border: OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Colors.grey[100],
                     ),
-                    SizedBox(height: 16),
-                    TextField(
-                      controller: _newPasswordController,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        labelText: 'Enter New Password',
-                        labelStyle: TextStyle(color: const Color.fromARGB(255, 1, 1, 1)),
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                      ),
+                  ),
+                  SizedBox(height: 16),
+                  TextField(
+                    controller: _confirmPasswordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Confirm New Password',
+                      labelStyle: TextStyle(color: const Color.fromARGB(255, 3, 3, 3)),
+                      border: OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Colors.grey[100],
                     ),
-                    SizedBox(height: 16),
-                    TextField(
-                      controller: _confirmPasswordController,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        labelText: 'Confirm New Password',
-                        labelStyle: TextStyle(color: const Color.fromARGB(255, 3, 3, 3)),
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                      ),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: verifyCodeAndChangePassword,
+                    child: Text('   Change Password   '),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromARGB(255, 250, 250, 250),
+                      padding: EdgeInsets.symmetric(vertical: 15),
+                      textStyle: TextStyle(fontSize: 18),
                     ),
-                    SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: verifyCodeAndChangePassword,
-                      child: Text('   Change Password   '),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 250, 250, 250),
-                        padding: EdgeInsets.symmetric(vertical: 15),
-                        textStyle: TextStyle(fontSize: 18),
-                      ),
+                  ),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Enter Following Details',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+                  ),
+                  SizedBox(height: 20),
+                  TextField(
+                    controller: _cardNoController,
+                    decoration: InputDecoration(
+                      labelText: 'Card Number',
+                      labelStyle: TextStyle(color: const Color.fromARGB(255, 10, 10, 10)),
+                      border: OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Colors.grey[100],
                     ),
-                  ],
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Forgot Password?',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+                    keyboardType: TextInputType.number,
+                  ),
+                  SizedBox(height: 16),
+                  TextField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      labelStyle: TextStyle(color: const Color.fromARGB(255, 27, 26, 26)),
+                      border: OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Colors.grey[100],
                     ),
-                    SizedBox(height: 20),
-                    TextField(
-                      controller: _cardNoController,
-                      decoration: InputDecoration(
-                        labelText: 'Card Number',
-                        labelStyle: TextStyle(color: const Color.fromARGB(255, 10, 10, 10)),
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                      ),
-                      keyboardType: TextInputType.number,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: submitCardAndEmail,
+                    child: Text('    Submit    '),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 236, 238, 213),
+                      padding: EdgeInsets.symmetric(vertical: 15),
+                      textStyle: TextStyle(fontSize: 16),
                     ),
-                    SizedBox(height: 16),
-                    TextField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        labelStyle: TextStyle(color: const Color.fromARGB(255, 27, 26, 26)),
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: submitCardAndEmail,
-                      child: Text('    Submit    '),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 236, 238, 213),
-                        padding: EdgeInsets.symmetric(vertical: 15),
-                        textStyle: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ],
-                ),
-        ),
+                  ),
+                ],
+              ),
       ),
     );
   }

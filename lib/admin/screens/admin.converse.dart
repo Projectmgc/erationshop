@@ -44,8 +44,9 @@ class ConversePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Messages'),
-        backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+        title: const Text('Shop Enquiries',style: TextStyle(color: Colors.white),),
+        backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -53,8 +54,8 @@ class ConversePage extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),],
+                  const Color.fromARGB(255, 255, 255, 255),
+                  const Color.fromARGB(255, 255, 255, 255),],
           ),
         ),
         child: FutureBuilder<List<Map<String, dynamic>>>(
@@ -234,8 +235,9 @@ class _MessageDetailsPageState extends State<MessageDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Message Details'),
-        backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+        title: const Text('Enquiry Details',style: TextStyle(color: Colors.white),),
+        backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -243,8 +245,8 @@ class _MessageDetailsPageState extends State<MessageDetailsPage> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),],
+                  const Color.fromARGB(255, 255, 255, 255),
+                  const Color.fromARGB(255, 255, 255, 255),],
           ),
         ),
         child: Padding(
@@ -253,7 +255,7 @@ class _MessageDetailsPageState extends State<MessageDetailsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Message Details',
+                'Enquiry',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
@@ -302,7 +304,7 @@ class _MessageDetailsPageState extends State<MessageDetailsPage> {
                   children: [
                     const Text(
                       'Submit Reply:',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,color: Colors.black),
                     ),
                     TextField(
                       controller: _replyController,
@@ -317,9 +319,9 @@ class _MessageDetailsPageState extends State<MessageDetailsPage> {
                       child: ElevatedButton(
                         onPressed: _submitReply,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+                          backgroundColor: const Color.fromARGB(255, 22, 170, 42),
                         ),
-                        child: const Text('Submit Reply'),
+                        child: const Text('Submit Reply',style: TextStyle(color: Colors.black),),
                       ),
                     ),
                   ],
@@ -331,7 +333,7 @@ class _MessageDetailsPageState extends State<MessageDetailsPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent,
                 ),
-                child: const Text('Delete Message'),
+                child: const Text('Delete Message',style: TextStyle(color: Colors.black),),
               ),)
             ],
           ),

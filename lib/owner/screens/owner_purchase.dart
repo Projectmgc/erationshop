@@ -66,15 +66,16 @@ class _OwnerPurchaseState extends State<OwnerPurchase> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Owner Purchase'),
-        backgroundColor: Colors.orangeAccent,
+        title: Text('Owner Purchase',style: TextStyle(color: Colors.white),),
+        backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color.fromARGB(255, 245, 184, 93),
-              Color.fromARGB(255, 233, 211, 88),
+              Color.fromARGB(255, 255, 255, 255),
+              Color.fromARGB(255, 255, 255, 255),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -96,6 +97,8 @@ class _OwnerPurchaseState extends State<OwnerPurchase> {
             TextField(
               controller: _cardNoController,
               decoration: InputDecoration(
+                filled: true,
+                fillColor: const Color.fromARGB(255, 180, 177, 175),
                 labelText: 'Card Number',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.credit_card),
@@ -106,7 +109,7 @@ class _OwnerPurchaseState extends State<OwnerPurchase> {
             ElevatedButton(
               onPressed: _isSubmitting ? null : _saveCardNo,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
+                backgroundColor: const Color.fromARGB(255, 180, 177, 175),
                 padding: EdgeInsets.symmetric(vertical: 14, horizontal: 20),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -118,7 +121,7 @@ class _OwnerPurchaseState extends State<OwnerPurchase> {
                     )
                   : Text(
                       'Submit',
-                      style: TextStyle(fontSize: 18),
+                      style: TextStyle(fontSize: 18,color: Colors.black),
                     ),
             ),
           ],

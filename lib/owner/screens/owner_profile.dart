@@ -110,8 +110,9 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile', style: GoogleFonts.merriweather(fontWeight: FontWeight.bold)),
-        backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+        title: Text('Profile', style: GoogleFonts.merriweather(fontWeight: FontWeight.bold,color: Colors.white),),
+        backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+        iconTheme: IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: Icon(Icons.exit_to_app),
@@ -125,8 +126,8 @@ class _ProfilePageState extends State<ProfilePage> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color.fromARGB(255, 245, 184, 93),
-                    const Color.fromARGB(255, 233, 211, 88),
+                    const Color.fromARGB(255, 255, 254, 253),
+                    const Color.fromARGB(255, 255, 255, 255),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -169,9 +170,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                   _isPasswordChanging = true;
                                 });
                               },
-                              child: Text('Change Password'),
+                              child: Text('Change Password',style: TextStyle(color: Colors.black),),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+                                backgroundColor: const Color.fromARGB(255, 175, 174, 173),
                               ),
                             ),
 
@@ -201,8 +202,8 @@ class _ProfilePageState extends State<ProfilePage> {
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
-              color: Colors.black26,
-              blurRadius: 4,
+              color: const Color.fromARGB(66, 101, 99, 99),
+              
               offset: Offset(0, 2),
             ),
           ],
@@ -248,12 +249,12 @@ class _ProfilePageState extends State<ProfilePage> {
           obscureText: true, // Hide the password input
           decoration: InputDecoration(
             hintText: 'Enter new password',
-            hintStyle: TextStyle(color: Colors.grey),
+            hintStyle: TextStyle(color: const Color.fromARGB(255, 53, 52, 52)),
             filled: true,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
             ),
-            fillColor: const Color.fromARGB(255, 225, 157, 68),
+            fillColor: const Color.fromARGB(255, 180, 177, 175),
           ),
         ),
         SizedBox(height: 20),
@@ -261,9 +262,9 @@ class _ProfilePageState extends State<ProfilePage> {
           onPressed: () {
             _updatePassword(_newPasswordController.text);
           },
-          child: Text('Submit'),
+          child: Text('Submit',style: TextStyle(color: Colors.black),),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+            backgroundColor: const Color.fromARGB(255, 180, 177, 175),
           ),
         ),
       ],

@@ -119,8 +119,9 @@ class _UserEnquiryState extends State<UserEnquiry> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('User Enquiry'),
-        backgroundColor: Color.fromARGB(255, 245, 184, 93),
+        title: Text('User Enquiry',style: TextStyle(color: Colors.white),),
+        backgroundColor: Color.fromARGB(255, 0, 0, 0),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         height: double.infinity, // Ensure the container takes up full screen height
@@ -129,8 +130,8 @@ class _UserEnquiryState extends State<UserEnquiry> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-            Color.fromARGB(255, 245, 184, 93),
-            Color.fromARGB(255, 233, 211, 88),],
+            Color.fromARGB(255, 254, 254, 254),
+            Color.fromARGB(255, 255, 255, 255),],
           ),
         ),
         child: _isLoading
@@ -152,7 +153,7 @@ class _UserEnquiryState extends State<UserEnquiry> {
 
   Widget _buildEnquiryForm() {
     return Card(
-      color: Colors.white.withOpacity(0.8),
+      color: const Color.fromARGB(255, 196, 192, 192).withOpacity(0.8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       elevation: 5,
       child: Padding(
@@ -188,7 +189,7 @@ class _UserEnquiryState extends State<UserEnquiry> {
               onPressed: _submitEnquiry,
               child: Text(
                 'Submit Enquiry',
-                style: TextStyle(fontSize: 18),
+                style: TextStyle(fontSize: 18,color: Colors.black),
               ),
             ),
           ],

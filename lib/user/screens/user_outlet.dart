@@ -55,8 +55,9 @@ class _UserOutletState extends State<UserOutlet> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Outlet Details'),
-        backgroundColor: Color.fromARGB(255, 245, 184, 93),
+        title: Text('Outlet Details',style: TextStyle(color: Colors.white),),
+        backgroundColor: Color.fromARGB(255, 0, 0, 0),
+        iconTheme: IconThemeData(color: Colors.white),
         elevation: 0,
       ),
       body: Container(
@@ -65,8 +66,8 @@ class _UserOutletState extends State<UserOutlet> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              const Color.fromARGB(255, 245, 184, 93),
-              const Color.fromARGB(255, 233, 211, 88),
+              const Color.fromARGB(255, 255, 255, 255),
+              const Color.fromARGB(255, 255, 255, 255),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -141,7 +142,7 @@ class _UserOutletState extends State<UserOutlet> {
 
   Widget _buildOutletCard(Map<String, dynamic> outlet) {
     return Card(
-      color: Colors.white.withOpacity(0.8),
+      color: const Color.fromARGB(255, 182, 177, 177).withOpacity(0.8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       elevation: 5,
       child: Padding(
@@ -178,7 +179,7 @@ class _UserOutletState extends State<UserOutlet> {
                   icon: Icon(Icons.location_on),
                   label: Text('View Location'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
+                    backgroundColor: const Color.fromARGB(255, 169, 236, 173),
                   ),
                 ),
                 ElevatedButton.icon(
@@ -187,7 +188,7 @@ class _UserOutletState extends State<UserOutlet> {
                   icon: Icon(Icons.directions),
                   label: Text('Get Route'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
+                    backgroundColor: const Color.fromARGB(255, 169, 236, 173),
                   ),
                 ),
               ],

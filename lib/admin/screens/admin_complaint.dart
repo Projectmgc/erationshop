@@ -30,15 +30,16 @@ class ComplaintsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('User Complaints'),
-        backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+        title: const Text('User Enquiries',style: TextStyle(color: Colors.white),),
+        backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),
+                  const Color.fromARGB(255, 255, 255, 255),
+                  const Color.fromARGB(255, 255, 255, 255),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -215,15 +216,16 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Complaint Details'),
-        backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+        title: const Text('Enquiry Details',style: TextStyle(color: Colors.white),),
+        backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),// End color
+                  const Color.fromARGB(255, 255, 255, 255),
+                  const Color.fromARGB(255, 255, 255, 255),// End color
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -235,7 +237,7 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Complaint Details',
+                'Enquiry Details',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
@@ -313,7 +315,7 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
                           padding:
                               const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                         ),
-                        child: const Text('Submit Response'),
+                        child: const Text('Submit Response',style: TextStyle(color: Colors.black),),
                       ),
                     ),
                   ],
@@ -328,7 +330,7 @@ class _ComplaintDetailsPageState extends State<ComplaintDetailsPage> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                   ),
-                  child: const Text('Delete Complaint'),
+                  child: const Text('Delete Complaint',style: TextStyle(color: Colors.black),),
                 ),
               ),
             ],

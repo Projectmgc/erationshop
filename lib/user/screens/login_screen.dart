@@ -75,8 +75,7 @@ class _Login_ScreenState extends State<Login_Screen> {
   }
 
   void forgotpassword() {
-
-    Navigator.push(context, MaterialPageRoute(builder: (context){
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
       return ForgotPasswordPage();
     }));
     // Navigate to Forgot Password Screen
@@ -98,8 +97,8 @@ class _Login_ScreenState extends State<Login_Screen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),
+                  const Color.fromARGB(255, 249, 248, 247),
+                  const Color.fromARGB(255, 243, 242, 240),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -108,191 +107,179 @@ class _Login_ScreenState extends State<Login_Screen> {
           ),
           
           // Main content
-          Opacity(
-            opacity: loading ? 0.3 : 1.0, // Apply low opacity when loading is true
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
-              child: Form(
-                key: _formKey,
-                child: ListView(
-                  children: [
-                    SizedBox(height: 80),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ClipOval(
-                          child: Image.asset(
-                            'asset/logo.jpg', // Replace with your logo
-                            width: 120,
-                            height: 120,
-                            fit: BoxFit.contain,
-                          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                children: [
+                  SizedBox(height: 80),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ClipOval(
+                        child: Image.asset(
+                          'asset/logo.jpg', // Replace with your logo
+                          width: 120,
+                          height: 120,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 55),
+                  // Center the LOGIN header
+                  Text(
+                    'LOGIN',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.merriweather(
+                      color: const Color.fromARGB(255, 10, 10, 10),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 28.0,
+                      shadows: [
+                        Shadow(
+                          blurRadius: 3.0,
+                          color: const Color.fromARGB(255, 160, 155, 155),
+                          offset: Offset(-3.0, 3.0),
                         ),
                       ],
                     ),
-                    SizedBox(height: 55),
-                    // Center the LOGIN header
-                    Text(
-                      'LOGIN',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.merriweather(
-                        color: const Color.fromARGB(255, 81, 50, 12),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 28.0,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 3.0,
-                            color: const Color.fromARGB(255, 160, 155, 155),
-                            offset: Offset(-3.0, 3.0),
-                          ),
-                        ],
+                  ),
+                  SizedBox(height: 45),
+                  // Card Number Field
+                  TextFormField(
+                    controller: card_controller,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: const Color.fromARGB(255, 202, 196, 182),
+                      prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
+                      hintText: 'Enter Card No',
+                      prefixIcon: Icon(Icons.book),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 10, 10, 10)),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    SizedBox(height: 45),
-                    // Card Number Field
-                    TextFormField(
-                      controller: card_controller,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: const Color.fromARGB(255, 225, 157, 68),
-                        prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
-                        hintText: 'Enter Card No',
-                        prefixIcon: Icon(Icons.book),
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 81, 50, 12)),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Please enter the correct card number";
+                      } else if (value.length != 10) {
+                        return "Card number must be 10 digits";
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 20),
+                  // Email Field
+                  TextFormField(
+                    controller: email_controller,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 17, 16, 16)),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Please enter the correct card number";
-                        } else if (value.length != 10) {
-                          return "Card number must be 10 digits";
-                        }
-                        return null;
-                      },
+                      hintText: "Enter your email address",
+                      filled: true,
+                      fillColor:const Color.fromARGB(255, 202, 196, 182),
+                      prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
+                      prefixIcon: Icon(Icons.email),
                     ),
-                    SizedBox(height: 20),
-                    // Email Field
-                    TextFormField(
-                      controller: email_controller,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 81, 50, 12)),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        hintText: "Enter your email address",
-                        filled: true,
-                        fillColor: const Color.fromARGB(255, 225, 157, 68),
-                        prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
-                        prefixIcon: Icon(Icons.email),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Please enter your email address";
+                      }
+                      final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                      if (!emailRegex.hasMatch(value)) {
+                        return "Please enter a valid email address";
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 20),
+                  // Password Field
+                  TextFormField(
+                    controller: password_controller,
+                    obscureText: passwordVisible,
+                    decoration: InputDecoration(
+                      prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
+                      suffixIconColor: const Color.fromARGB(198, 14, 1, 62),
+                      filled: true,
+                      fillColor:const Color.fromARGB(255, 202, 196, 182),
+                      hintText: 'Enter Password',
+                      prefixIcon: Icon(Icons.lock),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 6, 6, 6)),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Please enter your email address";
-                        }
-                        final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                        if (!emailRegex.hasMatch(value)) {
-                          return "Please enter a valid email address";
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 20),
-                    // Password Field
-                    TextFormField(
-                      controller: password_controller,
-                      obscureText: passwordVisible,
-                      decoration: InputDecoration(
-                        prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
-                        suffixIconColor: const Color.fromARGB(198, 14, 1, 62),
-                        filled: true,
-                        fillColor: const Color.fromARGB(255, 225, 157, 68),
-                        hintText: 'Enter Password',
-                        prefixIcon: Icon(Icons.lock),
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(width: 2, color: const Color.fromARGB(255, 81, 50, 12)),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              passwordVisible = !passwordVisible;
-                            });
-                          },
-                          icon: Icon(passwordVisible ? Icons.visibility : Icons.visibility_off),
-                        ),
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            passwordVisible = !passwordVisible;
+                          });
+                        },
+                        icon: Icon(passwordVisible ? Icons.visibility : Icons.visibility_off),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Please enter correct password";
-                        } else if (value.length < 6) {
-                          return "Password must be at least 6 characters";
-                        }
-                        return null;
-                      },
                     ),
-                    SizedBox(height: 10),
-                    // Forgot Password Button
-                    TextButton(
-                      onPressed: forgotpassword,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Please enter correct password";
+                      } else if (value.length < 6) {
+                        return "Password must be at least 6 characters";
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  // Forgot Password Button
+                  TextButton(
+                    onPressed: forgotpassword,
+                    child: Text(
+                      'Forgot password ?',
+                      style: TextStyle(color: const Color.fromARGB(255, 11, 8, 1), fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  SizedBox(height: 40),
+                  // Reduced size for the login button
+                  if (!loading)
+                    ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all(const Color.fromARGB(255, 202, 196, 182)),
+                        shadowColor: WidgetStateProperty.all(const Color.fromARGB(255, 62, 55, 5)),
+                        elevation: WidgetStateProperty.all(10.0),
+                        minimumSize: WidgetStateProperty.all(Size(180, 45)), // Reduced size
+                      ),
+                      onPressed: login, // Call the login method here
                       child: Text(
-                        'Forgot password ?',
-                        style: TextStyle(color: const Color.fromARGB(255, 11, 8, 1), fontSize: 15, fontWeight: FontWeight.bold),
+                        'LOGIN',
+                        style: TextStyle(color: const Color.fromARGB(255, 8, 6, 21), fontWeight: FontWeight.bold),
                       ),
                     ),
-                    SizedBox(height: 40),
-                    // Show Lottie animation while loading
-                    if (loading)
-                      Center(
-                        child: Lottie.asset(
-                          'asset/loading.json', // Path to your animation file
-                          width: 150,
-                          height: 150,
-                        ),
-                      )
-                    else
-                      // Reduced size for the login button
-                      ElevatedButton(
-                        style: ButtonStyle(
-                          backgroundColor: WidgetStateProperty.all(const Color.fromARGB(255, 225, 157, 68)),
-                          shadowColor: WidgetStateProperty.all(const Color.fromARGB(255, 62, 55, 5)),
-                          elevation: WidgetStateProperty.all(10.0),
-                          minimumSize: WidgetStateProperty.all(Size(180, 45)), // Reduced size
-                        ),
-                        onPressed: login, // Call the login method here
+                  SizedBox(height: 10),
+                  // Sign Up Button
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account?",
+                        style: TextStyle(color: const Color.fromARGB(255, 50, 3, 27)),
+                      ),
+                      TextButton(
+                        onPressed: gotosignup,
                         child: Text(
-                          'LOGIN',
-                          style: TextStyle(color: const Color.fromARGB(255, 8, 6, 21), fontWeight: FontWeight.bold),
+                          'Sign Up',
+                          style: TextStyle(color: const Color.fromARGB(255, 23, 5, 32), fontWeight: FontWeight.bold),
                         ),
                       ),
-                    SizedBox(height: 10),
-                    // Sign Up Button
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Don't have an account?",
-                          style: TextStyle(color: const Color.fromARGB(255, 50, 3, 27)),
-                        ),
-                        TextButton(
-                          onPressed: gotosignup,
-                          child: Text(
-                            'Sign Up',
-                            style: TextStyle(color: const Color.fromARGB(255, 23, 5, 32), fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
           
-          // Lottie animation centered with full opacity
+          // Show Lottie animation in the center when loading
           if (loading)
             Positioned.fill(
               child: Container(

@@ -1,6 +1,7 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Import to use SystemNavigator.pop()
 import 'package:erationshop/main.dart';
 import 'package:erationshop/owner/screens/owner_purchase.dart';
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:erationshop/user/screens/signup_screen.dart';
@@ -24,28 +25,28 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
   final List<Map<String, dynamic>> _cards = [
     {
       'title': 'Purchase',
-      'color': Colors.lightGreenAccent,
+      'color': const Color.fromARGB(255, 0, 0, 0),
       'description': 'Keep track of available inventory and supplies.',
       'image': 'asset/purchase.jpg',
       'page': OwnerPurchase(),
     },
     {
       'title': 'Outlet',
-      'color': Colors.amberAccent,
+      'color': const Color.fromARGB(255, 0, 0, 0),
       'description': 'Find and Analyze the Ration Outlets.',
       'image': 'asset/outlet.jpg',
       'page': null, // Will handle separately in the logic
     },
     {
       'title': 'Enquiry',
-      'color': Colors.pinkAccent.shade100,
+      'color': const Color.fromARGB(255, 0, 0, 0),
       'description': 'Address and Resolve Your Complaints.',
       'image': 'asset/enquiry.jpg',
       'page': null, // Will handle separately
     },
     {
       'title': 'Notification',
-      'color': Colors.tealAccent,
+      'color': const Color.fromARGB(255, 0, 0, 0),
       'description': 'New Updates and Notifications are here.',
       'image': 'asset/notification.jpg',
       'page': OwnerNotification(),
@@ -63,44 +64,41 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       shopId = prefs.getString('shop_id');
-      shopOwnerId=prefs.getString('shop_owner_doc_id');
-          });
+      shopOwnerId = prefs.getString('shop_owner_doc_id');
+    });
   }
-
 
   void _onCardTapped(BuildContext context, Widget? page, String title) {
-  if (page != null) {
-    // Navigate to the given page if it’s not null
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => page),
-    );
-  } else if (shopId != null) {
-    // Handle the special cases where `page` is null
-    if (title == 'Outlet') {
-      // Handle navigation for Outlet card
+    if (page != null) {
+      // Navigate to the given page if it’s not null
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => OwnerOutletPage(shopId: shopOwnerId!),
-        ),
+        MaterialPageRoute(builder: (context) => page),
       );
-    } else if (title == 'Enquiry') {
-      // Handle navigation for Enquiry card
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => EnquiryPage(shopId: shopId!),
-        ),
-      );
+    } else if (shopId != null) {
+      // Handle the special cases where `page` is null
+      if (title == 'Outlet') {
+        // Handle navigation for Outlet card
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OwnerOutletPage(shopId: shopOwnerId!),
+          ),
+        );
+      } else if (title == 'Enquiry') {
+        // Handle navigation for Enquiry card
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EnquiryPage(shopId: shopId!),
+          ),
+        );
+      }
+    } else {
+      // If no shopId found, show error
+      _showErrorSnackBar(context, 'No shop ID found. Please log in again.');
     }
-  } else {
-    // If no shopId found, show error
-    _showErrorSnackBar(context, 'No shop ID found. Please log in again.');
   }
-}
-
-
 
   // Navigate to owner profile page
   void _goToProfile() {
@@ -123,96 +121,90 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
     );
   }
 
+  // Handle the back button press
+  Future<bool> _onWillPop() async {
+    // Close the app when the back button is pressed
+    SystemNavigator.pop();
+    return false; // Prevent the default back navigation behavior
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Background gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color.fromARGB(255, 245, 184, 93),
-                  Color.fromARGB(255, 233, 211, 88),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+    // ignore: deprecated_member_use
+    return WillPopScope(
+      onWillPop: _onWillPop, // Custom back button behavior
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          automaticallyImplyLeading: false, // Remove back button
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.center, // Center the title text
             children: [
-              const SizedBox(height: 20),
-              // Header Section
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  children: [
-                    ClipOval(
-                      child: Image.asset(
-                        'asset/logo.jpg',
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'OWNER HOME',
-                      style: TextStyle(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 26.0,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      icon: const CircleAvatar(
-                        radius: 20,
-                        backgroundColor: Colors.white,
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.deepPurpleAccent,
-                        ),
-                      ),
-                      onPressed: _goToProfile,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 50),
-
-              // Cards Section
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: _cards.length,
-                  itemBuilder: (context, index) {
-                    final card = _cards[index];
-                    return _buildPageCard(context, card);
-                  },
-                ),
-              ),
-
-              // Dot indicator
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: SmoothPageIndicator(
-                  controller: _pageController,
-                  count: _cards.length,
-                  effect: const ExpandingDotsEffect(
-                    dotWidth: 10,
-                    dotHeight: 10,
-                    activeDotColor: Colors.deepPurpleAccent,
-                    dotColor: Colors.white54,
-                  ),
+              Text(
+                'Owner Home', // The title in the center
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 30, // Adjust size as needed
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-        ],
+          leading: Padding(
+            padding: const EdgeInsets.all(8.0), // To add some spacing
+            child: ClipOval(
+              child: Image.asset(
+                'asset/logo.jpg',
+                width: 40,
+                height: 40,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: const CircleAvatar(
+                radius: 20,
+                backgroundColor: Colors.white,
+                child: Icon(
+                  Icons.person,
+                  color: Color.fromARGB(255, 0, 0, 0),
+                ),
+              ),
+              onPressed: _goToProfile,
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            // Cards Section
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: _cards.length,
+                itemBuilder: (context, index) {
+                  final card = _cards[index];
+                  return _buildPageCard(context, card);
+                },
+              ),
+            ),
+
+            // Dot indicator
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20.0),
+              child: SmoothPageIndicator(
+                controller: _pageController,
+                count: _cards.length,
+                effect: const ExpandingDotsEffect(
+                  dotWidth: 10,
+                  dotHeight: 10,
+                  activeDotColor: Color.fromARGB(255, 12, 12, 12),
+                  dotColor: Colors.white54,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -222,7 +214,6 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
     return Center(
       child: GestureDetector(
         onTap: () => _onCardTapped(context, card['page'], card['title']),
-        
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,

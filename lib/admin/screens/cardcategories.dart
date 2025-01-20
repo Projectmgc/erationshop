@@ -90,15 +90,16 @@ class _CategoryPageState extends State<CategoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Categories'),
-      backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+      appBar: AppBar(title: Text('Categories',style: TextStyle(color: Colors.white),),
+      backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+      iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-                  const Color.fromARGB(255, 245, 184, 93),
-                  const Color.fromARGB(255, 233, 211, 88),], // Add your preferred colors here
+                  const Color.fromARGB(255, 255, 255, 255),
+                  const Color.fromARGB(255, 255, 255, 255),], // Add your preferred colors here
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -124,7 +125,7 @@ class _CategoryPageState extends State<CategoryPage> {
                     _categoryNameController.clear();
                   }
                 },
-                child: Text('Add Category'),
+                child: Text('Add Category',style: TextStyle(color: Colors.black),),
               ),
               SizedBox(height: 20),
               Expanded(

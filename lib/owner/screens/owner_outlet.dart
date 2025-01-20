@@ -119,9 +119,9 @@ class _OwnerOutletPageState extends State<OwnerOutletPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Outlet Stock Management'),
-        centerTitle: true,
-        backgroundColor: Color.fromARGB(255, 245, 184, 93),
+        title: const Text('Outlet Stock Management',style: TextStyle(color: Colors.white),),
+        backgroundColor: Color.fromARGB(255, 0, 0, 0),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: widget.shopId == null
           ? const Center(child: Text('No shop ID found'))
@@ -130,8 +130,8 @@ class _OwnerOutletPageState extends State<OwnerOutletPage> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color.fromARGB(255, 245, 184, 93),
-                    Color.fromARGB(255, 233, 211, 88),
+                    Color.fromARGB(255, 255, 255, 255),
+                    Color.fromARGB(255, 255, 255, 255),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -207,7 +207,7 @@ class _OwnerOutletPageState extends State<OwnerOutletPage> {
                                         const SizedBox(height: 5),
                                         Text(
                                           'Current Stock: $currentStock',
-                                          style: TextStyle(color: Colors.grey[700]),
+                                          style: TextStyle(color: const Color.fromARGB(255, 89, 87, 87)),
                                         ),
                                       ],
                                     ),

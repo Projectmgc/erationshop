@@ -404,15 +404,16 @@ class _UserPurchaseState extends State<UserPurchase> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ration Shop - User Purchase'),
-        backgroundColor: Colors.orangeAccent,
+        title: Text('User Purchase',style: TextStyle(color: Colors.white),),
+        backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color.fromARGB(255, 245, 184, 93),
-              Color.fromARGB(255, 233, 211, 88),
+              Color.fromARGB(255, 255, 255, 255),
+              Color.fromARGB(255, 255, 255, 255),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -480,9 +481,9 @@ class _UserPurchaseState extends State<UserPurchase> {
                         ElevatedButton(
                           onPressed: _placeOrder,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
+                            backgroundColor: const Color.fromARGB(255, 171, 169, 168),
                           ),
-                          child: Text('Place Order', style: TextStyle(fontSize: 18)),
+                          child: Text('Place Order', style: TextStyle(fontSize: 18,color: Colors.black)),
                         ),
                       ],
                     ),

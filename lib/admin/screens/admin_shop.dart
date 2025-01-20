@@ -164,8 +164,9 @@ class _AdminShopPageState extends State<AdminShopPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Shop' : 'Add Shop'),
-        backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+        title: Text(_isEditing ? 'Edit Shop' : 'Add Shop',style: TextStyle(color: const Color.fromARGB(255, 255, 255, 255)),),
+        backgroundColor: Color.fromARGB(255, 0, 0, 0),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         width: double.infinity, // Ensure it fills the width
@@ -175,8 +176,8 @@ class _AdminShopPageState extends State<AdminShopPage> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color.fromARGB(255, 245, 184, 93),
-              const Color.fromARGB(255, 233, 211, 88),
+              const Color.fromARGB(255, 255, 255, 255),
+              const Color.fromARGB(255, 255, 255, 255),
             ],
           ),
         ),
@@ -223,9 +224,9 @@ class _AdminShopPageState extends State<AdminShopPage> {
                       ElevatedButton(
                         onPressed: _getLatLongFromAddress,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 206, 130, 17),
+                          backgroundColor: Color.fromARGB(255, 208, 207, 206),
                         ),
-                        child: const Text('Get Latitude & Longitude'),
+                        child: const Text('Get Latitude & Longitude',style: TextStyle(color: Colors.black),),
                       ),
                       TextFormField(
                         controller: _emailController,
@@ -286,10 +287,10 @@ class _AdminShopPageState extends State<AdminShopPage> {
                       ElevatedButton(
                         onPressed: _isEditing ? _updateShop : _addShop,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 206, 130, 17),
+                          backgroundColor: Color.fromARGB(255, 208, 207, 206),
                           padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                         ),
-                        child: Text(_isEditing ? 'Update Shop' : 'Add Shop'),
+                        child: Text(_isEditing ? 'Update Shop' : 'Add Shop',style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),),
                       ),
                     ],
                   ),

@@ -121,8 +121,9 @@ class _ProfilePageState extends State<ProfilePage> {
     if (isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: Text("Admin Profile", style: GoogleFonts.merriweather(fontWeight: FontWeight.bold)),
-          backgroundColor: Colors.deepPurpleAccent,
+          title: Text("Admin Profile", style: GoogleFonts.merriweather(fontWeight: FontWeight.bold,color: Colors.white)),
+          backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+          iconTheme: IconThemeData(color: Colors.white),
           elevation: 0,
         ),
         body: Center(child: CircularProgressIndicator()),
@@ -133,8 +134,9 @@ class _ProfilePageState extends State<ProfilePage> {
     if (emailAdmin == null) {
       return Scaffold(
         appBar: AppBar(
-          title: Text("Admin Profile", style: GoogleFonts.merriweather(fontWeight: FontWeight.bold)),
-          backgroundColor: Colors.deepPurpleAccent,
+          title: Text("Admin Profile", style: GoogleFonts.merriweather(fontWeight: FontWeight.bold,color: Colors.white)),
+          backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+          iconTheme: IconThemeData(color: Colors.white),
           elevation: 0,
         ),
         body: Center(
@@ -150,8 +152,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Admin Profile", style: GoogleFonts.merriweather(fontWeight: FontWeight.bold)),
-        backgroundColor: Color.fromARGB(255, 245, 184, 93),
+        title: Text("Admin Profile", style: GoogleFonts.merriweather(fontWeight: FontWeight.bold,color: Colors.white)),
+        backgroundColor: Color.fromARGB(255, 0, 0, 0),
+        iconTheme: IconThemeData(color: Colors.white),
         elevation: 0,
         actions: [
           IconButton(
@@ -164,7 +167,7 @@ class _ProfilePageState extends State<ProfilePage> {
         height: double.infinity, // Ensure the gradient fills the entire screen
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [ Color.fromARGB(255, 245, 184, 93), Color.fromARGB(255, 233, 211, 88)],
+            colors: [ Color.fromARGB(255, 255, 255, 255), Color.fromARGB(255, 255, 255, 255)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -239,7 +242,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color.fromARGB(255, 206, 131, 20),
+        color: Color.fromARGB(255, 208, 207, 206),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -276,9 +279,9 @@ class _ProfilePageState extends State<ProfilePage> {
               isPasswordChanging = !isPasswordChanging;  // Toggle visibility
             });
           },
-          child: Text(isPasswordChanging ? "Cancel Change Password" : "Change Password"),
+          child: Text(isPasswordChanging ? "Cancel Change Password" : "Change Password" ,style: TextStyle(color: Colors.red),),
           style: ButtonStyle(
-            backgroundColor: WidgetStateProperty.all(Color.fromARGB(255, 206, 131, 20)),
+            backgroundColor: WidgetStateProperty.all(Color.fromARGB(255, 208, 207, 206)),
           ),
         ),
         SizedBox(height: 10),
@@ -294,9 +297,9 @@ class _ProfilePageState extends State<ProfilePage> {
           SizedBox(height: 20),
           ElevatedButton(
             onPressed: _updatePassword,
-            child: Text("Update Password"),
+            child: Text("Update Password",style: TextStyle(color: const Color.fromARGB(255, 25, 116, 4)),),
             style: ButtonStyle(
-              backgroundColor: WidgetStateProperty.all(Color.fromARGB(255, 206, 131, 20)),
+              backgroundColor: WidgetStateProperty.all(Color.fromARGB(255, 208, 207, 206)),
             ),
           ),
         ],
@@ -329,9 +332,9 @@ class _ProfilePageState extends State<ProfilePage> {
         SizedBox(height: 20),
         ElevatedButton(
           onPressed: _addNewAdmin,
-          child: Text("Add Admin"),
+          child: Text("Add Admin",style: TextStyle(color: Colors.black),),
           style: ButtonStyle(
-            backgroundColor: WidgetStateProperty.all(Color.fromARGB(255, 206, 131, 20)),
+            backgroundColor: WidgetStateProperty.all(Color.fromARGB(255, 208, 207, 206)),
           ),
         ),
       ],

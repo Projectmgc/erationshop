@@ -21,8 +21,9 @@ class UserProfile extends StatelessWidget {
 
           return Scaffold(
             appBar: AppBar(
-              title: Text("User Profile"),
-              backgroundColor: const Color.fromARGB(255, 245, 184, 93),
+              title: Text("User Profile",style: TextStyle(color: Colors.white),),
+              backgroundColor: const Color.fromARGB(255, 12, 12, 12),
+              iconTheme: IconThemeData(color: Colors.white),
             ),
             body: StreamBuilder(
               // Stream to get the user data from Firestore using the retrieved card_no
@@ -73,10 +74,8 @@ class UserProfile extends StatelessWidget {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                const Color.fromARGB(
-                                    255, 245, 184, 93), // Light yellow color
-                                const Color.fromARGB(
-                                    255, 233, 211, 88), // Darker yellow color
+                                const Color.fromARGB(255, 255, 255, 255), // Light yellow color
+                                const Color.fromARGB(255, 255, 255, 255), // Darker yellow color
                               ],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
@@ -93,7 +92,7 @@ class UserProfile extends StatelessWidget {
                                   child: CircleAvatar(
                                     radius: 60,
                                     backgroundColor:
-                                        const Color.fromARGB(255, 80, 49, 2),
+                                        const Color.fromARGB(255, 0, 0, 0),
                                     child: Icon(
                                       Icons.person,
                                       size: 60,
@@ -139,9 +138,9 @@ class UserProfile extends StatelessWidget {
                                             builder: (context) => IntroPage()),
                                       );
                                     },
-                                    child: Text("Logout"),
+                                    child: Text("Logout",style: TextStyle(color: Colors.black),),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.red, // Set color
+                                      backgroundColor: Colors.white24, // Set color
                                       padding: EdgeInsets.symmetric(
                                           horizontal: 32, vertical: 16),
                                       textStyle: TextStyle(fontSize: 18),
@@ -187,7 +186,7 @@ class UserProfile extends StatelessWidget {
                   width: 2, color: const Color.fromARGB(255, 81, 50, 12)),
               borderRadius: BorderRadius.circular(10),
             ),
-            fillColor: const Color.fromARGB(255, 225, 157, 68),
+            fillColor: const Color.fromARGB(255, 202, 196, 182),
             contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           ),
         ),

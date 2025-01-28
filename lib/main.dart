@@ -5,23 +5,31 @@ import 'package:erationshop/owner/screens/home_screen.dart';
 import 'package:erationshop/user/screens/uhome_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 String? card_no;
 String? shopId;
 String? shopOwnerId;
 String? emailadmin;
+String? email;
 
+const apiKey="AIzaSyCorJbDiz7pklqwwwvzwKnMSwTpXEEl7FI";
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
-  // Initialize SharedPreferences and check for login data
+  Gemini.init(apiKey: apiKey);
+  OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
+  OneSignal.initialize("bde1b039-f0cc-41a7-b483-9203d4b15c0e");
+  OneSignal.Notifications.requestPermission(true);
+   // Initialize SharedPreferences and check for login data
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   card_no = prefs.getString('card_no');
+  email = prefs.getString('email');
   shopId = prefs.getString('shop_id');
   shopOwnerId = prefs.getString('shop_owner_doc_id');
   emailadmin = prefs.getString('email');
@@ -41,7 +49,7 @@ class MyApp extends StatelessWidget {
 
   // Check the stored data and return the appropriate screen
   Widget _getInitialScreen() {
-    if (card_no != null) {
+    if (card_no != null && email != null) {
       // If card_no is available, navigate to HomeScreen
       return UhomeScreen();
     } else if (shopId != null && shopOwnerId != null) {

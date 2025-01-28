@@ -35,6 +35,8 @@ class _Login_ScreenState extends State<Login_Screen> {
 
     try {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+      // First query the User collection based on card number and email
       QuerySnapshot userSnapshot = await firestore
           .collection('User')
           .where('card_no', isEqualTo: cardno)
@@ -45,25 +47,45 @@ class _Login_ScreenState extends State<Login_Screen> {
       if (userSnapshot.docs.isNotEmpty) {
         var userDoc = userSnapshot.docs.first;
 
+        // Check if the password matches
         if (userDoc['password'] == password) {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          prefs.setString('card_no', cardno);
+          // Get the card_id from the User document
+          String cardId = userDoc['card_id'];
 
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => UhomeScreen()),
-          );
+          // Now check if the card_id exists in the Card collection
+          DocumentSnapshot cardDoc = await firestore.collection('Card').doc(cardId).get();
+
+          if (cardDoc.exists) {
+            // If card exists, proceed with login
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            prefs.setString('card_no', cardno);
+            prefs.setString('email', email);
+
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => UhomeScreen()),
+            );
+          } else {
+            // If card doesn't exist in the Card collection, show error
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Card not found')),
+            );
+          }
         } else {
+          // Incorrect password
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Incorrect password')),
           );
         }
       } else {
+        // User not found
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Card number or email does not exist')),
         );
       }
     } catch (e) {
+      // Handle errors
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred: $e')),
       );
@@ -245,10 +267,10 @@ class _Login_ScreenState extends State<Login_Screen> {
                   if (!loading)
                     ElevatedButton(
                       style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty.all(const Color.fromARGB(255, 202, 196, 182)),
-                        shadowColor: WidgetStateProperty.all(const Color.fromARGB(255, 62, 55, 5)),
-                        elevation: WidgetStateProperty.all(10.0),
-                        minimumSize: WidgetStateProperty.all(Size(180, 45)), // Reduced size
+                        backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255, 202, 196, 182)),
+                        shadowColor: MaterialStateProperty.all(const Color.fromARGB(255, 62, 55, 5)),
+                        elevation: MaterialStateProperty.all(10.0),
+                        minimumSize: MaterialStateProperty.all(Size(180, 45)), // Reduced size
                       ),
                       onPressed: login, // Call the login method here
                       child: Text(

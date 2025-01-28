@@ -34,35 +34,38 @@ class _UserPurchaseState extends State<UserPurchase> {
     _razorpay.clear();
   }
 
-  Future<void> _fetchPurchasedItems() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final cardId = prefs.getString('card_no');
+Future<void> _fetchPurchasedItems() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  final cardId = prefs.getString('card_no');
 
-    if (cardId != null) {
-      try {
-        QuerySnapshot querySnapshot = await firestore
-            .collection('Orders')
-            .where('user_id', isEqualTo: cardId)
-            .get();
-
-        if (querySnapshot.docs.isNotEmpty) {
-          setState(() {
-            _purchasedItems = querySnapshot.docs.map((doc) {
-              return {
-                'items': doc['items'],
-                'total_amount': doc['total_amount'],
-                'status': doc['status'],
-                'payment_id': doc['payment_id'],
-                'timestamp': doc['timestamp'],
-              };
-            }).toList();
-          });
-        }
-      } catch (e) {
-        print("Error fetching purchased items: $e");
-      }
+  if (cardId != null) {
+    try {
+      // Using snapshots to get real-time data from Firestore
+      firestore.collection('Orders')
+        .where('user_id', isEqualTo: cardId)
+        .snapshots()
+        .listen((querySnapshot) {
+          if (querySnapshot.docs.isNotEmpty) {
+            setState(() {
+              _purchasedItems = querySnapshot.docs.map((doc) {
+                return {
+                  'items': doc['items'],
+                  'total_amount': doc['total_amount'],
+                  'status': doc['status'],
+                  'payment_id': doc['payment_id'],
+                  'timestamp': doc['timestamp'],
+                  'purchased': doc['purchased'], // Ensure purchase status is fetched
+                };
+              }).toList();
+            });
+          }
+        });
+    } catch (e) {
+      print("Error fetching purchased items: $e");
     }
   }
+}
+
 
   @override
   void didChangeDependencies() {
@@ -286,82 +289,94 @@ class _UserPurchaseState extends State<UserPurchase> {
     return total;
   }
 
-  Future<void> _placeOrder() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      final cardNo = prefs.getString('card_no');
-
-      if (cardNo != null) {
-        double totalAmount = _calculateTotalPrice() * 100;
-        var options = {
-          'key': 'rzp_test_QLvdqmBfoYL2Eu',
-          'amount': totalAmount.toString(),
-          'name': 'Ration Shop',
-          'description': 'Order Payment',
-          'prefill': {
-            'contact': '1234567890',
-            'email': 'example@example.com'
-          },
-          'external': {
-            'wallets': ['paytm']
-          }
-        };
-
-        _razorpay.open(options);
-      }
-    } catch (e) {
+Future<void> _placeOrder() async {
+  try {
+    // Check if the cart is empty
+    if (_cart.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error initiating payment: $e')),
+        const SnackBar(content: Text('Your cart is empty. Please add items to the cart.')),
       );
+      return; // Exit the method early if the cart is empty
     }
-  }
 
-  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final cardNo = prefs.getString('card_no');
 
     if (cardNo != null) {
-      try {
-        await firestore.collection('Orders').add({
-          'user_id': cardNo,
-          'items': _cart,
-          'total_amount': _calculateTotalPrice(),
-          'payment_id': response.paymentId,
-          'status': 'Success',
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-
-        QuerySnapshot cardQuerySnapshot = await firestore
-            .collection('Card')
-            .where('card_no', isEqualTo: cardNo)
-            .limit(1)
-            .get();
-
-        if (cardQuerySnapshot.docs.isNotEmpty) {
-          DocumentSnapshot cardDoc = cardQuerySnapshot.docs.first;
-          await firestore.collection('Card').doc(cardDoc.id).update({
-            'last_purchase_date': FieldValue.serverTimestamp(),
-          });
+      double totalAmount = _calculateTotalPrice() * 100;
+      var options = {
+        'key': 'rzp_test_QLvdqmBfoYL2Eu',
+        'amount': totalAmount.toString(),
+        'name': 'Ration Shop',
+        'description': 'Order Payment',
+        'prefill': {
+          'contact': '1234567890',
+          'email': 'example@example.com'
+        },
+        'external': {
+          'wallets': ['paytm']
         }
+      };
 
-        _removeAllFromCart();
+      _razorpay.open(options);
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error initiating payment: $e')),
+    );
+  }
+}
 
-        await _fetchCardsFromFirestore();
+void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  final cardNo = prefs.getString('card_no');
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Payment Successful!')),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating last purchase date: $e')),
-        );
+  if (cardNo != null) {
+    try {
+      // Add order to Orders collection
+      await firestore.collection('Orders').add({
+        'user_id': cardNo,
+        'items': _cart,
+        'total_amount': _calculateTotalPrice(),
+        'payment_id': response.paymentId,
+        'status': 'Success',
+        'timestamp': FieldValue.serverTimestamp(),
+        'purchased': 'not purchased', // Add the purchased field
+      });
+
+      // Update the card with the last purchase date
+      QuerySnapshot cardQuerySnapshot = await firestore
+          .collection('Card')
+          .where('card_no', isEqualTo: cardNo)
+          .limit(1)
+          .get();
+
+      if (cardQuerySnapshot.docs.isNotEmpty) {
+        DocumentSnapshot cardDoc = cardQuerySnapshot.docs.first;
+        await firestore.collection('Card').doc(cardDoc.id).update({
+          'last_purchase_date': FieldValue.serverTimestamp(),
+        });
       }
-    } else {
+
+      // Clear cart and fetch updated cards
+      _removeAllFromCart();
+      await _fetchCardsFromFirestore();
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('User ID is missing!')),
+        SnackBar(content: Text('Payment Successful!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating last purchase date: $e')),
       );
     }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('User ID is missing!')),
+    );
   }
+}
+
 
   void _handlePaymentError(PaymentFailureResponse response) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -470,7 +485,7 @@ class _UserPurchaseState extends State<UserPurchase> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Total: ₹${_calculateTotalPrice()}',
+                          '     Total: ₹${_calculateTotalPrice()}',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -495,7 +510,7 @@ class _UserPurchaseState extends State<UserPurchase> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Purchased Items',
+                                'Ordered Items',
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -524,6 +539,16 @@ class _UserPurchaseState extends State<UserPurchase> {
                                               return Text('Item: ${item['name']}  Quantity: ${item['quantity']}');
                                             }).toList(),
                                           ),
+                                           Text(
+  'Purchase Status: ${purchasedItem['purchased'] ?? 'not purchased'}',
+  style: TextStyle(
+    color: (purchasedItem['purchased'] ?? 'not purchased') == 'not purchased'
+        ? Colors.red
+        : Colors.green, // Red for not purchased, Green for purchased
+    fontWeight: FontWeight.bold,
+  ),
+)
+
                                         ],
                                       ),
                                     ),

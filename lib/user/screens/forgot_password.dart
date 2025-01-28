@@ -22,24 +22,27 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   bool isPasswordChanged = false;
 
   // Step 1: Submit Card Number and Email
-  Future<void> submitCardAndEmail() async {
-    final cardNo = _cardNoController.text.trim();
-    final email = _emailController.text.trim();
+ Future<void> submitCardAndEmail() async {
+  final email = _emailController.text.trim();
+  final cardNo = _cardNoController.text.trim();
 
-    bool isValidUser = await checkUserExists(cardNo, email);
 
-    if (isValidUser) {
-      verificationCode = generateVerificationCode();
-      await sendVerificationEmail(email, verificationCode);
 
-      setState(() {
-        isVerificationStep = true;
-      });
-    } else {
-      showErrorDialog('No matching user found for the provided card number and email.');
-    }
+
+
+  bool isValidAdmin = await checkUserExists(cardNo,email);  // Ensure this completes before continuing
+
+  if (isValidAdmin) {
+    verificationCode = generateVerificationCode();
+    await sendVerificationEmail(email, verificationCode);  // Ensure email is sent before updating the UI
+
+    setState(() {
+      isVerificationStep = true;
+    });
+  } else {
+    showErrorDialog('No matching Shop Owner found for the provided email.');
   }
-
+}
   // Step 2: Check if the User Exists in Firebase
   Future<bool> checkUserExists(String cardNo, String email) async {
     var snapshot = await FirebaseFirestore.instance
@@ -63,7 +66,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     final smtpServer = SmtpServer(
       'smtp.sendgrid.net', // SendGrid SMTP server
       username: 'apikey',  // Use "apikey" as the username
-      password: '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',  // Your SendGrid API key here
+      password: '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',  // Your SendGrid API key here
       port: 587,           // TLS connection (587 recommended)
       ssl: false,          // False because we use TLS, not SSL
     );

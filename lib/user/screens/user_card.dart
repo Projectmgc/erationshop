@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:erationshop/admin/screens/admin_product.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -61,14 +60,13 @@ class _UserCardState extends State<UserCard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ration Card Details',style: TextStyle(color: Colors.white)),
+        title: const Text('Ration Card Details', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.black,
-         iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      // Apply the background gradient to the entire body to cover the full screen
       body: Container(
         width: double.infinity,
-        height: double.infinity,  // Ensure the container takes up the full screen
+        height: double.infinity, // Ensure the container takes up the full screen
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -83,15 +81,13 @@ class _UserCardState extends State<UserCard> {
             ? const Center(child: CircularProgressIndicator())
             : cardData != null
                 ? _buildCardDetails(context)
-                : const Center(
-                    child: Text('No card data found.'),
-                  ),
+                : const Center(child: Text('No card data found.')),
       ),
     );
   }
 
   Widget _buildCardDetails(BuildContext context) {
-    return SingleChildScrollView(  // Added to handle overflow when content is too long
+    return SingleChildScrollView( // Added to handle overflow when content is too long
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Card(
@@ -115,8 +111,21 @@ class _UserCardState extends State<UserCard> {
                 _buildCardDetailRow('Card Number:', cardData!['card_no'] ?? "N/A"),
                 _buildCardDetailRow('Owner Name:', cardData!['owner_name'] ?? "N/A"),
                 _buildCardDetailRow('Category:', cardData!['category'] ?? "N/A"),
+                _buildCardDetailRow('Address:', cardData!['address'] ?? "N/A"),
+                _buildCardDetailRow('Taluk:', cardData!['taluk'] ?? "N/A"),
+                _buildCardDetailRow('Ward No:', cardData!['ward_no'] ?? "N/A"),
+                _buildCardDetailRow('House No:', cardData!['house_no'] ?? "N/A"),
+                _buildCardDetailRow('Local Body:', cardData!['local_body'] ?? "N/A"),
+                _buildCardDetailRow('Electrified:', cardData!['electrified'] ?? "N/A"),
+                _buildCardDetailRow('LPG:', cardData!['lpg'] ?? "N/A"),
                 _buildCardDetailRow('Members Count:', cardData!['members_count'] ?? "N/A"),
-                _buildCardDetailRow('Mobile Number:', cardData!['mobile_no'] ?? "N/A"),
+                _buildCardDetailRow('Mobile No:', cardData!['mobile_no'] ?? "N/A"),
+                _buildCardDetailRow('Monthly Income:', cardData!['monthly_income'] ?? "N/A"),
+                const SizedBox(height: 20),
+                Text('Members : ',style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 20),
+                 // Space before the members table
+                _buildMembersTable(),
               ],
             ),
           ),
@@ -142,5 +151,79 @@ class _UserCardState extends State<UserCard> {
         ],
       ),
     );
+  }
+
+  Widget _buildMembersTable() {
+    // Get the list of members from the card data
+    List<dynamic> members = cardData?['member_list'] ?? [];
+    
+    // If there are no members, show a message
+    if (members.isEmpty) {
+      return const Text('No members found for this card.');
+    }
+
+    // Create a list of rows to display member information
+    List<Widget> rows = [
+      const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Text('Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text('Age', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text('Occupation', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text('UID No', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ],
+        ),
+      ),
+    ];
+
+    // Iterate over the member list and create rows for each member
+    for (var member in members) {
+      rows.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Text(member['name'] ?? 'N/A'),
+              Text(member['age']?.toString() ?? 'N/A'),
+              Text(member['occupation'] ?? 'N/A'),
+              Text(_maskUID(member['uid_no'] ?? '')),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Return the table with the rows of member data
+    return Column(children: rows);
+  }
+
+  // Mask UID number to show only last 4 digits
+  String _maskUID(String uid) {
+    if (uid.length > 4) {
+      return '*' * (uid.length - 4) + uid.substring(uid.length - 4);
+    } else {
+      return uid; // If UID is shorter than 4 digits, just return it as is
+    }
+  }
+
+  // Format the timestamp (last_purchase_date)
+  String? _formatTimestamp(Timestamp? timestamp) {
+    if (timestamp == null) {
+      return null;
+    }
+    DateTime date = timestamp.toDate();
+    return "${date.day} ${_getMonthName(date.month)} ${date.year} at ${date.hour}:${date.minute}:${date.second} UTC+5:30";
+  }
+
+  // Get the full name of the month
+  String _getMonthName(int month) {
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return monthNames[month - 1];
   }
 }

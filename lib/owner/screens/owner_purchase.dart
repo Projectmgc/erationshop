@@ -1,25 +1,9 @@
+import 'dart:convert';
 import 'package:erationshop/user/screens/user_purchase.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-// HomeScreen Page (For example)
-class HomeScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Home Screen'),
-        backgroundColor: Colors.orangeAccent,
-      ),
-      body: Center(
-        child: Text(
-          'Welcome to the Home Screen!',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart'; // Import shared_preferences
 
 class OwnerPurchase extends StatefulWidget {
   @override
@@ -28,37 +12,144 @@ class OwnerPurchase extends StatefulWidget {
 
 class _OwnerPurchaseState extends State<OwnerPurchase> {
   final TextEditingController _cardNoController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
   bool _isSubmitting = false;
+  bool _isVerifying = false;
+  String? mobileNo;
+  String? cardNo;
 
-  // Function to save the card number in SharedPreferences
-  Future<void> _saveCardNo() async {
+  // Function to verify the card number and send OTP
+  Future<void> _verifyCardAndSendOTP() async {
     setState(() {
       _isSubmitting = true;
     });
 
-    // Retrieve SharedPreferences instance
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    cardNo = _cardNoController.text;
 
-    // Save the card number
-    String card_no = _cardNoController.text;
-    if (card_no.isNotEmpty) {
-      await prefs.setString('card_no', card_no);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Card number saved successfully!')),
-      );
+    if (cardNo != null && cardNo!.isNotEmpty) {
+      // Fetch the card document from Firestore
+      var cardDoc = await FirebaseFirestore.instance
+          .collection('Card')
+          .where('card_no', isEqualTo: cardNo)
+          .limit(1)
+          .get();
 
-      // Navigate to HomeScreen after successful submission
-      Navigator.push(context, MaterialPageRoute(builder: (context){
-        return UserPurchase();
-      }));
+      if (cardDoc.docs.isEmpty) {
+        // If no card found
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Card number not found')),
+        );
+        setState(() {
+          _isSubmitting = false;
+        });
+      } else {
+        // Card found, get the mobile number
+        mobileNo = cardDoc.docs[0]['mobile_no'];
+
+        // Send OTP using Twilio Verify API
+        await _sendOTPViaTwilio(mobileNo!);
+
+        // Save the card number to SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setString('card_no', cardNo!);
+
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please enter a valid card number')),
       );
+      setState(() {
+        _isSubmitting = false;
+      });
+    }
+  }
+
+  // Function to send OTP via Twilio Verify API
+  Future<void> _sendOTPViaTwilio(String mobileNo) async {
+    // Twilio credentials (replace with your actual credentials)
+    final String accountSid = 'ACd15973cda53f718644a1864b3e120b0a';  // Your Twilio Account SID
+    final String authToken = '889ede11abcbb0170cdcc00c8a9c2cb0';  // Your Twilio Auth Token
+    final String serviceSid = 'VA62813aef6261795faf343f1c8f379775';  // Your Twilio Verify Service SID
+
+    // Twilio Verify API URL for sending OTP
+    final String url = 'https://verify.twilio.com/v2/Services/$serviceSid/Verifications';
+
+    // Prepare the payload
+    final Map<String, String> data = {
+      'To': mobileNo,
+      'Channel': 'sms',  // Use 'sms' to send via SMS
+    };
+
+    // Send the POST request
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Basic ' + base64Encode(utf8.encode('$accountSid:$authToken')),
+      },
+      body: data,
+    );
+
+    if (response.statusCode == 201) {
+      print('OTP sent successfully');
+    } else {
+      print('Failed to send OTP: ${response.body}');
+    }
+  }
+
+  // Function to verify OTP
+  Future<void> _verifyOTP() async {
+    setState(() {
+      _isVerifying = true;
+    });
+
+    String otp = _otpController.text;
+
+    // Twilio credentials (replace with your actual credentials)
+    final String accountSid = 'ACd15973cda53f718644a1864b3e120b0a';  // Your Twilio Account SID
+    final String authToken = '889ede11abcbb0170cdcc00c8a9c2cb0';    // Your Twilio Auth Token
+    final String serviceSid = 'VA62813aef6261795faf343f1c8f379775';  // Your Twilio Verify Service SID
+
+    // Twilio API URL for verifying OTP
+    final String url = 'https://verify.twilio.com/v2/Services/$serviceSid/VerificationCheck';
+
+    // Prepare the payload
+    final Map<String, String> data = {
+      'To': mobileNo!,
+      'Code': otp,
+    };
+
+    // Send the POST request to verify the OTP
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Basic ' + base64Encode(utf8.encode('$accountSid:$authToken')),
+      },
+      body: data,
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('OTP Verified Successfully')),
+      );
+
+      // Navigate to the next screen (for example, UserPurchase)
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => UserPurchase(),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Invalid OTP')),
+      );
     }
 
     setState(() {
-      _isSubmitting = false;
+      _isVerifying = false;
     });
   }
 
@@ -66,17 +157,14 @@ class _OwnerPurchaseState extends State<OwnerPurchase> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Owner Purchase',style: TextStyle(color: Colors.white),),
+        title: Text('Owner Purchase', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color.fromARGB(255, 0, 0, 0),
         iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color.fromARGB(255, 255, 255, 255),
-              Color.fromARGB(255, 255, 255, 255),
-            ],
+            colors: [Color.fromARGB(255, 255, 255, 255), Color.fromARGB(255, 255, 255, 255)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -85,54 +173,60 @@ class _OwnerPurchaseState extends State<OwnerPurchase> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Enter Card Number',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+            // Card Number Input
+            if (mobileNo == null) ...[
+              Text(
+                'Enter Card Number',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
               ),
-            ),
-            SizedBox(height: 20),
-            TextField(
-              controller: _cardNoController,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: const Color.fromARGB(255, 180, 177, 175),
-                labelText: 'Card Number',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.credit_card),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isSubmitting ? null : _saveCardNo,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 180, 177, 175),
-                padding: EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+              SizedBox(height: 20),
+              TextField(
+                controller: _cardNoController,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: const Color.fromARGB(255, 180, 177, 175),
+                  labelText: 'Card Number',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.credit_card),
                 ),
+                keyboardType: TextInputType.number,
               ),
-              child: _isSubmitting
-                  ? CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    )
-                  : Text(
-                      'Submit',
-                      style: TextStyle(fontSize: 18,color: Colors.black),
-                    ),
-            ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _isSubmitting ? null : _verifyCardAndSendOTP,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 180, 177, 175),
+                  padding: EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: _isSubmitting
+                    ? CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                    : Text('Submit', style: TextStyle(fontSize: 18, color: Colors.black)),
+              ),
+            ],
+            // OTP Verification
+            if (mobileNo != null) ...[
+              Text('Enter the OTP sent to your mobile number'),
+              SizedBox(height: 20),
+              TextField(
+                controller: _otpController,
+                decoration: InputDecoration(
+                  labelText: 'Enter OTP',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _isVerifying ? null : _verifyOTP,
+                child: _isVerifying
+                    ? CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                    : Text('Verify OTP'),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: OwnerPurchase(),
-  ));
 }

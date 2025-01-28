@@ -1,4 +1,6 @@
 import 'package:erationshop/admin/screens/cardcategories.dart';
+import 'package:erationshop/admin/screens/chatbot.dart';
+import 'package:erationshop/admin/screens/feedback_show.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -31,14 +33,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'image': 'asset/stock.jpg',
       'page': StockPage(), // Navigation target
     },
-    {
-      'title': 'User Enquiry',
-      'icon': Icons.report_problem,
-      'color': const Color.fromARGB(255, 0, 0, 0),
-      'description': 'Address and resolve User complaints.',
-      'image': 'asset/enquiry.jpg',
-      'page': ComplaintsPage(), // Navigation target
-    },
+    
     {
       'title': 'Card',
       'icon': Icons.credit_card,
@@ -87,6 +82,15 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'image': 'asset/outlet.jpg',
       'page': AdminProduct(), // Navigation target for AdminProductPage
     },
+    {
+      'title': 'Feedbacks',
+      'icon': Icons.inventory,
+      'color': const Color.fromARGB(255, 0, 0, 0),
+      'description': 'Keep track of User Feedbacks.',
+      'image': 'asset/stock.jpg',
+      'page': FeedbackGraphPage(), // Navigation target
+    },
+
   ];
 
   // Function to handle infinite scrolling
@@ -228,6 +232,28 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   ),
                 ),
               ],
+            ),
+            Positioned(
+              bottom: 30,
+              right: 30,
+              child: IconButton(
+                icon: CircleAvatar(
+                  radius: 30,
+                  backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+                  child: Icon(
+                    Icons.chat,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
+                onPressed: () {
+                  // Navigate to the chatbot page
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AiChatPage()),
+                  );
+                },
+              ),
             ),
           ],
         ),

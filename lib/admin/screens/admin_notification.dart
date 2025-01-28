@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class AdminNotificationPage extends StatefulWidget {
   const AdminNotificationPage({super.key});
@@ -27,6 +29,9 @@ class _AdminNotificationPageState extends State<AdminNotificationPage> {
           'timestamp': FieldValue.serverTimestamp(),
         });
 
+        // Send push notification to all users
+        await sendPushNotificationToAllUsers(titleController.text, contentController.text);
+
         // Clear the text fields after posting
         titleController.clear();
         contentController.clear();
@@ -41,6 +46,53 @@ class _AdminNotificationPageState extends State<AdminNotificationPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in both title and content')),
       );
+    }
+  }
+
+  // Function to send push notifications to all users (no need for player_id)
+  Future<void> sendPushNotificationToAllUsers(String title, String content) async {
+    try {
+      // Prepare the message for sending to all users
+      var message = {
+        "app_id": "bde1b039-f0cc-41a7-b483-9203d4b15c0e",  // Replace with your OneSignal App ID
+        "headings": {"en": title},
+        "contents": {"en": content},
+        // This sends the notification to all users
+        "included_segments": ["All"],  // Targets all users subscribed to notifications
+      };
+
+      // Send the notification
+      await sendNotificationToOneSignal(message);
+      print("Notification sent to all users.");
+    } catch (e) {
+      print("Error sending push notification: $e");
+    }
+  }
+
+  // Function to send the notification using OneSignal API (HTTP request)
+  Future<void> sendNotificationToOneSignal(Map<String, dynamic> message) async {
+    final String oneSignalApiUrl = 'https://onesignal.com/api/v1/notifications';
+    final String oneSignalRestApiKey = 'os_v2_app_xxq3aopqzra2pnedsib5jmk4bzo5zwrnegpuigms65ckx3hxcb2siedmu6vegz2rboi7n3cmjfbwizxjjjlljeoojq6wlagelcvey2q'; // Replace with your API key
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Basic $oneSignalRestApiKey',
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(oneSignalApiUrl),
+        headers: headers,
+        body: json.encode(message),
+      );
+
+      if (response.statusCode == 200) {
+        print('Notification sent successfully');
+      } else {
+        print('Failed to send notification: ${response.body}');
+      }
+    } catch (e) {
+      print('Error sending notification: $e');
     }
   }
 
@@ -60,20 +112,24 @@ class _AdminNotificationPageState extends State<AdminNotificationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Post Notification',style: TextStyle(color: Colors.white),)
-      ,
-      backgroundColor: const Color.fromARGB(255, 0, 0, 0),
-      iconTheme: IconThemeData(color: Colors.white),
+      appBar: AppBar(
+        title: const Text(
+          'Post Notification',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Container(
         // Applying a gradient to the entire page background
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-                  const Color.fromARGB(255, 253, 253, 253),
-                  const Color.fromARGB(255, 255, 255, 255),],
+              Color.fromARGB(255, 253, 253, 253),
+              Color.fromARGB(255, 255, 255, 255),
+            ],
           ),
         ),
         child: Padding(
@@ -103,7 +159,10 @@ class _AdminNotificationPageState extends State<AdminNotificationPage> {
               // Button to post the notification
               ElevatedButton(
                 onPressed: addNotification,
-                child: const Text('Post Notification',style: TextStyle(color: Colors.black),),
+                child: const Text(
+                  'Post Notification',
+                  style: TextStyle(color: Colors.black),
+                ),
               ),
               const SizedBox(height: 32),
               // Display list of posted notifications

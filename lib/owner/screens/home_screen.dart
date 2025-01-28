@@ -1,14 +1,16 @@
+import 'package:erationshop/owner/screens/chatbot.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import to use SystemNavigator.pop()
-import 'package:erationshop/main.dart';
+import 'package:erationshop/owner/screens/owner_feedback.dart';
+import 'package:erationshop/owner/screens/owner_purchaseconf.dart';
 import 'package:erationshop/owner/screens/owner_purchase.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:erationshop/user/screens/signup_screen.dart';
+import 'package:erationshop/main.dart';
 import 'package:erationshop/owner/screens/owner_enquiry.dart';
 import 'package:erationshop/owner/screens/owner_notification.dart';
 import 'package:erationshop/owner/screens/owner_outlet.dart';
 import 'package:erationshop/owner/screens/owner_profile.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class OwnerHomeScreen extends StatefulWidget {
   const OwnerHomeScreen({super.key});
@@ -38,6 +40,13 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       'page': null, // Will handle separately in the logic
     },
     {
+      'title': 'Purchase Confirmation',
+      'color': const Color.fromARGB(255, 0, 0, 0),
+      'description': 'Confirm the purchase of the User.',
+      'image': 'asset/purchase.jpg',
+      'page': OwnerOrdersPage(),
+    },
+    {
       'title': 'Enquiry',
       'color': const Color.fromARGB(255, 0, 0, 0),
       'description': 'Address and Resolve Your Complaints.',
@@ -50,6 +59,13 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       'description': 'New Updates and Notifications are here.',
       'image': 'asset/notification.jpg',
       'page': OwnerNotification(),
+    },
+     {
+      'title': 'Feedback',
+      'color': const Color.fromARGB(255, 0, 0, 0),
+      'description': 'Give Feedbacks about App and Other Services.',
+      'image': 'asset/enquiry.jpg',
+      'page': FeedbackPage(), 
     },
   ];
 
@@ -64,7 +80,6 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       shopId = prefs.getString('shop_id');
-      shopOwnerId = prefs.getString('shop_owner_doc_id');
     });
   }
 
@@ -82,7 +97,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => OwnerOutletPage(shopId: shopOwnerId!),
+            builder: (context) => OwnerOutletPage(shopId: shopId!),
           ),
         );
       } else if (title == 'Enquiry') {
@@ -130,7 +145,6 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: _onWillPop, // Custom back button behavior
       child: Scaffold(
@@ -175,32 +189,60 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
             ),
           ],
         ),
-        body: Column(
+        body: Stack(
           children: [
-            // Cards Section
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: _cards.length,
-                itemBuilder: (context, index) {
-                  final card = _cards[index];
-                  return _buildPageCard(context, card);
-                },
-              ),
-            ),
-
-            // Dot indicator
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20.0),
-              child: SmoothPageIndicator(
-                controller: _pageController,
-                count: _cards.length,
-                effect: const ExpandingDotsEffect(
-                  dotWidth: 10,
-                  dotHeight: 10,
-                  activeDotColor: Color.fromARGB(255, 12, 12, 12),
-                  dotColor: Colors.white54,
+            Column(
+              children: [
+                // Cards Section
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: _cards.length,
+                    itemBuilder: (context, index) {
+                      final card = _cards[index];
+                      return _buildPageCard(context, card);
+                    },
+                  ),
                 ),
+
+                // Dot indicator
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: SmoothPageIndicator(
+                    controller: _pageController,
+                    count: _cards.length,
+                    effect: const ExpandingDotsEffect(
+                      dotWidth: 10,
+                      dotHeight: 10,
+                      activeDotColor: Color.fromARGB(255, 12, 12, 12),
+                      dotColor: Colors.white54,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            
+            // Chatbot Icon Button - Positioned at the bottom-right corner
+            Positioned(
+              bottom: 30,
+              right: 30,
+              child: IconButton(
+                icon: CircleAvatar(
+                  radius: 30,
+                  backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+                  child: Icon(
+                    Icons.chat,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
+                onPressed: () {
+                  // Navigate to the chatbot page
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AiChatPage()),
+                  );
+                },
               ),
             ),
           ],
@@ -284,3 +326,4 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
     );
   }
 }
+

@@ -1,3 +1,4 @@
+import 'package:erationshop/user/screens/user_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -8,7 +9,9 @@ import 'package:erationshop/user/screens/user_notification.dart';
 import 'package:erationshop/user/screens/user_outlet.dart';
 import 'package:erationshop/user/screens/user_profile.dart';
 import 'package:erationshop/user/screens/user_purchase.dart';
-import 'package:flutter/services.dart'; // Import to use SystemNavigator.pop()
+import 'package:flutter/services.dart'; 
+
+import 'package:erationshop/user/screens/chatbot.dart'; 
 
 class UhomeScreen extends StatefulWidget {
   const UhomeScreen({super.key});
@@ -35,13 +38,6 @@ class _UhomeScreenState extends State<UhomeScreen> {
       'page': UserOutlet(), // Navigation target
     },
     {
-      'title': 'Enquiry',
-      'color': const Color.fromARGB(255, 3, 3, 3),
-      'description': 'Address and Resolve Your Complaints.',
-      'image': 'asset/enquiry.jpg',
-      'page': null, // Handle separately
-    },
-    {
       'title': 'Card',
       'color': const Color.fromARGB(255, 5, 5, 5),
       'description': 'Manage Ration-Card related operations.',
@@ -54,6 +50,13 @@ class _UhomeScreenState extends State<UhomeScreen> {
       'description': 'New Updations and Notifications are here.',
       'image': 'asset/notification.jpg',
       'page': NotificationsPage(), // Navigation target
+    },
+    {
+      'title': 'Feedback',
+      'color': const Color.fromARGB(255, 3, 3, 3),
+      'description': 'Give Feedbacks about App and Other Services.',
+      'image': 'asset/enquiry.jpg',
+      'page': FeedbackPage(), // Handle separately
     },
   ];
 
@@ -202,6 +205,21 @@ class _UhomeScreenState extends State<UhomeScreen> {
                   ),
                 ),
               ],
+            ),
+            // Floating Chatbot Icon Button at the bottom-right
+            Positioned(
+              bottom: 20,
+              right: 20,
+              child: FloatingActionButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AiChatPage()), // Navigate to the Chatbot page
+                  );
+                },
+                child: Icon(Icons.chat, color: Colors.white), // Chatbot icon
+                backgroundColor: Colors.black, // Set the background color for the button
+              ),
             ),
           ],
         ),

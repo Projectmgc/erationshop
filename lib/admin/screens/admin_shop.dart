@@ -17,11 +17,11 @@ class _AdminShopPageState extends State<AdminShopPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _shopIdController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController(); // New controller for password
+  final TextEditingController _passwordController = TextEditingController();
 
   bool _isEditing = false;
   String? _shopIdToEdit;
-  bool _isPasswordVisible = false; // Boolean variable to control password visibility
+  bool _isPasswordVisible = false;
   late double _latitude;
   late double _longitude;
 
@@ -36,9 +36,9 @@ class _AdminShopPageState extends State<AdminShopPage> {
           'email': _emailController.text,
           'phone': _phoneController.text,
           'shop_id': _shopIdController.text,
-          'password': _passwordController.text, // Save the password field
+          'password': _passwordController.text,
           'lat': _latitude,
-          'long': _longitude // Save location
+          'long': _longitude
         };
 
         await FirebaseFirestore.instance.collection('Shop Owner').add(newShop);
@@ -66,8 +66,8 @@ class _AdminShopPageState extends State<AdminShopPage> {
           'email': _emailController.text,
           'phone': _phoneController.text,
           'shop_id': _shopIdController.text,
-          'password': _passwordController.text, // Update the password field
-          'location': GeoPoint(_latitude, _longitude), // Update location
+          'password': _passwordController.text,
+          'location': GeoPoint(_latitude, _longitude),
         };
 
         await FirebaseFirestore.instance
@@ -96,11 +96,11 @@ class _AdminShopPageState extends State<AdminShopPage> {
     _emailController.clear();
     _phoneController.clear();
     _shopIdController.clear();
-    _passwordController.clear(); // Clear password field
+    _passwordController.clear();
     setState(() {
       _isEditing = false;
       _shopIdToEdit = null;
-      _isPasswordVisible = false; // Reset password visibility
+      _isPasswordVisible = false;
       _latitude = 0.0;
       _longitude = 0.0;
     });
@@ -114,25 +114,18 @@ class _AdminShopPageState extends State<AdminShopPage> {
     _emailController.text = shop['email'];
     _phoneController.text = shop['phone'];
     _shopIdController.text = shop['shop_id'];
-    _passwordController.text = shop['password'] ?? ''; // Load password field
-
-    if (shop['location'] != null) {
-      GeoPoint location = shop['location'];
-      _latitude = location.latitude;
-      _longitude = location.longitude;
-    }
+    _passwordController.text = shop['password'] ?? '';
 
     setState(() {
       _isEditing = true;
       _shopIdToEdit = shop.id;
-      _isPasswordVisible = false; // Default to password hidden on edit
+      _isPasswordVisible = false;
     });
   }
 
   // Function to handle geocoding (search address and get latitude and longitude)
   Future<void> _getLatLongFromAddress() async {
     try {
-      // Perform geocoding to get the latitude and longitude from the address
       if (_addressController.text.isNotEmpty) {
         List<Location> locations = await locationFromAddress(_addressController.text);
         if (locations.isNotEmpty) {
@@ -160,17 +153,73 @@ class _AdminShopPageState extends State<AdminShopPage> {
     }
   }
 
+  // Function to remove a shop
+  Future<void> _removeShop(String shopId) async {
+    try {
+      await FirebaseFirestore.instance.collection('Shop Owner').doc(shopId).delete();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Shop removed successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to remove shop')),
+      );
+    }
+  }
+
+  // Function to fetch the ShopOwner document ID based on shop_id
+  Future<String?> _getShopOwnerDocId(String shopId) async {
+    try {
+      var shopOwnerQuerySnapshot = await FirebaseFirestore.instance
+          .collection('Shop Owner')
+          .where('shop_id', isEqualTo: shopId)
+          .limit(1)
+          .get();
+
+      if (shopOwnerQuerySnapshot.docs.isNotEmpty) {
+        return shopOwnerQuerySnapshot.docs.first.id;
+      }
+    } catch (e) {
+      print('Error fetching ShopOwner document ID: $e');
+    }
+    return null;
+  }
+
+  // Function to fetch ratings for the shop from the ShopRating collection
+  Future<double> _getShopRatings(String shopId) async {
+    try {
+      // Fetch the ShopOwner document ID first using the shop_id
+      String? shopOwnerDocId = await _getShopOwnerDocId(shopId);
+
+      if (shopOwnerDocId != null) {
+        // Use the ShopOwner document ID to fetch ratings from ShopRating collection
+        var shopRatingDoc = await FirebaseFirestore.instance
+            .collection('ShopRating')
+            .doc(shopOwnerDocId)
+            .get();
+
+        if (shopRatingDoc.exists) {
+          // Get the average rating from the ShopRating document
+          return shopRatingDoc['averageRating'] ?? 0.0;
+        }
+      }
+    } catch (e) {
+      print('Error fetching shop ratings: $e');
+    }
+    return 0.0; // Return 0 if no ratings found
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Shop' : 'Add Shop',style: TextStyle(color: const Color.fromARGB(255, 255, 255, 255)),),
+        title: Text(_isEditing ? 'Edit Shop' : 'Add Shop', style: TextStyle(color: const Color.fromARGB(255, 255, 255, 255))),
         backgroundColor: Color.fromARGB(255, 0, 0, 0),
         iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Container(
-        width: double.infinity, // Ensure it fills the width
-        height: double.infinity, // Ensure it takes up full height
+        width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -181,7 +230,7 @@ class _AdminShopPageState extends State<AdminShopPage> {
             ],
           ),
         ),
-        child: SingleChildScrollView( // This makes the body scrollable
+        child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -220,13 +269,12 @@ class _AdminShopPageState extends State<AdminShopPage> {
                           return null;
                         },
                       ),
-                      // Button to trigger geocoding
                       ElevatedButton(
                         onPressed: _getLatLongFromAddress,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color.fromARGB(255, 208, 207, 206),
                         ),
-                        child: const Text('Get Latitude & Longitude',style: TextStyle(color: Colors.black),),
+                        child: const Text('Get Latitude & Longitude', style: TextStyle(color: Colors.black)),
                       ),
                       TextFormField(
                         controller: _emailController,
@@ -260,7 +308,7 @@ class _AdminShopPageState extends State<AdminShopPage> {
                       ),
                       TextFormField(
                         controller: _passwordController,
-                        obscureText: !_isPasswordVisible, // Toggle visibility
+                        obscureText: !_isPasswordVisible,
                         decoration: InputDecoration(
                           labelText: 'Password',
                           suffixIcon: IconButton(
@@ -271,7 +319,7 @@ class _AdminShopPageState extends State<AdminShopPage> {
                             ),
                             onPressed: () {
                               setState(() {
-                                _isPasswordVisible = !_isPasswordVisible; // Toggle password visibility
+                                _isPasswordVisible = !_isPasswordVisible;
                               });
                             },
                           ),
@@ -290,7 +338,90 @@ class _AdminShopPageState extends State<AdminShopPage> {
                           backgroundColor: Color.fromARGB(255, 208, 207, 206),
                           padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                         ),
-                        child: Text(_isEditing ? 'Update Shop' : 'Add Shop',style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),),
+                        child: Text(_isEditing ? 'Update Shop' : 'Add Shop', style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0))),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Manage Shops',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('Shop Owner')
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          }
+
+                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                            return const Text('No shops available');
+                          }
+
+                          return ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: snapshot.data!.docs.length,
+                            itemBuilder: (context, index) {
+                              var shop = snapshot.data!.docs[index];
+
+                              return FutureBuilder<double>(
+                                future: _getShopRatings(shop['shop_id']),
+                                builder: (context, ratingSnapshot) {
+                                  if (ratingSnapshot.connectionState == ConnectionState.waiting) {
+                                    return ListTile(
+                                      title: Text(shop['name']),
+                                      subtitle: Text('Loading rating...'),
+                                    );
+                                  }
+
+                                  double averageRating = ratingSnapshot.data ?? 0.0;
+                                  // Determine the color based on the rating value
+                                  Color ratingColor = averageRating < 3 ? Colors.red : const Color.fromARGB(255, 21, 159, 25);
+
+                                  return Card(
+                                    margin: const EdgeInsets.symmetric(vertical: 8),
+                                    child: ListTile(
+                                      title: Text(shop['name']),
+                                      subtitle: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Store: ${shop['store_name']}'),
+                                          Text('Shop ID: ${shop['shop_id']}'),
+                                          Text('Address: ${shop['address']}'),
+                                          Text('Phone: ${shop['phone']}'),
+                                          Text('Email: ${shop['email']}'),
+                                          Text(
+                                            'Average Rating: ${averageRating.toStringAsFixed(1)}',
+                                            style: TextStyle(color: ratingColor),
+                                          ),
+                                        ],
+                                      ),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            icon: Icon(Icons.edit, color: Colors.blue),
+                                            onPressed: () => _loadShopData(shop),
+                                          ),
+                                          IconButton(
+                                            icon: Icon(Icons.delete, color: Colors.red),
+                                            onPressed: () => _removeShop(shop.id),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
                       ),
                     ],
                   ),

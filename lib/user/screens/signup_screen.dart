@@ -28,88 +28,98 @@ class _Signup_ScreenState extends State<Signup_Screen> {
   }
 
   // Method to handle signup with Firebase Authentication and Firestore
-  void signp() async {
-    setState(() {
-      loading = true;
+void signp() async {
+  setState(() {
+    loading = true;
+  });
+
+  try {
+    // Check if card exists in the User collection
+    QuerySnapshot userSnapshot = await FirebaseFirestore.instance
+        .collection('User')
+        .where('card_no', isEqualTo: card_controller.text)
+        .limit(1)
+        .get();
+
+    if (userSnapshot.docs.isNotEmpty) {
+      // If the card number already exists in the User collection
+      setState(() {
+        loading = false;
+      });
+
+      // Show message that user is already registered and should log in
+      _showDialog("Already Registered",
+          "This card number is already registered. Please log in.");
+      return; // Exit the function if card number already exists in User collection
+    }
+
+    // Check if card exists in the Card collection (for verification)
+    QuerySnapshot cardSnapshot = await FirebaseFirestore.instance
+        .collection('Card')
+        .where('card_no', isEqualTo: card_controller.text)
+        .limit(1)
+        .get();
+
+    if (cardSnapshot.docs.isEmpty) {
+      setState(() {
+        loading = false;
+      });
+      // If no card is found, show an error message
+      _showDialog("Error", "Card number does not exist!");
+      return; // Exit the function if card doesn't exist in Card collection
+    }
+
+    // Check if the entered name matches the owner_name in the Card collection
+    String ownerName = cardSnapshot.docs.first['owner_name'];
+    if (ownerName != name_controller.text) {
+      setState(() {
+        loading = false;
+      });
+      // If the name doesn't match, show an error message
+      _showDialog("Error", "The name does not match the card's owner name.");
+      return; // Exit the function if the name doesn't match
+    }
+
+    // Calculate the date 31 days before current time
+    DateTime lastPurchaseDate = DateTime.now().subtract(Duration(days: 31));
+
+    // After successful authentication, store the additional user details in Firestore
+    await FirebaseFirestore.instance.collection('User').add({
+      'name': name_controller.text,
+      'card_no': card_controller.text, // Store the card number
+      'card_id': cardSnapshot.docs.first.id, // Store the card ID from the Card collection
+      'email': email_controller.text,
+      'password': password_controller.text,
+      'created_at': FieldValue.serverTimestamp(), // Store the creation time (optional)
+      'last_purchase_date': lastPurchaseDate, // Store the last purchase date (31 days before)
     });
 
-    try {
-      // Check if card exists in the User collection
-      QuerySnapshot userSnapshot = await FirebaseFirestore.instance
-          .collection('User')
-          .where('card_no', isEqualTo: card_controller.text)
-          .limit(1)
-          .get();
+    setState(() {
+      loading = false;
+    });
 
-      if (userSnapshot.docs.isNotEmpty) {
-        // If the card number already exists in the User collection
-        setState(() {
-          loading = false;
-        });
+    // After successful signup, navigate to OTP screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) {
+          return Login_Screen();
+        },
+      ),
+    );
 
-        // Show message that user is already registered and should log in
-        _showDialog("Already Registered",
-            "This card number is already registered. Please log in.");
-        return; // Exit the function if card number already exists in User collection
-      }
-
-      // Check if card exists in the Card collection (for verification)
-      QuerySnapshot cardSnapshot = await FirebaseFirestore.instance
-          .collection('Card')
-          .where('card_no', isEqualTo: card_controller.text)
-          .limit(1)
-          .get();
-
-      if (cardSnapshot.docs.isEmpty) {
-        setState(() {
-          loading = false;
-        });
-        // If no card is found, show an error message
-        _showDialog("Error", "Card number does not exist!");
-        return; // Exit the function if card doesn't exist in Card collection
-      }
-
-      // Calculate the date 31 days before current time
-      DateTime lastPurchaseDate = DateTime.now().subtract(Duration(days: 31));
-
-      // After successful authentication, store the additional user details in Firestore
-      await FirebaseFirestore.instance.collection('User').add({
-        'name': name_controller.text,
-        'card_no': card_controller.text, // Store the card number
-        'card_id': cardSnapshot
-            .docs.first.id, // Store the card ID from the Card collection
-        'email': email_controller.text,
-        'password': password_controller.text,
-        'created_at':
-            FieldValue.serverTimestamp(), // Store the creation time (optional)
-        'last_purchase_date': lastPurchaseDate, // Store the last purchase date (31 days before)
-      });
-
-      setState(() {
-        loading = false;
-      });
-
-      // After successful signup, navigate to OTP screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) {
-            return Login_Screen();
-          },
-        ),
-      );
-
-      print("Name: ${name_controller.text}");
-      print("Card No: ${card_controller.text}");
-      print("Email: ${email_controller.text}");
-    } catch (e) {
-      setState(() {
-        loading = false;
-      });
-      // Show error message if something went wrong during the signup process
-      _showDialog("Error", e.toString());
-    }
+    print("Name: ${name_controller.text}");
+    print("Card No: ${card_controller.text}");
+    print("Email: ${email_controller.text}");
+  } catch (e) {
+    setState(() {
+      loading = false;
+    });
+    // Show error message if something went wrong during the signup process
+    _showDialog("Error", e.toString());
   }
+}
+
 
   // Function to show a dialog with a custom title and message
   void _showDialog(String title, String message) {
@@ -267,42 +277,42 @@ class _Signup_ScreenState extends State<Signup_Screen> {
                   ),
                   SizedBox(height: 20),
                   TextFormField(
-                    controller: password_controller,
-                    obscureText: passwordVisible,
-                    decoration: InputDecoration(
-                      prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
-                      suffixIconColor: const Color.fromARGB(198, 14, 1, 62),
-                      filled: true,
-                      fillColor: const Color.fromARGB(255, 202, 196, 182),
-                      hintText: 'Create Password',
-                      prefixIcon: Icon(Icons.lock),
-                      border: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              width: 2,
-                              color: const Color.fromARGB(255, 7, 7, 7)),
-                          borderRadius: BorderRadius.circular(10)),
-                      suffixIcon: IconButton(
-                        onPressed: () {
-                          setState(() {
-                            passwordVisible = !passwordVisible;
-                          });
-                        },
-                        icon: Icon(
-                          passwordVisible
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                        ),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Please enter a password";
-                      } else if (value.length < 6) {
-                        return "Password must be at least 6 characters";
-                      }
-                      return null;
-                    },
-                  ),
+  controller: password_controller,
+  obscureText: passwordVisible,
+  decoration: InputDecoration(
+    prefixIconColor: const Color.fromARGB(255, 23, 2, 57),
+    suffixIconColor: const Color.fromARGB(198, 14, 1, 62),
+    filled: true,
+    fillColor: const Color.fromARGB(255, 202, 196, 182),
+    hintText: 'Create Password',
+    prefixIcon: Icon(Icons.lock),
+    border: OutlineInputBorder(
+        borderSide: BorderSide(
+            width: 2,
+            color: const Color.fromARGB(255, 7, 7, 7)),
+        borderRadius: BorderRadius.circular(10)),
+    suffixIcon: IconButton(
+      onPressed: () {
+        setState(() {
+          passwordVisible = !passwordVisible;
+        });
+      },
+      icon: Icon(
+        passwordVisible
+            ? Icons.visibility
+            : Icons.visibility_off,
+      ),
+    ),
+  ),
+  validator: (value) {
+    if (value == null || value.isEmpty) {
+      return "Please enter a password";
+    } else if (value.length < 8) {
+      return "Password must be at least 8 characters";
+    }
+    return null;
+  },
+),
                   SizedBox(height: 40),
                   loading
                       ? CircularProgressIndicator()

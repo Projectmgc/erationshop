@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:erationshop/main.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mailer/mailer.dart';
@@ -24,23 +25,24 @@ class _Forgot1_PasswordState extends State<Forgot1_Password> {
   String verificationCode = "";
 
   // Step 1: Submit Shop ID and Email to validate
-  Future<void> submitShopIdAndEmail() async {
-    final shopId = _shopIdController.text.trim();
-    final email = _emailController.text.trim();
+ Future<void> submitShopIdAndEmail() async {
+  final email = _emailController.text.trim();
+  final shopId = _shopIdController.text.trim();
 
-    bool isValidUser = await checkShopOwnerExists(shopId, email);
 
-    if (isValidUser) {
-      verificationCode = generateVerificationCode();
-      await sendVerificationEmail(email, verificationCode);
+  bool isValidAdmin = await checkShopOwnerExists(shopId,email);  // Ensure this completes before continuing
 
-      setState(() {
-        isVerificationStep = true;
-      });
-    } else {
-      showErrorDialog('No matching Shop ID and Email found.');
-    }
+  if (isValidAdmin) {
+    verificationCode = generateVerificationCode();
+    await sendVerificationEmail(email, verificationCode);  // Ensure email is sent before updating the UI
+
+    setState(() {
+      isVerificationStep = true;
+    });
+  } else {
+    showErrorDialog('No matching Shop Owner found for the provided email.');
   }
+}
 
   // Step 2: Check if the Shop ID and Email exist in Firestore
   Future<bool> checkShopOwnerExists(String shopId, String email) async {
@@ -65,7 +67,7 @@ class _Forgot1_PasswordState extends State<Forgot1_Password> {
     final smtpServer = SmtpServer(
       'smtp.sendgrid.net',
       username: 'apikey',  // Use "apikey" as the username for SendGrid
-      password: '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',  // SendGrid API Key
+      password: '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',  // SendGrid API Key
       port: 587,  // TLS connection
       ssl: false,  // False because we use TLS, not SSL
     );

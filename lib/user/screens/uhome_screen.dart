@@ -1,16 +1,20 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:image/image.dart' as img;
+import 'package:http/http.dart' as http;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:erationshop/user/screens/user_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:erationshop/user/screens/user_card.dart';
-import 'package:erationshop/user/screens/user_enquiry.dart';
 import 'package:erationshop/user/screens/user_notification.dart';
 import 'package:erationshop/user/screens/user_outlet.dart';
 import 'package:erationshop/user/screens/user_profile.dart';
 import 'package:erationshop/user/screens/user_purchase.dart';
 import 'package:flutter/services.dart'; 
-
 import 'package:erationshop/user/screens/chatbot.dart'; 
 
 class UhomeScreen extends StatefulWidget {
@@ -22,13 +26,18 @@ class UhomeScreen extends StatefulWidget {
 
 class _UhomeScreenState extends State<UhomeScreen> {
   final PageController _pageController = PageController(initialPage: 0);
+  
+  bool loading = false;
+  bool comparingFaces = false;  // For showing the comparison progress
+  File? _imageFile; // For storing the selected image
+  final picker = ImagePicker(); // For picking images
   final List<Map<String, dynamic>> _cards = [
     {
       'title': 'Purchase',
       'color': const Color.fromARGB(255, 1, 1, 1),
       'description': 'Keep track of available inventory and supplies.',
       'image': 'asset/purchase.jpg',
-      'page': UserPurchase(), // Navigation target
+      'page': null, // Navigation target
     },
     {
       'title': 'Outlet',
@@ -60,7 +69,8 @@ class _UhomeScreenState extends State<UhomeScreen> {
     },
   ];
 
-  String _userId = ''; // To hold the user_id from the user profile
+  String _userId = '';
+   // To hold the user_id from the user profile
 
   @override
   void initState() {
@@ -78,29 +88,14 @@ class _UhomeScreenState extends State<UhomeScreen> {
     });
   }
 
+  
   Future<void> _fetchUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     _userId = prefs.getString('card_no')!; // Assuming 'card_no' is stored in SharedPreferences
   }
 
   // Handle the card tap event and navigate accordingly
-  void _onCardTapped(BuildContext context, Widget? page) {
-    if (page != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => page),
-      );
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              UserEnquiry(user_id: _userId), // Pass the userId to UserEnquiry
-        ),
-      );
-    }
-  }
-
+ 
   // Navigate to user profile page
   void gotoprofile() {
     Navigator.push(
@@ -108,6 +103,269 @@ class _UhomeScreenState extends State<UhomeScreen> {
       MaterialPageRoute(builder: (context) => UserProfile()),
     );
   }
+
+  Future<void> _pickImage() async {
+    setState(() {
+      loading = true; // Show loading spinner while capturing
+    });
+
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+
+      // Load the image file
+      var image = img.decodeImage(await _imageFile!.readAsBytes());
+
+      if (image != null) {
+        // Resize the image to a smaller size, e.g., 600x600
+        var resizedImage = img.copyResize(image, width: 600);
+
+        // Save the resized image back to a file
+        final compressedFile = File(pickedFile.path)..writeAsBytesSync(img.encodeJpg(resizedImage));
+
+        setState(() {
+          _imageFile = compressedFile;
+        });
+
+        print("Resized image path: ${_imageFile?.path}"); // Debugging
+      }
+
+      setState(() {
+        loading = false; // Image captured, stop loading
+      });
+
+    } else {
+      setState(() {
+        loading = false;
+      });
+    }
+  }
+
+  Future<String?> _uploadImageToFacePlusPlus() async {
+    try {
+      var uri = Uri.parse('https://api-us.faceplusplus.com/facepp/v3/detect');
+      var request = http.MultipartRequest('POST', uri);
+      request.fields['api_key'] = 'iQmi-6CZt09JXAkCEU-o1mEDbjgcSPUt';
+      request.fields['api_secret'] = 'kQHG1Uu7gbCuledKsGSFDgzUrj4BzpjV';
+      request.files.add(await http.MultipartFile.fromPath('image_file', _imageFile!.path));
+
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        var responseBody = await http.Response.fromStream(response);
+        var responseData = json.decode(responseBody.body);
+
+        print("Face++ Response: $responseData"); // Log the full response from Face++
+
+        if (responseData['faces'] != null && responseData['faces'].isNotEmpty) {
+          var faceToken = responseData['faces'][0]['face_token'];
+          return faceToken;
+        } else {
+          return null; // No faces detected
+        }
+      } else {
+        print("Failed to upload image. Status code: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("Error in image upload: $e");
+      return null;
+    }
+  }
+
+  Future<bool> _verifyFaceToken(String faceToken) async {
+    try {
+      // Check if card exists in the Card collection (for verification)
+      QuerySnapshot cardSnapshot = await FirebaseFirestore.instance
+          .collection('Card')
+          .where('card_no', isEqualTo: _userId)
+          .limit(1)
+          .get();
+
+      if (cardSnapshot.docs.isEmpty) {
+        return false;
+      }
+
+      // Retrieve the stored face_token from the card document in Firestore
+      String storedFaceToken = cardSnapshot.docs.first['face_token'];
+
+      // Compare the face tokens
+      if (storedFaceToken != faceToken) {
+        return false;
+      }
+      return true;
+    } catch (e) {
+      return false; // Return false if there's an error with face verification
+    }
+  }
+
+  Future<bool> _compareFaces(String? faceToken, String storedFaceToken) async {
+    if (faceToken == null) {
+      return false; // Return false if the face token is null
+    }
+
+    setState(() {
+      comparingFaces = true; // Show the comparison progress indicator
+    });
+
+    try {
+      var uri = Uri.parse('https://api-us.faceplusplus.com/facepp/v3/compare');
+      var request = http.MultipartRequest('POST', uri);
+      request.fields['api_key'] = 'iQmi-6CZt09JXAkCEU-o1mEDbjgcSPUt'; // Your Face++ API key
+      request.fields['api_secret'] = 'kQHG1Uu7gbCuledKsGSFDgzUrj4BzpjV'; // Your Face++ API secret
+      request.fields['face_token1'] = faceToken;  // The token of the captured face
+      request.fields['face_token2'] = storedFaceToken;  // The stored token from Firestore
+
+      var response = await request.send();
+      if (response.statusCode == 200) {
+        var responseBody = await http.Response.fromStream(response);
+        var responseData = json.decode(responseBody.body);
+        double confidence = responseData['confidence'];  // Similarity score
+
+        // Step 6: If confidence is high (you can adjust the threshold)
+        if (confidence > 80.0) {
+          setState(() {
+            comparingFaces = false; // Hide the comparison progress indicator
+          });
+          return true; // Faces match
+        } else {
+          setState(() {
+            comparingFaces = false; // Hide the comparison progress indicator
+          });
+          return false; // Faces don't match
+        }
+      } else {
+        setState(() {
+          comparingFaces = false; // Hide the comparison progress indicator
+        });
+        return false; // Return false if the comparison fails
+      }
+    } catch (e) {
+      setState(() {
+        comparingFaces = false; // Hide the comparison progress indicator
+      });
+      print(e);
+      return false; // Return false if there's an error with Face++ comparison API
+    }
+  }
+  void _showDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _onCardTapped(BuildContext context, Widget? page) async {
+  if (page != null) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => page),
+    );
+  } else {
+    await purchase(); // Call the purchase method when "Purchase" card is tapped
+  }
+}
+
+Future<void> purchase() async {
+  setState(() {
+    loading = true;
+  });
+  try {
+
+     ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please capture your face to proceed."))
+      );
+
+    // Step 1: Capture the face image
+    await _pickImage();
+    if (_imageFile == null) {
+      setState(() {
+        loading = false;
+      });
+      return; // Exit if no image is captured
+    }
+    _showDialog("Processing", "Face Verification in Progress do not click go back or click to the Purchase");
+
+    
+    // Step 2: Upload the image and detect the face concurrently with other checks
+    String? faceToken = await _uploadImageToFacePlusPlus();
+    if (faceToken == null) {
+      setState(() {
+        loading = false;
+      });
+      // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("No face detected. Please try again.")));
+    _showDialog("Unsuccessful", "No face detected. Please try again.");
+
+      return;
+    }
+
+    // Step 3: Retrieve the stored face token from Firestore
+    QuerySnapshot cardSnapshot = await FirebaseFirestore.instance
+        .collection('Card')
+        .where('card_no', isEqualTo: _userId)
+        .limit(1)
+        .get();
+
+    if (cardSnapshot.docs.isEmpty) {
+      setState(() {
+        loading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Card number not found.")));
+      return;
+    }
+
+    // Step 4: Get the stored face token from Firestore
+    String storedFaceToken = cardSnapshot.docs.first['face_token'];
+
+    // Step 5: Compare the captured face token with the stored one
+    bool isFaceMatched = await _compareFaces(faceToken, storedFaceToken);
+
+    if (!isFaceMatched) {
+      setState(() {
+        loading = false;
+      });
+      // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Face does not match.")));
+    _showDialog("Unsuccessful", "Face doesn't match. Please try again.");
+
+      return;
+    }
+
+    // Step 6: If face matches, proceed to the purchase page
+    setState(() {
+      loading = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Face verified! Proceeding to purchase...")));
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UserPurchase(), // Navigate to the UserPurchase page
+      ),
+    );
+  } catch (e) {
+    setState(() {
+      loading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("An error occurred. Please try again.")));
+  }
+}
 
   // Handle the back button press to close the app
   Future<bool> _onWillPop() async {
@@ -221,6 +479,8 @@ class _UhomeScreenState extends State<UhomeScreen> {
                 backgroundColor: Colors.black, // Set the background color for the button
               ),
             ),
+            // Circular progress indicator when faces are being compared
+          
           ],
         ),
       ),
@@ -290,10 +550,12 @@ class _UhomeScreenState extends State<UhomeScreen> {
                       textAlign: TextAlign.center,
                       style: GoogleFonts.roboto(
                         fontSize: 16,
-                        color: const Color.fromARGB(255, 254, 254, 254).withOpacity(0.9),
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
                       ),
                     ),
                   ),
+                  SizedBox(height: 30),
                 ],
               ),
             ],
@@ -303,3 +565,4 @@ class _UhomeScreenState extends State<UhomeScreen> {
     );
   }
 }
+ 

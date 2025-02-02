@@ -20,7 +20,6 @@ class _AddCardPageState extends State<AddCardPage> {
   final TextEditingController _wardNoController = TextEditingController();
   final TextEditingController _houseNoController = TextEditingController();
   final TextEditingController _monthlyIncomeController = TextEditingController();
-  final TextEditingController _lastPurchaseDateController = TextEditingController();
 
   String? _electrifiedValue;
   String? _lpgValue;
@@ -91,113 +90,140 @@ class _AddCardPageState extends State<AddCardPage> {
     return snapshot.docs.isNotEmpty;
   }
 
-Future<void> _addCard() async {
-  if (_formKey.currentState?.validate() ?? false) {
-    final cardNo = _cardNoController.text;
+  Future<void> _addCard() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      final cardNo = _cardNoController.text;
 
-    // Check if the card number already exists
-    bool exists = await _checkCardNoExists(cardNo);
-    if (exists) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Card number already exists!')),
-      );
-      return;
+      // Check if the card number already exists
+      bool exists = await _checkCardNoExists(cardNo);
+      if (exists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Card number already exists!')),
+        );
+        return;
+      }
+
+      // Get the category_id based on entered category_name
+      String categoryId = await _getCategoryIdByName(_categoryController.text);
+      if (categoryId.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Category not found!')),
+        );
+        return;
+      }
+
+      // Get Product Category to initialize purchase dates
+      List<String> productCategoryIds = await _getProductCategoryIds();
+
+     // Step 1: Get the current date-time
+DateTime currentDateTime = DateTime.now();
+
+// Step 2: Subtract 31 days from the current date-time
+DateTime thirtyOneDaysAgo = currentDateTime.subtract(Duration(days: 31));
+
+// Step 3: Convert the DateTime to a Timestamp
+Timestamp timestampThirtyOneDaysAgo = Timestamp.fromDate(thirtyOneDaysAgo);
+
+// Step 4: Use this timestamp when creating the purchase dates
+List<Map<String, dynamic>> purchaseDates = productCategoryIds.map((productId) {
+  return {
+    'product_id': productId,
+    'date': timestampThirtyOneDaysAgo, // Set the initial date as 31 days ago
+  };
+}).toList();
+
+
+      try {
+        await FirebaseFirestore.instance.collection('Card').add({
+          'owner_name': _ownerNameController.text,
+          'card_no': _cardNoController.text,
+          'category': _categoryController.text,
+          'category_id': categoryId,  // Add category_id
+          'mobile_no': _mobileNoController.text,
+          'address': _addressController.text,
+          'local_body': _localBodyController.text,
+          'ward_no': _wardNoController.text,
+          'house_no': _houseNoController.text,
+          'monthly_income': _monthlyIncomeController.text,
+          'electrified': _electrifiedValue,
+          'lpg': _lpgValue,
+          'members_count': membersCount.toString(),
+          'member_list': List.generate(membersCount, (index) {
+            return {
+              'name': _memberNameControllers[index].text,
+              'age': int.parse(_memberAgeControllers[index].text),
+              'occupation': _memberOccupationControllers[index].text,
+              'uid_no': _memberUIDControllers[index].text,
+            };
+          }),
+          'purchase_date': purchaseDates,  // Adding the purchase dates array
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Card added successfully!')),
+        );
+
+        // After successful submission, reset the form fields
+        setState(() {
+          membersCount = 0;
+          _memberNameControllers.clear();
+          _memberAgeControllers.clear();
+          _memberOccupationControllers.clear();
+          _memberUIDControllers.clear();
+          _ownerNameController.clear();
+          _cardNoController.clear();
+          _categoryController.clear();
+          _mobileNoController.clear();
+          _addressController.clear();
+          _localBodyController.clear();
+          _wardNoController.clear();
+          _houseNoController.clear();
+          _monthlyIncomeController.clear();
+        });
+
+        _fetchAllCards();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to add card')),
+        );
+      }
     }
+  }
 
-    // Get the category_id based on entered category_name
-    String categoryId = await _getCategoryIdByName(_categoryController.text);
-    if (categoryId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Category not found!')),
-      );
-      return;
-    }
-    // Store the last purchase date as a Firestore Timestamp
-Timestamp? lastPurchaseTimestamp = _lastPurchaseDateController.text.isNotEmpty
-    ? Timestamp.fromDate(DateFormat('yyyy-MM-dd').parse(_lastPurchaseDateController.text))
-    : null;
-
-
+  // Function to get the Category ID based on the category name
+  Future<String> _getCategoryIdByName(String categoryName) async {
     try {
-      await FirebaseFirestore.instance.collection('Card').add({
-        'owner_name': _ownerNameController.text,
-        'card_no': _cardNoController.text,
-        'category': _categoryController.text,
-        'category_id': categoryId,  // Add category_id
-        'mobile_no': _mobileNoController.text,
-        'address': _addressController.text,
-        'local_body': _localBodyController.text,
-        'ward_no': _wardNoController.text,
-        'house_no': _houseNoController.text,
-        'monthly_income': _monthlyIncomeController.text,
-        'electrified': _electrifiedValue,
-        'lpg': _lpgValue,
-        'members_count': membersCount.toString(),
-        'member_list': List.generate(membersCount, (index) {
-          return {
-            'name': _memberNameControllers[index].text,
-            'age': int.parse(_memberAgeControllers[index].text),
-            'occupation': _memberOccupationControllers[index].text,
-            'uid_no': _memberUIDControllers[index].text,
-          };
-          
-        }),
-        'last_purchase_date': lastPurchaseTimestamp,
-        
-      });
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('Category')
+          .where('category_name', isEqualTo: categoryName)
+          .get();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Card added successfully!')),
-      );
-
-      // After successful submission, reset the form fields
-      setState(() {
-        membersCount = 0;
-        _memberNameControllers.clear();
-        _memberAgeControllers.clear();
-        _memberOccupationControllers.clear();
-        _memberUIDControllers.clear();
-        _ownerNameController.clear();
-        _cardNoController.clear();
-        _categoryController.clear();
-        _mobileNoController.clear();
-        _addressController.clear();
-        _localBodyController.clear();
-        _wardNoController.clear();
-        _houseNoController.clear();
-        _monthlyIncomeController.clear();
-      });
-
-      _fetchAllCards();
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs.first.id;
+      } else {
+        return '';
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to add card')),
-      );
+      print('Error fetching category: $e');
+      return '';
     }
   }
-}
 
-Future<String> _getCategoryIdByName(String categoryName) async {
-  try {
-    // Query Category collection to find the document that matches the entered category_name
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('Category')
-        .where('category_name', isEqualTo: categoryName)
-        .get();
+  
 
-    // If a category with the same name is found, return its document ID
-    if (snapshot.docs.isNotEmpty) {
-      return snapshot.docs.first.id;
-    } else {
-      return '';  // Return an empty string if no match is found
+  // Fetch all product category IDs
+  Future<List<String>> _getProductCategoryIds() async {
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('Product_Category')
+          .get();
+
+      return snapshot.docs.map((doc) => doc.id).toList();
+    } catch (e) {
+      print('Error fetching product categories: $e');
+      return [];
     }
-  } catch (e) {
-    print('Error fetching category: $e');
-    return '';  // Return an empty string in case of error
   }
-}
-
-
 
   // Update a card's details in Firestore
   Future<void> _updateCard(String cardId) async {
@@ -417,7 +443,7 @@ Future<String> _getCategoryIdByName(String categoryName) async {
                       BoxShadow(
                         color: const Color.fromARGB(66, 0, 0, 0),
                         blurRadius: 6.0,
-                        offset: Offset(0, 2),
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
@@ -547,34 +573,6 @@ Future<String> _getCategoryIdByName(String categoryName) async {
                           },
                         ),
                         const SizedBox(height: 20),
-
-                        // Last Purchase Date
-TextFormField(
-  controller: _lastPurchaseDateController,
-  decoration: const InputDecoration(labelText: 'Last Purchase Date'),
-  readOnly: true, // Makes the field read-only so user can only select a date
-  onTap: () async {
-    final selectedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-    );
-
-    if (selectedDate != null) {
-      setState(() {
-        _lastPurchaseDateController.text = DateFormat('yyyy-MM-dd').format(selectedDate);
-      });
-    }
-  },
-  validator: (value) {
-    if (value == null || value.isEmpty) {
-      return 'Please select the last purchase date';
-    }
-    return null;
-  },
-),
-
 
                         // Electrified and LPG Radio Buttons
                         Row(

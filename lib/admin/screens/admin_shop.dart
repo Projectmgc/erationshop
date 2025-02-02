@@ -1,6 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:image/image.dart' as img;
 
 class AdminShopPage extends StatefulWidget {
   const AdminShopPage({super.key});
@@ -18,17 +23,80 @@ class _AdminShopPageState extends State<AdminShopPage> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _shopIdController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
+  File? _imageFile;
+  final picker = ImagePicker();
   bool _isEditing = false;
   String? _shopIdToEdit;
   bool _isPasswordVisible = false;
   late double _latitude;
   late double _longitude;
 
+  // Method to pick image using camera
+  Future<void> _pickImage() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<String> _uploadImageToFacePlusPlus() async {
+    try {
+      if (_imageFile == null) {
+        throw Exception('No image file selected.');
+      }
+
+      // Load image and resize it efficiently
+      img.Image image = img.decodeImage(_imageFile!.readAsBytesSync())!;
+      img.Image resizedImage = img.copyResize(image, width: 800); // Resize to 800px width to maintain detail
+
+      // Compress image slightly for faster upload while maintaining detail
+      final compressedImageBytes = img.encodeJpg(resizedImage, quality: 85); // quality=85 for good quality and fast upload
+
+      // Save resized and compressed image to a temporary file
+      final tempDir = await Directory.systemTemp.createTemp();
+      final tempFile = File('${tempDir.path}/resized_image.jpg');
+      await tempFile.writeAsBytes(compressedImageBytes);
+
+      var uri = Uri.parse('https://api-us.faceplusplus.com/facepp/v3/detect');
+      var request = http.MultipartRequest('POST', uri);
+      request.fields['api_key'] = 'iQmi-6CZt09JXAkCEU-o1mEDbjgcSPUt'; // Replace with your API Key
+      request.fields['api_secret'] = 'kQHG1Uu7gbCuledKsGSFDgzUrj4BzpjV'; // Replace with your API Secret
+      request.files.add(await http.MultipartFile.fromPath('image_file', tempFile.path));
+
+      var response = await request.send();
+      var responseBody = await http.Response.fromStream(response);
+
+      if (response.statusCode == 200) {
+        var responseData = json.decode(responseBody.body);
+
+        if (responseData['faces'] != null && responseData['faces'].isNotEmpty) {
+          var faceToken = responseData['faces'][0]['face_token'];
+          return faceToken;
+        } else {
+          throw Exception('No face detected in the image.');
+        }
+      } else {
+        var responseData = json.decode(responseBody.body);
+        var errorMessage = responseData['error_message'] ?? 'Unknown error';
+        throw Exception('Face++ API error: $errorMessage');
+      }
+    } catch (e) {
+      throw Exception('Error with Face++ API: $e');
+    }
+  }
+
   // Function to add a new shop
   Future<void> _addShop() async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
+        String faceToken = '';
+        if (_imageFile != null) {
+          // Upload face image to Face++ and get face_token
+          faceToken = await _uploadImageToFacePlusPlus();
+        }
+
         final newShop = {
           'name': _nameController.text,
           'store_name': _storeNameController.text,
@@ -38,7 +106,8 @@ class _AdminShopPageState extends State<AdminShopPage> {
           'shop_id': _shopIdController.text,
           'password': _passwordController.text,
           'lat': _latitude,
-          'long': _longitude
+          'long': _longitude,
+          'face_token': faceToken,
         };
 
         await FirebaseFirestore.instance.collection('Shop Owner').add(newShop);
@@ -49,7 +118,7 @@ class _AdminShopPageState extends State<AdminShopPage> {
         _clearForm();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to add shop')),
+          const SnackBar(content: Text('Failed to add shop , Check your selected Image for Face')),
         );
       }
     }
@@ -59,6 +128,12 @@ class _AdminShopPageState extends State<AdminShopPage> {
   Future<void> _updateShop() async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
+        String faceToken = '';
+        if (_imageFile != null) {
+          // Upload face image to Face++ and get face_token
+          faceToken = await _uploadImageToFacePlusPlus();
+        }
+
         final updatedShop = {
           'name': _nameController.text,
           'store_name': _storeNameController.text,
@@ -68,6 +143,7 @@ class _AdminShopPageState extends State<AdminShopPage> {
           'shop_id': _shopIdController.text,
           'password': _passwordController.text,
           'location': GeoPoint(_latitude, _longitude),
+          'face_token': faceToken,
         };
 
         await FirebaseFirestore.instance
@@ -82,7 +158,7 @@ class _AdminShopPageState extends State<AdminShopPage> {
         _clearForm();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update shop')),
+          const SnackBar(content: Text('Failed to update shop ,  Check your selected Image for Face')),
         );
       }
     }
@@ -103,6 +179,7 @@ class _AdminShopPageState extends State<AdminShopPage> {
       _isPasswordVisible = false;
       _latitude = 0.0;
       _longitude = 0.0;
+      _imageFile = null;
     });
   }
 
@@ -120,6 +197,7 @@ class _AdminShopPageState extends State<AdminShopPage> {
       _isEditing = true;
       _shopIdToEdit = shop.id;
       _isPasswordVisible = false;
+      _imageFile = null; // Add logic to load the existing image file if needed
     });
   }
 
@@ -151,62 +229,6 @@ class _AdminShopPageState extends State<AdminShopPage> {
         const SnackBar(content: Text('Error in geocoding address')),
       );
     }
-  }
-
-  // Function to remove a shop
-  Future<void> _removeShop(String shopId) async {
-    try {
-      await FirebaseFirestore.instance.collection('Shop Owner').doc(shopId).delete();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Shop removed successfully')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to remove shop')),
-      );
-    }
-  }
-
-  // Function to fetch the ShopOwner document ID based on shop_id
-  Future<String?> _getShopOwnerDocId(String shopId) async {
-    try {
-      var shopOwnerQuerySnapshot = await FirebaseFirestore.instance
-          .collection('Shop Owner')
-          .where('shop_id', isEqualTo: shopId)
-          .limit(1)
-          .get();
-
-      if (shopOwnerQuerySnapshot.docs.isNotEmpty) {
-        return shopOwnerQuerySnapshot.docs.first.id;
-      }
-    } catch (e) {
-      print('Error fetching ShopOwner document ID: $e');
-    }
-    return null;
-  }
-
-  // Function to fetch ratings for the shop from the ShopRating collection
-  Future<double> _getShopRatings(String shopId) async {
-    try {
-      // Fetch the ShopOwner document ID first using the shop_id
-      String? shopOwnerDocId = await _getShopOwnerDocId(shopId);
-
-      if (shopOwnerDocId != null) {
-        // Use the ShopOwner document ID to fetch ratings from ShopRating collection
-        var shopRatingDoc = await FirebaseFirestore.instance
-            .collection('ShopRating')
-            .doc(shopOwnerDocId)
-            .get();
-
-        if (shopRatingDoc.exists) {
-          // Get the average rating from the ShopRating document
-          return shopRatingDoc['averageRating'] ?? 0.0;
-        }
-      }
-    } catch (e) {
-      print('Error fetching shop ratings: $e');
-    }
-    return 0.0; // Return 0 if no ratings found
   }
 
   @override
@@ -341,6 +363,18 @@ class _AdminShopPageState extends State<AdminShopPage> {
                         child: Text(_isEditing ? 'Update Shop' : 'Add Shop', style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0))),
                       ),
                       const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _pickImage,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color.fromARGB(255, 208, 207, 206),
+                        ),
+                        child: const Text('Capture Face Image', style: TextStyle(color: Colors.black)),
+                      ),
+                      const SizedBox(height: 20),
+                      _imageFile == null
+                          ? const Text('No image selected.')
+                          : Image.file(_imageFile!, width: 100, height: 100),
+                      const SizedBox(height: 20),
                       Text(
                         'Manage Shops',
                         style: TextStyle(
@@ -370,54 +404,22 @@ class _AdminShopPageState extends State<AdminShopPage> {
                             itemBuilder: (context, index) {
                               var shop = snapshot.data!.docs[index];
 
-                              return FutureBuilder<double>(
-                                future: _getShopRatings(shop['shop_id']),
-                                builder: (context, ratingSnapshot) {
-                                  if (ratingSnapshot.connectionState == ConnectionState.waiting) {
-                                    return ListTile(
-                                      title: Text(shop['name']),
-                                      subtitle: Text('Loading rating...'),
-                                    );
-                                  }
-
-                                  double averageRating = ratingSnapshot.data ?? 0.0;
-                                  // Determine the color based on the rating value
-                                  Color ratingColor = averageRating < 3 ? Colors.red : const Color.fromARGB(255, 21, 159, 25);
-
-                                  return Card(
-                                    margin: const EdgeInsets.symmetric(vertical: 8),
-                                    child: ListTile(
-                                      title: Text(shop['name']),
-                                      subtitle: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text('Store: ${shop['store_name']}'),
-                                          Text('Shop ID: ${shop['shop_id']}'),
-                                          Text('Address: ${shop['address']}'),
-                                          Text('Phone: ${shop['phone']}'),
-                                          Text('Email: ${shop['email']}'),
-                                          Text(
-                                            'Average Rating: ${averageRating.toStringAsFixed(1)}',
-                                            style: TextStyle(color: ratingColor),
-                                          ),
-                                        ],
-                                      ),
-                                      trailing: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          IconButton(
-                                            icon: Icon(Icons.edit, color: Colors.blue),
-                                            onPressed: () => _loadShopData(shop),
-                                          ),
-                                          IconButton(
-                                            icon: Icon(Icons.delete, color: Colors.red),
-                                            onPressed: () => _removeShop(shop.id),
-                                          ),
-                                        ],
-                                      ),
+                              return ListTile(
+                                title: Text(shop['name']),
+                                subtitle: Text('Store: ${shop['store_name']}'),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(Icons.edit, color: Colors.blue),
+                                      onPressed: () => _loadShopData(shop),
                                     ),
-                                  );
-                                },
+                                    IconButton(
+                                      icon: Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () => _removeShop(shop.id),
+                                    ),
+                                  ],
+                                ),
                               );
                             },
                           );
@@ -432,5 +434,18 @@ class _AdminShopPageState extends State<AdminShopPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _removeShop(String shopId) async {
+    try {
+      await FirebaseFirestore.instance.collection('Shop Owner').doc(shopId).delete();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Shop removed successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to remove shop')),
+      );
+    }
   }
 }

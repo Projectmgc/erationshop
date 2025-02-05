@@ -130,7 +130,7 @@ class _OwnerOrdersPageState extends State<OwnerOrdersPage> {
                                 Text(
                                   'Purchase Status: ${order['purchased']}',
                                   style: TextStyle(
-                                    color: order['purchased'] == 'not purchased'
+                                    color: order['purchased'] == 'Not Purchased'
                                         ? Colors.red
                                         : Colors.green, // Red for not purchased, Green for purchased
                                     fontWeight: FontWeight.bold,
@@ -138,7 +138,7 @@ class _OwnerOrdersPageState extends State<OwnerOrdersPage> {
                                 ),
                               ],
                             ),
-                            trailing: order['purchased'] == 'not purchased'
+                            trailing: order['purchased'] == 'Not Purchased'
                                 ? IconButton(
                                     icon: Icon(Icons.check_circle),
                                     onPressed: () => _updatePurchaseStatus(order['order_id']),

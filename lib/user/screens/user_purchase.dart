@@ -15,11 +15,13 @@ class _UserPurchaseState extends State<UserPurchase> {
   bool _isLoading = false;
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   late Razorpay _razorpay;
+  List<Map<dynamic, dynamic>> _previousOrders = [];
 
   @override
   void initState() {
     super.initState();
     _fetchCardsFromFirestore();
+    _fetchPreviousOrders(); 
     _razorpay = Razorpay();
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
@@ -261,6 +263,60 @@ Future<void> _fetchCardsFromFirestore() async {
     }
   }
 
+  Future<void> _fetchPreviousOrders() async {
+  try {
+    // Retrieve the user ID from SharedPreferences
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('card_no');
+    
+    // If no userId is found, print an error and return early
+    if (userId == null || userId.isEmpty) {
+      print("User ID not found or invalid.");
+      setState(() {
+        _previousOrders = [];  // Empty the orders list if no userId is found
+      });
+      return;  // Exit early if no userId is found
+    }
+
+    // Query to fetch orders for the current user
+    QuerySnapshot querySnapshot = await firestore
+        .collection('Orders')
+        .where('user_id', isEqualTo: userId)
+        .orderBy('timestamp', descending: true) // Order by timestamp (most recent first)
+        .get();
+
+    // Check if any documents were returned
+    if (querySnapshot.docs.isEmpty) {
+      print("No previous orders found for this user.");
+      setState(() {
+        _previousOrders = []; // No orders to display
+      });
+    } else {
+      // If orders are found, map the result and update the state
+      setState(() {
+        _previousOrders = querySnapshot.docs.map((doc) {
+          return {
+            'order_id': doc.id,
+            'total_amount': doc['total_amount'],
+            'items': doc['items'],
+            'payment_id': doc['payment_id'],
+            'status': doc['status'],
+            'timestamp': doc['timestamp'],
+            'purchased': doc['purchased'],
+          };
+        }).toList();
+      });
+    }
+  } catch (e) {
+    // Print error and provide feedback if any error occurs during the fetching
+    print('Error fetching previous orders: $e');
+    setState(() {
+      _previousOrders = [];  // Empty the orders list in case of error
+    });
+  }
+}
+
+
   // Payment Success handler
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -275,6 +331,7 @@ Future<void> _fetchCardsFromFirestore() async {
         'payment_id': response.paymentId,
         'status': 'Success',
         'timestamp': FieldValue.serverTimestamp(),
+        'purchased' :'Not Purchased'
       });
 
       // Remove items from cart
@@ -410,8 +467,45 @@ Future<void> _fetchCardsFromFirestore() async {
                     ],
                   ),
                 ),
+                 Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Previous Orders',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 10),
+                      _previousOrders.isEmpty
+                          ? Text('No previous orders found.')
+                          : Column(
+                              children: _previousOrders.map((order) {
+                                return Card(
+                                  margin: EdgeInsets.symmetric(vertical: 5),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  elevation: 5,
+                                  child: ListTile(
+                                    title: Text('Order ID: ${order['order_id']}'),
+                                    subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text('Total: ₹${order['total_amount']}'),
+      Text('Payment id: ${order['payment_id']}'),
+      Text('Purchase Status: ${order['purchased']}')],
+                                   
+                                  ),
+                                ));
+                              }).toList(),
+                            ),
+                    ],
+                  ),
+                ),
               ],
             ),
+            
+            
     );
   }
 }

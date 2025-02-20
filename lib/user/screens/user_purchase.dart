@@ -412,24 +412,25 @@ void _handlePaymentSuccess(PaymentSuccessResponse response) async {
     }
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ration Shop - User Purchase',style: TextStyle(color: Colors.white),),
+        title: Text(
+          'Ration Shop - User Purchase',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: const Color.fromARGB(255, 0, 0, 0),
         iconTheme: IconThemeData(color: Colors.white),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // Card List using ListView to show available cards
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _cards.length,
-                    itemBuilder: (context, index) {
-                      final card = _cards[index];
+          : SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Card List using ListView to show available cards
+                  Column(
+                    children: _cards.map((card) {
                       return Card(
                         margin: EdgeInsets.all(8),
                         shape: RoundedRectangleBorder(
@@ -453,95 +454,97 @@ void _handlePaymentSuccess(PaymentSuccessResponse response) async {
                                   product: product,
                                   isAddedToCart: isAddedToCart,
                                   onAddToCart: () => _addToCart(product),
-                                  onRemoveFromCart: () =>
-                                      _removeFromCart(product),
+                                  onRemoveFromCart: () => _removeFromCart(product),
                                 );
                               }).toList(),
                             ),
                           ],
                         ),
                       );
-                    },
+                    }).toList(),
                   ),
-                ),
-                // Cart Summary and Place Order
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Cart (${_cart.length} items)',
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Total: ₹${_calculateTotalPrice().toStringAsFixed(2)}',
-                        style: TextStyle(fontSize: 18, color: Colors.green),
-                      ),
-                      SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _placeOrder,
-                        child: Text('Place Order',),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 212, 175, 175),
-                          padding: EdgeInsets.symmetric(vertical: 15,horizontal: 30),
-                          textStyle: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+
+                  // Cart Summary and Place Order
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Cart (${_cart.length} items)',
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          'Total: ₹${_calculateTotalPrice().toStringAsFixed(2)}',
+                          style: TextStyle(fontSize: 18, color: Colors.green),
+                        ),
+                        SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: _placeOrder,
+                          child: Text('Place Order'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color.fromARGB(255, 212, 175, 175),
+                            padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                            textStyle: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                 Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Previous Orders',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 10),
-                      _previousOrders.isEmpty
-                          ? Text('No orders found.')
-                          : Column(
-                              children: _previousOrders.map((order) {
-                                return Card(
-                                  margin: EdgeInsets.symmetric(vertical: 5),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  elevation: 5,
-                                  child: ListTile(
-                                    title: Text('Order ID: ${order['order_id']}'),
-                                    subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text('Total: ₹${order['total_amount']}'),
-      Text('Payment id: ${order['payment_id']}'),
-      Text('Purchase Status: ${order['purchased']}'),
-      Text('Order Date: ${order['timestamp']}'),
-     Text(
-  'Items: ${_getItemsDetails(order['items'])}',
-)],
-                                   
-                                  ),
-                                ));
-                              }).toList(),
-                            ),
-                    ],
+                  
+                  // Previous Orders section
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Previous Orders',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: 10),
+                        _previousOrders.isEmpty
+                            ? Text('No orders found.')
+                            : Column(
+                                children: _previousOrders.map((order) {
+                                  return Card(
+                                    margin: EdgeInsets.symmetric(vertical: 5),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    elevation: 5,
+                                    child: ListTile(
+                                      title: Text('Order ID: ${order['order_id']}'),
+                                      subtitle: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Total: ₹${order['total_amount']}'),
+                                          Text('Payment id: ${order['payment_id']}'),
+                                          Text('Purchase Status: ${order['purchased']}'),
+                                          Text('Order Date: ${order['timestamp']}'),
+                                          Text(
+                                            'Items: ${_getItemsDetails(order['items'])}',
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            
-            
     );
   }
 }
@@ -632,49 +635,52 @@ class ProductCard extends StatelessWidget {
               ),
             ),
             // Add/Remove Button
-          product['isOrderd'] ? Icon(Icons.task_alt,color: Colors.green,) :   isAddedToCart
-                ? ElevatedButton.icon(
-                    onPressed: onRemoveFromCart,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+            product['isOrderd']
+                ? Icon(Icons.task_alt, color: Colors.green)
+                : isAddedToCart
+                    ? ElevatedButton.icon(
+                        onPressed: onRemoveFromCart,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        icon: Icon(Icons.remove_shopping_cart, color: Colors.white),
+                        label: Text(
+                          'Remove',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      )
+                    : ElevatedButton.icon(
+                        onPressed: onAddToCart,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 6, 6, 6),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        icon: Icon(Icons.add_shopping_cart, color: Colors.white),
+                        label: Text(
+                          'Add',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
-                    icon: Icon(Icons.remove_shopping_cart, color: Colors.white),
-                    label: Text(
-                      'Remove',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  )
-                : ElevatedButton.icon(
-                    onPressed: onAddToCart,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 6, 6, 6),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    icon: Icon(Icons.add_shopping_cart, color: Colors.white),
-                    label: Text(
-                      'Add',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
           ],
         ),
       ),
     );
   }
 }
+
 String _getItemsDetails(List<dynamic> items) {
   if (items == null || items.isEmpty) return 'No items';
 

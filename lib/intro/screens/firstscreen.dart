@@ -45,8 +45,8 @@ class _IntroPageState extends State<IntroPage> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle, // Circular shape
                           border: Border.all(
-                            color: const Color.fromARGB(255, 7, 7, 7),
-                            width: 5,
+                            color: const Color.fromARGB(255, 173, 111, 4),
+                            width: 3,
                           ),
                         ),
                         child: ClipOval(

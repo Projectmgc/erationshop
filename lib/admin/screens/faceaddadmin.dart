@@ -15,7 +15,7 @@ class AdminFaceCaptureScreen extends StatefulWidget {
 class _AdminFaceCaptureScreenState extends State<AdminFaceCaptureScreen> {
   File? _imageFile;
   final picker = ImagePicker();
-  TextEditingController cardNoController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
   bool isLoading = false;
 
   // Method to pick image using camera
@@ -74,23 +74,23 @@ class _AdminFaceCaptureScreenState extends State<AdminFaceCaptureScreen> {
     }
   }
 
-  // Method to save face_token to Firestore
-  Future<void> _saveFaceIdToFirestore(String cardNo, String faceToken) async {
+  // Method to save face_token to Firestore under Admin collection
+  Future<void> _saveFaceIdToFirestore(String email, String faceToken) async {
     try {
-      // Check if the card number exists in the Card collection
-      var cardSnapshot = await FirebaseFirestore.instance
-          .collection('Card')
-          .where('card_no', isEqualTo: cardNo)
+      // Check if the admin exists in the Admin collection
+      var adminSnapshot = await FirebaseFirestore.instance
+          .collection('Admin')
+          .where('email', isEqualTo: email)
           .limit(1)
           .get();
 
-      if (cardSnapshot.docs.isEmpty) {
-        _showDialog('Error', 'Card number not found.');
+      if (adminSnapshot.docs.isEmpty) {
+        _showDialog('Error', 'Admin email not found.');
         return;
       }
 
-      // Update the corresponding card document with the face_token
-      await FirebaseFirestore.instance.collection('Card').doc(cardSnapshot.docs.first.id).update({
+      // Update the corresponding admin document with the face_token
+      await FirebaseFirestore.instance.collection('Admin').doc(adminSnapshot.docs.first.id).update({
         'face_token': faceToken,  // Store the Face++ face_token
       });
 
@@ -123,8 +123,8 @@ class _AdminFaceCaptureScreenState extends State<AdminFaceCaptureScreen> {
 
   // Submit method to handle the entire flow
   Future<void> _submit() async {
-    if (cardNoController.text.isEmpty || _imageFile == null) {
-      _showDialog('Error', 'Please provide both card number and image');
+    if (emailController.text.isEmpty || _imageFile == null) {
+      _showDialog('Error', 'Please provide both email and image');
       return;
     }
 
@@ -136,8 +136,8 @@ class _AdminFaceCaptureScreenState extends State<AdminFaceCaptureScreen> {
       // Upload image to Face++ and get the face_token
       String faceToken = await _uploadImageToFacePlusPlus();
 
-      // Save the face_token in Firestore under the corresponding card_no in the Card collection
-      await _saveFaceIdToFirestore(cardNoController.text, faceToken);
+      // Save the face_token in Firestore under the corresponding email in the Admin collection
+      await _saveFaceIdToFirestore(emailController.text, faceToken);
     } catch (e) {
       _showDialog('Error', e.toString());
     } finally {
@@ -151,7 +151,7 @@ class _AdminFaceCaptureScreenState extends State<AdminFaceCaptureScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Card Member Face Capture',style: TextStyle(color: Colors.white),),
+        title: Text('Admin Face Capture', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.black,
         iconTheme: IconThemeData(color: Colors.white),
       ),
@@ -161,8 +161,8 @@ class _AdminFaceCaptureScreenState extends State<AdminFaceCaptureScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
-              controller: cardNoController,
-              decoration: InputDecoration(labelText: 'Card Number'),
+              controller: emailController,
+              decoration: InputDecoration(labelText: 'Admin Email'),
             ),
             SizedBox(height: 20),
             _imageFile == null

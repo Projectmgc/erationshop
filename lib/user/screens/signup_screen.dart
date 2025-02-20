@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:erationshop/user/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
@@ -81,8 +82,8 @@ Future<String?> _uploadImageToFacePlusPlus() async {
   try {
     var uri = Uri.parse('https://api-us.faceplusplus.com/facepp/v3/detect');
     var request = http.MultipartRequest('POST', uri);
-    request.fields['api_key'] = 'iQmi-6CZt09JXAkCEU-o1mEDbjgcSPUt';
-    request.fields['api_secret'] = 'kQHG1Uu7gbCuledKsGSFDgzUrj4BzpjV';
+    request.fields['api_key'] = dotenv.env['faceppapikey']!; // Replace with your API Key
+    request.fields['api_secret'] = dotenv.env['faceppsecretkey']!; // Replace with your API Secret
     request.files.add(await http.MultipartFile.fromPath('image_file', _imageFile!.path));
 
     var response = await request.send();
@@ -258,8 +259,8 @@ Future<void> signp() async {
     try {
       var uri = Uri.parse('https://api-us.faceplusplus.com/facepp/v3/compare');
       var request = http.MultipartRequest('POST', uri);
-      request.fields['api_key'] = 'iQmi-6CZt09JXAkCEU-o1mEDbjgcSPUt'; // Your Face++ API key
-      request.fields['api_secret'] = 'kQHG1Uu7gbCuledKsGSFDgzUrj4BzpjV'; // Your Face++ API secret
+      request.fields['api_key'] = dotenv.env['faceppapikey']!; // Replace with your API Key
+      request.fields['api_secret'] = dotenv.env['faceppsecretkey']!; // Replace with your API Secret
       request.fields['face_token1'] = faceToken;  // The token of the captured face
       request.fields['face_token2'] = storedFaceToken;  // The stored token from Firestore
 

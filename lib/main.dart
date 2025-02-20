@@ -5,6 +5,7 @@ import 'package:erationshop/owner/screens/home_screen.dart';
 import 'package:erationshop/user/screens/uhome_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,7 +28,7 @@ Future<void> main() async {
   OneSignal.Notifications.requestPermission(true);
    // Initialize SharedPreferences and check for login data
   SharedPreferences prefs = await SharedPreferences.getInstance();
-
+  await dotenv.load(fileName: ".env");
   card_no = prefs.getString('card_no');
   email = prefs.getString('email');
   shopId = prefs.getString('shop_id');

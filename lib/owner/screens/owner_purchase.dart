@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:erationshop/user/screens/user_purchase.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart'; // Import shared_preferences
 
@@ -70,9 +71,9 @@ class _OwnerPurchaseState extends State<OwnerPurchase> {
   // Function to send OTP via Twilio Verify API
   Future<void> _sendOTPViaTwilio(String mobileNo) async {
     // Twilio credentials (replace with your actual credentials)
-    final String accountSid = 'ACd15973cda53f718644a1864b3e120b0a';  // Your Twilio Account SID
-    final String authToken = '889ede11abcbb0170cdcc00c8a9c2cb0';  // Your Twilio Auth Token
-    final String serviceSid = 'VA62813aef6261795faf343f1c8f379775';  // Your Twilio Verify Service SID
+    final String? accountSid = dotenv.env['accountSid'];  // Your Twilio Account SID
+    final String? authToken = dotenv.env['authToken'];  // Your Twilio Auth Token
+    final String? serviceSid = dotenv.env['serviceSid'];  // Your Twilio Verify Service SID
 
     // Twilio Verify API URL for sending OTP
     final String url = 'https://verify.twilio.com/v2/Services/$serviceSid/Verifications';
@@ -108,9 +109,9 @@ class _OwnerPurchaseState extends State<OwnerPurchase> {
     String otp = _otpController.text;
 
     // Twilio credentials (replace with your actual credentials)
-    final String accountSid = 'ACd15973cda53f718644a1864b3e120b0a';  // Your Twilio Account SID
-    final String authToken = '889ede11abcbb0170cdcc00c8a9c2cb0';    // Your Twilio Auth Token
-    final String serviceSid = 'VA62813aef6261795faf343f1c8f379775';  // Your Twilio Verify Service SID
+    final String? accountSid = dotenv.env['accountSid'];  // Your Twilio Account SID
+    final String? authToken = dotenv.env['2authToken'];    // Your Twilio Auth Token
+    final String? serviceSid = dotenv.env['2serviceSid'];  // Your Twilio Verify Service SID
 
     // Twilio API URL for verifying OTP
     final String url = 'https://verify.twilio.com/v2/Services/$serviceSid/VerificationCheck';

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:erationshop/main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
@@ -67,7 +68,7 @@ class _Forgot1_PasswordState extends State<Forgot1_Password> {
     final smtpServer = SmtpServer(
       'smtp.sendgrid.net',
       username: 'apikey',  // Use "apikey" as the username for SendGrid
-      password: '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',  // SendGrid API Key
+      password: dotenv.env['SENDGRID_API_KEY'],  // SendGrid API Key
       port: 587,  // TLS connection
       ssl: false,  // False because we use TLS, not SSL
     );

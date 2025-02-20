@@ -93,17 +93,33 @@ Future<void> _fetchCardsFromFirestore() async {
       productFutures.add(
         firestore
             .collection('Orders')
-            
+            .where('user_id', isEqualTo: cardId)
             .get()
             .then((orderQuerySnapshot) async {
+bool isOrderd = false;
 
-              bool  isOrderd = false;
+for (var e in orderQuerySnapshot.docs) {
+  var items = e.data()['items'];
 
-          orderQuerySnapshot.docs.forEach((e) {
-  isOrderd = e.data()['items'].any((e) => e['id'] == productInfo['product_id']) ?? true; // Ensuring it's not null
-  print('oooooooo');
-  print(isOrderd);
-});
+  // Print data to check if it matches your expectations
+  print('Order data: ${e.data()}');
+  print('Items: $items');
+
+  if (items != null && items is List) {
+    // Print to see if the product_id is correctly matched
+    print('Checking if product ${productInfo['product_id']} is in the order...');
+    if (items.any((item) => item['id'] == productInfo['product_id'])) {
+      isOrderd = true;
+      break; // Break as soon as we find the product ordered
+    }
+  } else {
+    print('Items is not a valid list or is null');
+  }
+}
+
+print('Is ordered: $isOrderd');
+ // After checking all orders, print the final status
+
 
           
             // Fetch product details
@@ -263,11 +279,14 @@ Future<void> _fetchCardsFromFirestore() async {
     }
   }
 
-  Future<void> _fetchPreviousOrders() async {
+Future<void> _fetchPreviousOrders() async {
   try {
     // Retrieve the user ID from SharedPreferences
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString('card_no');
+    
+    // Log the user ID to ensure it's being retrieved correctly
+    print("User ID from SharedPreferences: $userId");
     
     // If no userId is found, print an error and return early
     if (userId == null || userId.isEmpty) {
@@ -278,16 +297,18 @@ Future<void> _fetchCardsFromFirestore() async {
       return;  // Exit early if no userId is found
     }
 
-    // Query to fetch orders for the current user
+    // Simplify the query to test
     QuerySnapshot querySnapshot = await firestore
-        .collection('Orders')
+        .collection('Orders_all')
         .where('user_id', isEqualTo: userId)
-        .orderBy('timestamp', descending: true) // Order by timestamp (most recent first)
         .get();
 
+    // Log the number of documents returned
+    print("Number of orders found: ${querySnapshot.docs.length}");
+    
     // Check if any documents were returned
     if (querySnapshot.docs.isEmpty) {
-      print("No previous orders found for this user.");
+      print("No orders found for this user.");
       setState(() {
         _previousOrders = []; // No orders to display
       });
@@ -316,34 +337,45 @@ Future<void> _fetchCardsFromFirestore() async {
   }
 }
 
+// Payment Success handler
+void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  final userId = prefs.getString('card_no');
 
-  // Payment Success handler
-  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('card_no');
+  if (userId != null) {
+    // Add the order to Firestore 'Orders' collection
+    await firestore.collection('Orders').add({
+      'user_id': userId,
+      'items': _cart,
+      'total_amount': _calculateTotalPrice(),
+      'payment_id': response.paymentId,
+      'status': 'Success',
+      'timestamp': FieldValue.serverTimestamp(),
+      'purchased': 'Not Purchased'
+    });
 
-    if (userId != null) {
-      // Add the order to Firestore 'Orders' collection
-      await firestore.collection('Orders').add({
-        'user_id': userId,
-        'items': _cart,
-        'total_amount': _calculateTotalPrice(),
-        'payment_id': response.paymentId,
-        'status': 'Success',
-        'timestamp': FieldValue.serverTimestamp(),
-        'purchased' :'Not Purchased'
-      });
+    // Also add the order to the 'Orders_all' collection
+    await firestore.collection('Orders_all').add({
+      'user_id': userId,
+      'items': _cart,
+      'total_amount': _calculateTotalPrice(),
+      'payment_id': response.paymentId,
+      'status': 'Success',
+      'timestamp': FieldValue.serverTimestamp(),
+      'purchased': 'Not Purchased'
+    });
 
-      // Remove items from cart
-      _removeAllFromCart();
+    // Remove items from cart
+    _removeAllFromCart();
 
-      await _fetchCardsFromFirestore();
+    // Refresh the cards and orders data
+    await _fetchCardsFromFirestore();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Payment Successful!')),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Payment Successful!')),
+    );
   }
+}
 
   // Payment Error handler
   void _handlePaymentError(PaymentFailureResponse response) {
@@ -478,7 +510,7 @@ Future<void> _fetchCardsFromFirestore() async {
                       ),
                       SizedBox(height: 10),
                       _previousOrders.isEmpty
-                          ? Text('No previous orders found.')
+                          ? Text('No orders found.')
                           : Column(
                               children: _previousOrders.map((order) {
                                 return Card(
@@ -493,7 +525,11 @@ Future<void> _fetchCardsFromFirestore() async {
     children: [
       Text('Total: ₹${order['total_amount']}'),
       Text('Payment id: ${order['payment_id']}'),
-      Text('Purchase Status: ${order['purchased']}')],
+      Text('Purchase Status: ${order['purchased']}'),
+      Text('Order Date: ${order['timestamp']}'),
+     Text(
+  'Items: ${_getItemsDetails(order['items'])}',
+)],
                                    
                                   ),
                                 ));
@@ -638,4 +674,17 @@ class ProductCard extends StatelessWidget {
       ),
     );
   }
+}
+String _getItemsDetails(List<dynamic> items) {
+  if (items == null || items.isEmpty) return 'No items';
+
+  // Iterate through the list of items and extract the name and quantity
+  List<String> itemDetails = items.map((item) {
+    String name = item['name'] ?? 'Unknown'; // Default to 'Unknown' if no name is found
+    String quantity = item['quantity']?.toString() ?? '0'; // Default to '0' if no quantity is found
+    return '$name ($quantity)';
+  }).toList();
+
+  // Join the item details into a single string, separated by commas
+  return itemDetails.join(', ');
 }

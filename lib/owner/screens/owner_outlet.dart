@@ -26,24 +26,46 @@ class _OwnerOutletPageState extends State<OwnerOutletPage> {
   }
 
   // Fetch Stock Details from Stock_Details collection using shopId
-  Future<Map<String, dynamic>> fetchStockDetails(String shopId) async {
-    try {
-      print("Fetching stock details for shopId: $shopId");
+Future<Map<String, dynamic>> fetchStockDetails(String shopId) async {
+  try {
+    print("Fetching stock details for shopId: $shopId");
 
-      DocumentSnapshot docSnapshot = await _firestore.collection('Stock_Details').doc(shopId).get();
+    // Fetch the document from the 'Shop Owner' collection where shop_id field matches the provided shopId
+    QuerySnapshot shopQuerySnapshot = await _firestore
+        .collection('Shop Owner')
+        .where('shop_id', isEqualTo: shopId)  // Match the field shop_id in Shop Owner collection
+        .limit(1)  // Limit to 1 document
+        .get();
 
-      if (!docSnapshot.exists) {
-        print("No stock details found for shopId: $shopId");
-        return {}; // Return empty map if no stock details found
-      }
-
-      print("Stock details found: ${docSnapshot.data()}");
-      return docSnapshot.data() as Map<String, dynamic>;
-    } catch (e) {
-      print('Error fetching stock details: $e');
-      return {}; // Return empty map in case of error
+    // Check if we have a matching document in the 'Shop Owner' collection
+    if (shopQuerySnapshot.docs.isEmpty) {
+      print("No matching shop found for shopId: $shopId");
+      return {};  // Return empty map if no matching shop is found
     }
+
+    // Get the document ID from the matched document
+    String shopOwnerDocId = shopQuerySnapshot.docs.first.id;
+    print("Found shop document with ID: $shopOwnerDocId");
+
+    // Now fetch the stock details using the shopOwnerDocId
+    DocumentSnapshot docSnapshot = await _firestore
+        .collection('Stock_Details')
+        .doc(shopOwnerDocId)  // Use the document ID from Shop Owner collection
+        .get();
+
+    if (!docSnapshot.exists) {
+      print("No stock details found for shopId: $shopId");
+      return {};  // Return empty map if no stock details found
+    }
+
+    print("Stock details found: ${docSnapshot.data()}");
+    return docSnapshot.data() as Map<String, dynamic>;  // Return stock details as a map
+  } catch (e) {
+    print('Error fetching stock details: $e');
+    return {};  // Return empty map in case of error
   }
+}
+
 
   // Fetch product details from Product_Category collection
   Future<List<Map<String, dynamic>>> fetchProducts() async {

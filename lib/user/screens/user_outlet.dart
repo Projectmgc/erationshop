@@ -279,108 +279,208 @@ Widget build(BuildContext context) {
   );
 }
 
-  Widget _buildOutletCard(Map<String, dynamic> outlet) {
-    String shopId = outlet['shopId'];
-    // Fetch the last submitted rating or the default rating
-    double localRating = outletRatings[shopId] ?? 0.0;
+Widget _buildOutletCard(Map<String, dynamic> outlet) {
+  String shopId = outlet['shopId'];
 
-    // Fetch the user's rating when the widget is built (if not already fetched)
-    _fetchUserRating(shopId);
+  return FutureBuilder<DocumentSnapshot>(
+    future: FirebaseFirestore.instance
+        .collection('Stock_Details')
+        .doc(shopId) // Fetch Stock_Details document by shopId
+        .get(),
+    builder: (context, stockSnapshot) {
+      if (stockSnapshot.connectionState == ConnectionState.waiting) {
+      }
 
-    return Card(
-      color: const Color.fromARGB(255, 182, 177, 177).withOpacity(0.8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      elevation: 5,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              outlet['outletName'],
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text(
-              'Owner: ${outlet['ownerName']}',
-              style: TextStyle(fontSize: 18),
-            ),
-            SizedBox(height: 10),
-            Text(
-              'Address: ${outlet['address']}',
-              style: TextStyle(fontSize: 18),
-            ),
-            SizedBox(height: 10),
-            Text(
-              'Phone: ${outlet['phone']}',
-              style: TextStyle(fontSize: 18),
-            ),
-            SizedBox(height: 10),
-            FutureBuilder<double>(
-              future: _getAverageRating(shopId),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
-                } else if (snapshot.hasError) {
-                  return Text('Error fetching rating');
-                } else {
-                  double avgRating = snapshot.data ?? 0.0;
-                  return Text('Average Rating: ${avgRating.toStringAsFixed(1)}');
-                }
-              },
-            ),
-            SizedBox(height: 10),
-            Row(
-              children: List.generate(5, (index) {
-                return IconButton(
-                  icon: Icon(
-                    index < localRating ? Icons.star : Icons.star_border,
-                    color: Colors.yellow,
+      if (stockSnapshot.hasError) {
+        return Text('Error fetching stock details');
+      }
+
+      if (!stockSnapshot.hasData || !stockSnapshot.data!.exists) {
+        return Text('Loading....');
+      }
+
+      final stockData = stockSnapshot.data!.data() as Map<String, dynamic>;
+
+      // Extract products map
+      Map<String, dynamic> products = stockData['products'] ?? {};
+
+      List<Map<String, dynamic>> productList = [];
+      products.forEach((key, product) {
+        final productRef = product['documentLink'] as DocumentReference?;
+
+        if (productRef == null) {
+          // Handle the case where product reference is null
+          productList.add({
+            'productId': key,
+            'productReference': null,
+            'currentStock': product['currentStock'] ?? 0,
+            'stockAllotted': product['stockAllotted'] ?? 0,
+          });
+        } else {
+          productList.add({
+            'productId': key,
+            'productReference': productRef,
+            'currentStock': product['currentStock'] ?? 0,
+            'stockAllotted': product['stockAllotted'] ?? 0,
+          });
+        }
+      });
+
+      return Card(
+        color: const Color.fromARGB(255, 182, 177, 177).withOpacity(0.8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        elevation: 5,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                outlet['outletName'] ?? 'No Outlet Name',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10),
+              Text(
+                'Owner: ${outlet['ownerName'] ?? 'No Owner Name'}',
+                style: TextStyle(fontSize: 18),
+              ),
+              SizedBox(height: 10),
+              Text(
+                'Address: ${outlet['address'] ?? 'No Address'}',
+                style: TextStyle(fontSize: 18),
+              ),
+              SizedBox(height: 10),
+              Text(
+                'Phone: ${outlet['phone'] ?? 'No Phone'}',
+                style: TextStyle(fontSize: 18),
+              ),
+              SizedBox(height: 10),
+              FutureBuilder<double>(
+                future: _getAverageRating(shopId),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Text(" ");
+                  } else if (snapshot.hasError) {
+                    return Text('Error fetching rating');
+                  } else {
+                    double avgRating = snapshot.data ?? 0.0;
+                    return Text('Average Rating: ${avgRating.toStringAsFixed(1)}');
+                  }
+                },
+              ),
+              SizedBox(height: 10),
+                            Text("Stock Details :",style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
+
+              // Display product name and stock
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: List.generate(productList.length, (index) {
+                  DocumentReference? productRef = productList[index]['productReference'];
+
+                  if (productRef == null) {
+                    // If product reference is invalid or missing, show a placeholder
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Text(
+                        'Product not available (Invalid reference)',
+                        style: TextStyle(fontSize: 16, color: Colors.red),
+                      ),
+                    );
+                  }
+
+                  return FutureBuilder<DocumentSnapshot>(
+                    future: productRef.get(), // Fetch product details from Product_Category
+                    builder: (context, productDetailSnapshot) {
+                      if (productDetailSnapshot.connectionState == ConnectionState.waiting) {
+                        return Text('Loading product details...');
+                      }
+
+                      if (productDetailSnapshot.hasError) {
+                        return Text('Error fetching product details');
+                      }
+
+                      if (!productDetailSnapshot.hasData || !productDetailSnapshot.data!.exists) {
+                        return Text('Product not found');
+                      }
+
+                      var productDetailData = productDetailSnapshot.data!.data() as Map<String, dynamic>;
+                      String productName = productDetailData['name'] ?? 'Unknown Product';
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$productName - Stock: ${productList[index]['currentStock']}',
+                              style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold),
+                            ),
+                            
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                }),
+              ),
+
+              SizedBox(height: 10),
+              Row(
+                children: List.generate(5, (index) {
+                  double rating = outletRatings[shopId] ?? 0.0; // Default to 0.0 if null
+                  return IconButton(
+                    icon: Icon(
+                      index < rating ? Icons.star : Icons.star_border,
+                      color: Colors.yellow,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        outletRatings[shopId] = (index + 1).toDouble();
+                      });
+                    },
+                  );
+                }),
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _openMap(outlet['latitude'].toString(),
+                          outlet['longitude'].toString()),
+                      icon: Icon(Icons.location_on),
+                      label: Text('View Location'),
+                    ),
                   ),
-                  onPressed: () {
-                    setState(() {
-                      outletRatings[shopId] = (index + 1).toDouble(); // Store the rating
-                    });
-                  },
-                );
-              }),
-            ),
-            SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _openMap(outlet['latitude'].toString(),
-                        outlet['longitude'].toString()),
-                    icon: Icon(Icons.location_on),
-                    label: Text('View Location'),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _openRoute(outlet['latitude'].toString(),
+                          outlet['longitude'].toString()),
+                      icon: Icon(Icons.directions),
+                      label: Text('Get Route'),
+                    ),
                   ),
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _openRoute(outlet['latitude'].toString(),
-                        outlet['longitude'].toString()),
-                    icon: Icon(Icons.directions),
-                    label: Text('Get Route'),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _submitRating(shopId, outletRatings[shopId]!),
+                      icon: Icon(Icons.rate_review),
+                      label: Text('Submit Rating'),
+                    ),
                   ),
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _submitRating(shopId, localRating),
-                    icon: Icon(Icons.rate_review),
-                    label: Text('Submit Rating'),
-                  ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
-    );
-  }
+      );
+    },
+  );
+}
+
+
 
   void _openMap(String? latitude, String? longitude) async {
     if (latitude != null && longitude != null) {

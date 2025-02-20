@@ -65,14 +65,14 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       'title': 'Feedback',
       'color': const Color.fromARGB(255, 0, 0, 0),
       'description': 'Give Feedbacks about App and Other Services.',
-      'image': 'asset/enquiry.jpg',
+      'image': 'asset/feedback.jpeg',
       'page': FeedbackPage(), 
     },
      {
       'title': 'Face Capture',
       'color': const Color.fromARGB(255, 0, 0, 0),
       'description': 'Give Feedbacks about App and Other Services.',
-      'image': 'asset/enquiry.jpg',
+      'image': 'asset/camera.jpeg',
       'page': AdminFaceCaptureScreen(), 
     },
   ];

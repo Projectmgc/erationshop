@@ -1,5 +1,8 @@
+import 'package:erationshop/admin/screens/admin_allowp.dart';
 import 'package:erationshop/admin/screens/cardcategories.dart';
 import 'package:erationshop/admin/screens/chatbot.dart';
+import 'package:erationshop/admin/screens/faceaddadmin.dart';
+import 'package:erationshop/admin/screens/faceaddd.dart';
 import 'package:erationshop/admin/screens/feedback_show.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,7 +10,6 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'admin_product.dart'; // Import your AdminProductPage
 import 'admin_profile.dart';
 import 'admin_stoke.dart';
-import 'admin_complaint.dart';
 import 'admin_card.dart';
 import 'admin_notification.dart';
 import 'admin_shop.dart';
@@ -43,10 +45,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'page': AddCardPage(), // Navigation target
     },
     {
-      'title': 'Shop Enquiry',
+      'title': "Distributer's Enquiry",
       'icon': Icons.chat,
       'color': const Color.fromARGB(255, 0, 0, 0),
-      'description': 'Communicate with Shop Owners.',
+      'description': 'Communicate with Distributers.',
       'image': 'asset/stock.jpg',
       'page': ConversePage(), // Navigation target
     },
@@ -67,12 +69,36 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'page': AdminNotificationPage(), // Navigation target
     },
     {
-      'title': 'Add Shops',
+      'title': 'Add Ration-Shops',
       'icon': Icons.shop,
       'color': const Color.fromARGB(255, 0, 0, 0),
-      'description': 'Add new Shop and Shop owner details.',
+      'description': 'Add new Ration-Shop and Distributer details.',
       'image': 'asset/outlet.jpg',
       'page': AdminShopPage(), // Navigation target for AdminShopPage
+    },
+    {
+      'title': 'Face ID add',
+      'icon': Icons.camera,
+      'color': const Color.fromARGB(255, 0, 0, 0),
+      'description': 'Add /update the Face Id of Distributer.',
+      'image': 'asset/camera.jpeg',
+      'page': AdminFaceCaptureForShopScreen(), // Navigation target for AdminShopPage
+    },
+    {
+      'title': 'Face ID add',
+      'icon': Icons.camera,
+      'color': const Color.fromARGB(255, 0, 0, 0),
+      'description': 'Add / update the Face Id of Admin.',
+      'image': 'asset/camera.jpeg',
+      'page': AdminFaceCaptureScreen(), // Navigation target for AdminShopPage
+    },
+    {
+      'title': 'Purchase Activation',
+      'icon': Icons.shopping_cart,
+      'color': const Color.fromARGB(255, 0, 0, 0),
+      'description': 'Allow the customer to purchase items.',
+      'image': 'asset/purchase.jpg',
+      'page': AdminAllowPurchase(), // Navigation target for AdminShopPage
     },
     {
       'title': 'Add Product',
@@ -86,7 +112,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'title': 'Feedbacks',
       'icon': Icons.inventory,
       'color': const Color.fromARGB(255, 0, 0, 0),
-      'description': 'Keep track of User Feedbacks.',
+      'description': 'Keep track of Customer Feedbacks.',
       'image': 'asset/stock.jpg',
       'page': FeedbackGraphPage(), // Navigation target
     },
@@ -161,7 +187,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               Expanded(
                 child: Center(
                   child: Text(
-                    'E-RATION ADMIN\'S', // Centered title
+                    'E-RATION (ADMIN)', // Centered title
                     style: GoogleFonts.merriweather(
                       color: Colors.white, // Set text color to white
                       fontWeight: FontWeight.bold,

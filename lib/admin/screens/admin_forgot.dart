@@ -3,6 +3,7 @@ import 'package:erationshop/admin/screens/admin_home.dart';
 import 'package:erationshop/admin/screens/admin_login.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
 
@@ -62,7 +63,7 @@ class _AdminForgotPasswordPageState extends State<AdminForgotPasswordPage> {
     final smtpServer = SmtpServer(
       'smtp.sendgrid.net', // SendGrid SMTP server (or any email service)
       username: 'apikey',  // Use "apikey" as the username
-      password: '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',  // Your SendGrid API key here
+      password: dotenv.env['SENDGRID_API_KEY'],  // Your SendGrid API key here
       port: 587,           // TLS connection (587 recommended)
       ssl: false,          // False because we use TLS, not SSL
     );

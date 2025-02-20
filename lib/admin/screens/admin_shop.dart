@@ -1,11 +1,8 @@
 import 'dart:io';
+import 'dart:convert'; // Added for JSON decoding
 import 'package:flutter/material.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:image/image.dart' as img;
+import 'package:http/http.dart' as http; // Import http package
 
 class AdminShopPage extends StatefulWidget {
   const AdminShopPage({super.key});
@@ -23,80 +20,18 @@ class _AdminShopPageState extends State<AdminShopPage> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _shopIdController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  File? _imageFile;
-  final picker = ImagePicker();
   bool _isEditing = false;
   String? _shopIdToEdit;
   bool _isPasswordVisible = false;
   late double _latitude;
   late double _longitude;
 
-  // Method to pick image using camera
-  Future<void> _pickImage() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
-    }
-  }
 
-  Future<String> _uploadImageToFacePlusPlus() async {
-    try {
-      if (_imageFile == null) {
-        throw Exception('No image file selected.');
-      }
-
-      // Load image and resize it efficiently
-      img.Image image = img.decodeImage(_imageFile!.readAsBytesSync())!;
-      img.Image resizedImage = img.copyResize(image, width: 800); // Resize to 800px width to maintain detail
-
-      // Compress image slightly for faster upload while maintaining detail
-      final compressedImageBytes = img.encodeJpg(resizedImage, quality: 85); // quality=85 for good quality and fast upload
-
-      // Save resized and compressed image to a temporary file
-      final tempDir = await Directory.systemTemp.createTemp();
-      final tempFile = File('${tempDir.path}/resized_image.jpg');
-      await tempFile.writeAsBytes(compressedImageBytes);
-
-      var uri = Uri.parse('https://api-us.faceplusplus.com/facepp/v3/detect');
-      var request = http.MultipartRequest('POST', uri);
-      request.fields['api_key'] = 'iQmi-6CZt09JXAkCEU-o1mEDbjgcSPUt'; // Replace with your API Key
-      request.fields['api_secret'] = 'kQHG1Uu7gbCuledKsGSFDgzUrj4BzpjV'; // Replace with your API Secret
-      request.files.add(await http.MultipartFile.fromPath('image_file', tempFile.path));
-
-      var response = await request.send();
-      var responseBody = await http.Response.fromStream(response);
-
-      if (response.statusCode == 200) {
-        var responseData = json.decode(responseBody.body);
-
-        if (responseData['faces'] != null && responseData['faces'].isNotEmpty) {
-          var faceToken = responseData['faces'][0]['face_token'];
-          return faceToken;
-        } else {
-          throw Exception('No face detected in the image.');
-        }
-      } else {
-        var responseData = json.decode(responseBody.body);
-        var errorMessage = responseData['error_message'] ?? 'Unknown error';
-        throw Exception('Face++ API error: $errorMessage');
-      }
-    } catch (e) {
-      throw Exception('Error with Face++ API: $e');
-    }
-  }
 
   // Function to add a new shop
   Future<void> _addShop() async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
-        String faceToken = '';
-        if (_imageFile != null) {
-          // Upload face image to Face++ and get face_token
-          faceToken = await _uploadImageToFacePlusPlus();
-        }
-
         final newShop = {
           'name': _nameController.text,
           'store_name': _storeNameController.text,
@@ -107,58 +42,17 @@ class _AdminShopPageState extends State<AdminShopPage> {
           'password': _passwordController.text,
           'lat': _latitude,
           'long': _longitude,
-          'face_token': faceToken,
         };
 
         await FirebaseFirestore.instance.collection('Shop Owner').add(newShop);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Shop added successfully')),
+          const SnackBar(content: Text('Ration-Shop added successfully')),
         );
 
         _clearForm();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to add shop , Check your selected Image for Face')),
-        );
-      }
-    }
-  }
-
-  // Function to update an existing shop
-  Future<void> _updateShop() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      try {
-        String faceToken = '';
-        if (_imageFile != null) {
-          // Upload face image to Face++ and get face_token
-          faceToken = await _uploadImageToFacePlusPlus();
-        }
-
-        final updatedShop = {
-          'name': _nameController.text,
-          'store_name': _storeNameController.text,
-          'address': _addressController.text,
-          'email': _emailController.text,
-          'phone': _phoneController.text,
-          'shop_id': _shopIdController.text,
-          'password': _passwordController.text,
-          'location': GeoPoint(_latitude, _longitude),
-          'face_token': faceToken,
-        };
-
-        await FirebaseFirestore.instance
-            .collection('Shop Owner')
-            .doc(_shopIdToEdit)
-            .update(updatedShop);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Shop updated successfully')),
-        );
-
-        _clearForm();
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update shop ,  Check your selected Image for Face')),
+          const SnackBar(content: Text('Failed to add Ration-shop')),
         );
       }
     }
@@ -179,38 +73,29 @@ class _AdminShopPageState extends State<AdminShopPage> {
       _isPasswordVisible = false;
       _latitude = 0.0;
       _longitude = 0.0;
-      _imageFile = null;
-    });
-  }
-
-  // Function to load data for editing
-  void _loadShopData(DocumentSnapshot shop) {
-    _nameController.text = shop['name'];
-    _storeNameController.text = shop['store_name'];
-    _addressController.text = shop['address'];
-    _emailController.text = shop['email'];
-    _phoneController.text = shop['phone'];
-    _shopIdController.text = shop['shop_id'];
-    _passwordController.text = shop['password'] ?? '';
-
-    setState(() {
-      _isEditing = true;
-      _shopIdToEdit = shop.id;
-      _isPasswordVisible = false;
-      _imageFile = null; // Add logic to load the existing image file if needed
     });
   }
 
   // Function to handle geocoding (search address and get latitude and longitude)
-  Future<void> _getLatLongFromAddress() async {
+  Future<void> getLatLongFromAddress(String address) async {
     try {
-      if (_addressController.text.isNotEmpty) {
-        List<Location> locations = await locationFromAddress(_addressController.text);
-        if (locations.isNotEmpty) {
+      // Make a request to the Nominatim API to get geocoding data
+      String url = 'https://nominatim.openstreetmap.org/search?format=json&q=$address';
+
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        if (data.isNotEmpty) {
+          double lat = double.parse(data[0]['lat']);
+          double lng = double.parse(data[0]['lon']);
+
+          // Set latitude and longitude to the variables
           setState(() {
-            _latitude = locations.first.latitude;
-            _longitude = locations.first.longitude;
+            _latitude = lat;
+            _longitude = lng;
           });
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Address converted to coordinates')),
           );
@@ -220,13 +105,113 @@ class _AdminShopPageState extends State<AdminShopPage> {
           );
         }
       } else {
+        print('Error with geocoding API');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Complete the address field')),
+          const SnackBar(content: Text('Error in geocoding address')),
+        );
+      }
+    } catch (e) {
+      print('Error in geocoding address: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error in geocoding address')),
+      );
+    }
+  }
+
+  Future<void> _updateShop() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      try {
+        final updatedShop = {
+          'name': _nameController.text,
+          'store_name': _storeNameController.text,
+          'address': _addressController.text,
+          'email': _emailController.text,
+          'phone': _phoneController.text,
+          'shop_id': _shopIdController.text,
+          'password': _passwordController.text,
+          'lat': _latitude,
+          'long': _longitude,
+        };
+
+        // Update the shop in Firestore
+        await FirebaseFirestore.instance
+            .collection('Shop Owner')
+            .doc(_shopIdToEdit) // Use the shop ID to find the document
+            .update(updatedShop);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Shop updated successfully')),
+        );
+
+        _clearForm(); // Clear form after successful update
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update shop')),
+        );
+      }
+    }
+  }
+
+  // Function to load the list of shops from Firestore
+  Stream<List<Map<String, dynamic>>> _getShopList() {
+    return FirebaseFirestore.instance
+        .collection('Shop Owner')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
+
+  // Function to load shop data for editing
+  Future<void> _loadShopData(String shopId) async {
+    try {
+      // Get shop data from Firestore where shop_id matches the given value
+      var querySnapshot = await FirebaseFirestore.instance
+          .collection('Shop Owner')
+          .where('shop_id', isEqualTo: shopId) // Query by shop_id
+          .limit(1) // Ensure only one document is retrieved
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        var shopDoc = querySnapshot.docs.first; // Retrieve the first (and only) document
+
+        var shopData = shopDoc.data()!;
+
+        // Pre-fill form fields with retrieved data
+        _nameController.text = shopData['name'] ?? '';
+        _storeNameController.text = shopData['store_name'] ?? '';
+        _addressController.text = shopData['address'] ?? '';
+        _emailController.text = shopData['email'] ?? '';
+        _phoneController.text = shopData['phone'] ?? '';
+        _shopIdController.text = shopData['shop_id'] ?? '';
+        _passwordController.text = shopData['password'] ?? '';
+        _latitude = shopData['lat'] ?? 0.0;
+        _longitude = shopData['long'] ?? 0.0;
+
+        setState(() {
+          _isEditing = true;
+          _shopIdToEdit = shopId; // Set the ID for editing
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Shop not found')),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error in geocoding address')),
+        const SnackBar(content: Text('Error loading shop data')),
+      );
+    }
+  }
+
+  // Function to remove shop
+  Future<void> _removeShop(String shopId) async {
+    try {
+      await FirebaseFirestore.instance.collection('Shop Owner').doc(shopId).delete();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Shop removed successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to remove shop')),
       );
     }
   }
@@ -292,7 +277,7 @@ class _AdminShopPageState extends State<AdminShopPage> {
                         },
                       ),
                       ElevatedButton(
-                        onPressed: _getLatLongFromAddress,
+                        onPressed: () => getLatLongFromAddress(_addressController.text), // Pass address to get coordinates
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color.fromARGB(255, 208, 207, 206),
                         ),
@@ -353,80 +338,55 @@ class _AdminShopPageState extends State<AdminShopPage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _isEditing ? _updateShop : _addShop,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 208, 207, 206),
-                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        child: ElevatedButton(
+                          onPressed: _isEditing ? _updateShop : _addShop,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color.fromARGB(255, 74, 74, 74),
+                          ),
+                          child: Text(_isEditing ? 'Update Shop' : 'Add Shop'),
                         ),
-                        child: Text(_isEditing ? 'Update Shop' : 'Add Shop', style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0))),
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _pickImage,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 208, 207, 206),
-                        ),
-                        child: const Text('Capture Face Image', style: TextStyle(color: Colors.black)),
-                      ),
-                      const SizedBox(height: 20),
-                      _imageFile == null
-                          ? const Text('No image selected.')
-                          : Image.file(_imageFile!, width: 100, height: 100),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Manage Shops',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('Shop Owner')
-                            .snapshots(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const CircularProgressIndicator();
-                          }
-
-                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                            return const Text('No shops available');
-                          }
-
-                          return ListView.builder(
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemCount: snapshot.data!.docs.length,
-                            itemBuilder: (context, index) {
-                              var shop = snapshot.data!.docs[index];
-
-                              return ListTile(
-                                title: Text(shop['name']),
-                                subtitle: Text('Store: ${shop['store_name']}'),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: Icon(Icons.edit, color: Colors.blue),
-                                      onPressed: () => _loadShopData(shop),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () => _removeShop(shop.id),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          );
-                        },
                       ),
                     ],
                   ),
+                ),
+                StreamBuilder<List<Map<String, dynamic>>>( 
+                  stream: _getShopList(), 
+                  builder: (context, snapshot) { 
+                    if (snapshot.connectionState == ConnectionState.waiting) { 
+                      return Center(child: CircularProgressIndicator()); 
+                    }
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) { 
+                      return Center(child: Text("No shops found"));
+                    }
+
+                    final shopList = snapshot.data!; 
+                    return ListView.builder( 
+                      shrinkWrap: true, 
+                      itemCount: shopList.length, 
+                      itemBuilder: (context, index) { 
+                        final shop = shopList[index]; 
+                        return ListTile( 
+                          title: Text(shop['store_name']), 
+                          subtitle: Text(shop['address']), 
+                          trailing: Row( 
+                            mainAxisSize: MainAxisSize.min, 
+                            children: [ 
+                              IconButton( 
+                                icon: Icon(Icons.edit), 
+                                onPressed: () => _loadShopData(shop['shop_id']), 
+                              ), 
+                              IconButton( 
+                                icon: Icon(Icons.delete), 
+                                onPressed: () => _removeShop(shop['shop_id']), 
+                              ), 
+                            ], 
+                          ), 
+                        ); 
+                      }, 
+                    ); 
+                  },
                 ),
               ],
             ),
@@ -434,18 +394,5 @@ class _AdminShopPageState extends State<AdminShopPage> {
         ),
       ),
     );
-  }
-
-  Future<void> _removeShop(String shopId) async {
-    try {
-      await FirebaseFirestore.instance.collection('Shop Owner').doc(shopId).delete();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Shop removed successfully')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to remove shop')),
-      );
-    }
   }
 }

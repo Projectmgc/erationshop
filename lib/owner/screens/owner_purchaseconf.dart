@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -111,9 +112,9 @@ class _OwnerOrdersPageState extends State<OwnerOrdersPage> {
   }
 
   Future<bool> _sendOTPViaTwilio(String mobileNo) async {
-    final String accountSid = 'ACd15973cda53f718644a1864b3e120b0a';  // Your Twilio Account SID
-    final String authToken = 'e7f238879c9734d4fa6462129b992f56';  // Your Twilio Auth Token
-    final String serviceSid = 'VA62813aef6261795faf343f1c8f379775';  // Your Twilio Verify Service SID
+    final String? accountSid = dotenv.env['accountSid'];  // Your Twilio Account SID
+    final String? authToken = dotenv.env['authToken'];  // Your Twilio Auth Token
+    final String? serviceSid = dotenv.env['serviceSid'];  // Your Twilio Verify Service SID
 
     final String url = 'https://verify.twilio.com/v2/Services/$serviceSid/Verifications';
     final Map<String, String> data = {
@@ -180,10 +181,9 @@ class _OwnerOrdersPageState extends State<OwnerOrdersPage> {
   }
 
   Future<bool> _verifyOTP(String userOtp) async {
-    final String accountSid = 'ACd15973cda53f718644a1864b3e120b0a';  // Your Twilio Account SID
-    final String authToken = 'e7f238879c9734d4fa6462129b992f56';  // Your Twilio Auth Token
-    final String serviceSid = 'VA62813aef6261795faf343f1c8f379775'; // Your Twilio Verify Service SID
-
+    final String? accountSid = dotenv.env['accountSid'];  // Your Twilio Account SID
+    final String? authToken = dotenv.env['authToken'];  // Your Twilio Auth Token
+    final String? serviceSid = dotenv.env['serviceSid'];  // Your Twilio Verify Service SID
     final String url = 'https://verify.twilio.com/v2/Services/$serviceSid/VerificationCheck';
     final Map<String, String> data = {
       'To': mobileNo!,  // The mobile number to which the OTP was sent

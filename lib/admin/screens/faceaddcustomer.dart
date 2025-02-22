@@ -7,12 +7,12 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:image/image.dart' as img;
 
-class AdminFaceCaptureScreen extends StatefulWidget {
+class AdminFaceCaptureCustomer extends StatefulWidget {
   @override
-  _AdminFaceCaptureScreenState createState() => _AdminFaceCaptureScreenState();
+  _AdminFaceCaptureCustomerState createState() => _AdminFaceCaptureCustomerState();
 }
 
-class _AdminFaceCaptureScreenState extends State<AdminFaceCaptureScreen> {
+class _AdminFaceCaptureCustomerState extends State<AdminFaceCaptureCustomer> {
   File? _imageFile;
   final picker = ImagePicker();
   TextEditingController cardNoController = TextEditingController();

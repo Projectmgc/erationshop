@@ -343,7 +343,7 @@ class _AdminShopPageState extends State<AdminShopPage> {
                         child: ElevatedButton(
                           onPressed: _isEditing ? _updateShop : _addShop,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromARGB(255, 74, 74, 74),
+                            backgroundColor: const Color.fromARGB(255, 196, 185, 185),
                           ),
                           child: Text(_isEditing ? 'Update Shop' : 'Add Shop'),
                         ),

@@ -1,3 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:image/image.dart' as img; // For image resizing
+import 'package:http/http.dart' as http; // For Face++ integration
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:erationshop/user/screens/forgot_password.dart';
 import 'package:erationshop/user/screens/signup_screen.dart';
@@ -5,6 +10,7 @@ import 'package:erationshop/user/screens/uhome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,79 +28,228 @@ class _Login_ScreenState extends State<Login_Screen> {
   TextEditingController password_controller = TextEditingController();
   bool passwordVisible = true;
   bool loading = false;
+  
+  File? _imageFile; // For storing the selected image
+  final picker = ImagePicker(); // For picking images
 
-  // This function will handle the login process
-  void login() async {
+    Future<void> _pickImage() async {
     setState(() {
-      loading = true; // Set loading to true while performing login
+      loading = true;
     });
 
-    String email = email_controller.text;
-    String password = password_controller.text;
-    String cardno = card_controller.text;
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+
+      // Load the image file
+      var image = img.decodeImage(await _imageFile!.readAsBytes());
+
+      if (image != null) {
+        // Resize the image to a smaller size, e.g., 600x600
+        var resizedImage = img.copyResize(image, width: 600);
+
+        // Save the resized image back to a file
+        final compressedFile = File(pickedFile.path)..writeAsBytesSync(img.encodeJpg(resizedImage));
+
+        setState(() {
+          _imageFile = compressedFile;
+        });
+      }
+
+      setState(() {
+        loading = false;
+      });
+    } else {
+      setState(() {
+        loading = false;
+      });
+    }
+  }
+
+  // Method to upload the image to Face++ for face detection
+  Future<String?> _uploadImageToFacePlusPlus() async {
+    try {
+      var uri = Uri.parse('https://api-us.faceplusplus.com/facepp/v3/detect');
+      var request = http.MultipartRequest('POST', uri);
+      request.fields['api_key'] = dotenv.env['faceppapikey']!; 
+      request.fields['api_secret'] = dotenv.env['faceppsecretkey']!; 
+      request.files.add(await http.MultipartFile.fromPath('image_file', _imageFile!.path));
+
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        var responseBody = await http.Response.fromStream(response);
+        var responseData = json.decode(responseBody.body);
+
+        if (responseData['faces'] != null && responseData['faces'].isNotEmpty) {
+          var faceToken = responseData['faces'][0]['face_token'];
+          return faceToken;
+        } else {
+          return null; // No faces detected
+        }
+      } else {
+        return null;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+
+    // Method to compare the captured face token with the stored face token
+  Future<bool> _compareFaces(String? faceToken, String storedFaceToken) async {
+    if (faceToken == null) {
+      return false;
+    }
 
     try {
-      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      var uri = Uri.parse('https://api-us.faceplusplus.com/facepp/v3/compare');
+      var request = http.MultipartRequest('POST', uri);
+      request.fields['api_key'] = dotenv.env['faceppapikey']!; // Replace with your API Key
+      request.fields['api_secret'] = dotenv.env['faceppsecretkey']!; // Replace with your API Secret
+      request.fields['face_token1'] = faceToken;
+      request.fields['face_token2'] = storedFaceToken;
 
-      // First query the User collection based on card number and email
-      QuerySnapshot userSnapshot = await firestore
-          .collection('User')
-          .where('card_no', isEqualTo: cardno)
-          .where('email', isEqualTo: email)
-          .limit(1)
-          .get();
+      var response = await request.send();
+      if (response.statusCode == 200) {
+        var responseBody = await http.Response.fromStream(response);
+        var responseData = json.decode(responseBody.body);
+        double confidence = responseData['confidence'];  // Similarity score
 
-      if (userSnapshot.docs.isNotEmpty) {
-        var userDoc = userSnapshot.docs.first;
-
-        // Check if the password matches
-        if (userDoc['password'] == password) {
-          // Get the card_id from the User document
-          String cardId = userDoc['card_id'];
-
-          // Now check if the card_id exists in the Card collection
-          DocumentSnapshot cardDoc = await firestore.collection('Card').doc(cardId).get();
-
-          if (cardDoc.exists) {
-            // If card exists, proceed with login
-            SharedPreferences prefs = await SharedPreferences.getInstance();
-            prefs.setString('card_no', cardno);
-            prefs.setString('email', email);
-
-
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => UhomeScreen()),
-            );
-          } else {
-            // If card doesn't exist in the Card collection, show error
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Card not found')),
-            );
-          }
+        if (confidence > 80.0) {
+          return true; // Faces match
         } else {
-          // Incorrect password
+          return false; // Faces don't match
+        }
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+
+// This function will handle the login process with face verification
+void login() async {
+  setState(() {
+    loading = true; // Set loading to true while performing login
+  });
+
+  String email = email_controller.text;
+  String password = password_controller.text;
+  String cardno = card_controller.text;
+
+  try {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    // First query the User collection based on card number and email
+    QuerySnapshot userSnapshot = await firestore
+        .collection('User')
+        .where('card_no', isEqualTo: cardno)
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+
+    if (userSnapshot.docs.isNotEmpty) {
+      var userDoc = userSnapshot.docs.first;
+
+      // Check if the password matches
+      if (userDoc['password'] == password) {
+        // Get the card_id from the User document
+        String cardId = userDoc['card_id'];
+
+        // Now check if the card_id exists in the Card collection
+        DocumentSnapshot cardDoc = await firestore.collection('Card').doc(cardId).get();
+
+        if (cardDoc.exists) {
+          // Step 1: Capture the face image
+          await _pickImage();
+          if (_imageFile == null) {
+            setState(() {
+              loading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Please capture your face image')),
+            );
+            return;
+          }
+
+          // Step 2: Show "Processing Image" message while uploading
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Incorrect password')),
+            const SnackBar(content: Text('Processing image, please wait...')),
+          );
+        loading=true;
+
+          // Step 3: Upload the image and detect the face
+          String? faceToken = await _uploadImageToFacePlusPlus();
+          if (faceToken == null) {
+            setState(() {
+              loading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No face detected. Please try again.')),
+            );
+            return;
+          }
+
+          // Step 4: Verify face token by comparing with stored face_token
+          String storedFaceToken = cardDoc['face_token'];
+          bool isFaceMatched = await _compareFaces(faceToken, storedFaceToken);
+          if (!isFaceMatched) {
+            setState(() {
+              loading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Face does not match the stored image')),
+            );
+            return;
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Face Verified Successfully !!!')));
+          // If face matches, proceed with login and store card_no in SharedPreferences
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          prefs.setString('card_no', cardno);
+          prefs.setString('email', email);
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => UhomeScreen()),
+          );
+        } else {
+          // If card doesn't exist in the Card collection, show error
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Card not found')),
           );
         }
       } else {
-        // User not found
+        // Incorrect password
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Card number or email does not exist')),
+          SnackBar(content: Text('Incorrect password')),
         );
       }
-    } catch (e) {
-      // Handle errors
+    } else {
+      // User not found
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred: $e')),
+        SnackBar(content: Text('Card number or email does not exist')),
       );
     }
-
-    setState(() {
-      loading = false; // Set loading to false after login attempt
-    });
+  } catch (e) {
+    // Handle errors
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('An error occurred: $e')),
+    );
   }
+
+  setState(() {
+    loading = false; // Set loading to false after login attempt
+  });
+}
+
 
   void forgotpassword() {
     Navigator.push(context, MaterialPageRoute(builder: (context) {

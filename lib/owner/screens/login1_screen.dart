@@ -73,8 +73,8 @@ class _Login1_ScreenState extends State<Login1_Screen> {
     try {
       var uri = Uri.parse('https://api-us.faceplusplus.com/facepp/v3/detect');
       var request = http.MultipartRequest('POST', uri);
-      request.fields['api_key'] = dotenv.env['faceppapikey']!; // Replace with your API Key
-      request.fields['api_secret'] = dotenv.env['faceppsecretkey']!; // Replace with your API Secret
+      request.fields['api_key'] = dotenv.env['faceppapikey']!; 
+      request.fields['api_secret'] = dotenv.env['faceppsecretkey']!; 
       request.files.add(await http.MultipartFile.fromPath('image_file', _imageFile!.path));
 
       var response = await request.send();
@@ -292,7 +292,7 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                     // "Owner Login" centered header
                     Center(
                       child: Text(
-                        'OWNER LOGIN',
+                        'DISTRIBUTER LOGIN',
                         style: GoogleFonts.merriweather(
                           color: const Color.fromARGB(255, 4, 4, 4),
                           fontWeight: FontWeight.bold,

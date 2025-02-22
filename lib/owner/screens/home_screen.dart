@@ -1,11 +1,9 @@
 import 'package:erationshop/owner/screens/chatbot.dart';
-import 'package:erationshop/owner/screens/faceadd.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import to use SystemNavigator.pop()
 import 'package:erationshop/owner/screens/owner_feedback.dart';
 import 'package:erationshop/owner/screens/owner_purchaseconf.dart';
 import 'package:erationshop/owner/screens/owner_purchase.dart';
-import 'package:erationshop/main.dart';
 import 'package:erationshop/owner/screens/owner_enquiry.dart';
 import 'package:erationshop/owner/screens/owner_notification.dart';
 import 'package:erationshop/owner/screens/owner_outlet.dart';
@@ -68,13 +66,7 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
       'image': 'asset/feedback.jpeg',
       'page': FeedbackPage(), 
     },
-     {
-      'title': 'Face Capture',
-      'color': const Color.fromARGB(255, 0, 0, 0),
-      'description': 'Give Feedbacks about App and Other Services.',
-      'image': 'asset/camera.jpeg',
-      'page': AdminFaceCaptureScreen(), 
-    },
+    
   ];
 
   @override

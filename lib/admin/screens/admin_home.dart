@@ -1,8 +1,10 @@
 import 'package:erationshop/admin/screens/admin_allowp.dart';
+import 'package:erationshop/admin/screens/all_orders.dart';
 import 'package:erationshop/admin/screens/cardcategories.dart';
 import 'package:erationshop/admin/screens/chatbot.dart';
 import 'package:erationshop/admin/screens/faceaddadmin.dart';
-import 'package:erationshop/admin/screens/faceaddd.dart';
+import 'package:erationshop/admin/screens/faceaddcustomer.dart';
+import 'package:erationshop/admin/screens/faceaddddistributer.dart';
 import 'package:erationshop/admin/screens/feedback_show.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -91,6 +93,22 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       'description': 'Add / update the Face Id of Admin.',
       'image': 'asset/camera.jpeg',
       'page': AdminFaceCaptureScreen(), // Navigation target for AdminShopPage
+    },
+     {
+      'title': 'Face ID add',
+      'icon': Icons.camera,
+      'color': const Color.fromARGB(255, 0, 0, 0),
+      'description': 'Add / update the Face Id of Card Owners.',
+      'image': 'asset/camera.jpeg',
+      'page': AdminFaceCaptureCustomer(), 
+    },
+    {
+      'title': 'All Orders',
+      'icon': Icons.shopping_cart,
+      'color': const Color.fromARGB(255, 0, 0, 0),
+      'description': 'All order details of the Customer',
+      'image': 'asset/purchase.jpg',
+      'page': OrdersPage(), // Navigation target for AdminShopPage
     },
     {
       'title': 'Purchase Activation',
@@ -340,6 +358,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
+                    
                     ),
                   ),
                   SizedBox(height: 10),

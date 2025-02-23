@@ -101,13 +101,13 @@ class _IntroPageState extends State<IntroPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Color.fromARGB(255, 255, 255, 254),
-          title: Text('Select User Type'),
+          title: Text('LOGIN AS....'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               _userTypeButton('Admin', _navigateToAdmin),
-              _userTypeButton('Owner', _navigateToOwner),
-              _userTypeButton('User', _navigateToCustomer),
+              _userTypeButton('Distributer', _navigateToOwner),
+              _userTypeButton('Customer', _navigateToCustomer),
             ],
           ),
         );

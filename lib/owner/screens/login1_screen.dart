@@ -386,8 +386,8 @@ class _Login1_ScreenState extends State<Login1_Screen> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return "Please enter correct password";
-                        } else if (value.length < 5) {
-                          return "Password must be at least 5 characters";
+                        } else if (value.length < 8) {
+                          return "Password must be at least 8 characters";
                         }
                         return null;
                       },

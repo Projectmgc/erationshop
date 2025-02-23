@@ -373,8 +373,8 @@ class _Admin_LoginState extends State<Admin_Login> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return "Please enter correct password";
-                        } else if (value.length < 6) {
-                          return "Password must be at least 6 characters";
+                        } else if (value.length < 8) {
+                          return "Password must be at least 8 characters";
                         }
                         return null;
                       },

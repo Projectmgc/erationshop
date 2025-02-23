@@ -155,10 +155,10 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
             mainAxisAlignment: MainAxisAlignment.center, // Center the title text
             children: [
               Text(
-                'Owner Home', // The title in the center
+                'E-RATION (DISTRIBUTER)', // The title in the center
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 30, // Adjust size as needed
+                  fontSize: 25, // Adjust size as needed
                   fontWeight: FontWeight.bold,
                 ),
               ),

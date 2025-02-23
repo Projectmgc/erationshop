@@ -142,7 +142,7 @@ void login() async {
   String email = email_controller.text;
   String password = password_controller.text;
   String cardno = card_controller.text;
-
+if (_formKey.currentState?.validate() ?? false) {
   try {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
 
@@ -239,16 +239,26 @@ void login() async {
       );
     }
   } catch (e) {
+    setState(() {
+    loading = false; // Set loading to false after login attempt
+  });
     // Handle errors
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('An error occurred: $e')),
     );
   }
+  
+} else {
+      setState(() {
+        loading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+    }
+  }
+  
 
-  setState(() {
-    loading = false; // Set loading to false after login attempt
-  });
-}
 
 
   void forgotpassword() {
@@ -402,8 +412,8 @@ void login() async {
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return "Please enter correct password";
-                      } else if (value.length < 6) {
-                        return "Password must be at least 6 characters";
+                      } else if (value.length < 8) {
+                        return "Password must be at least 8 characters";
                       }
                       return null;
                     },

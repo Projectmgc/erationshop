@@ -142,6 +142,7 @@ Future<void> signp() async {
   setState(() {
     loading = true;
   });
+if (_formKey.currentState?.validate() ?? false) {
 
   try {
     // Step 1: Capture the face image
@@ -248,6 +249,16 @@ Future<void> signp() async {
     });
     _showDialog("Error", e.toString());
   }
+}
+else {
+      setState(() {
+        loading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+    }
+  
 }
 
   // Method to compare the captured face token with the stored face token
